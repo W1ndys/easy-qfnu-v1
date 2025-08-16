@@ -1,0 +1,14 @@
+# --- Web 框架与服务器 ---
+fastapi
+uvicorn[standard]
+
+# --- 数据抓取 (爬虫) ---
+requests
+beautifulsoup4
+lxml
+
+# --- 数据库 ORM (对象关系映射) ---
+SQLAlchemy
+
+# --- 认证 (JWT) ---
+python-jose[cryptography]

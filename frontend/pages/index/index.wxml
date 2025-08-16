@@ -1,0 +1,119 @@
+<!--首页-->
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card card fade-in">
+    <view class="user-header">
+      <view class="user-avatar">👤</view>
+      <view class="user-info">
+        <text class="user-greeting">{{greeting}}！</text>
+        <text class="user-name" wx:if="{{userInfo}}">{{userInfo.name}}</text>
+        <text class="current-time">{{currentTime}}</text>
+      </view>
+      <view class="settings-btn" bindtap="goToSettings">⚙️</view>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="quick-actions card fade-in">
+    <view class="card-title">快捷操作</view>
+    <view class="actions-grid">
+      <view 
+        class="action-item" 
+        wx:for="{{quickActions}}" 
+        wx:key="id"
+        data-path="{{item.path}}"
+        bindtap="onQuickActionTap"
+      >
+        <text class="action-icon">{{item.icon}}</text>
+        <text class="action-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日课程 -->
+  <view class="today-courses card fade-in" wx:if="{{todayCourses.length > 0}}">
+    <view class="card-header">
+      <text class="card-title">今日课程</text>
+      <text class="more-btn" bindtap="viewMoreCourses">查看更多 ></text>
+    </view>
+    <view class="courses-list">
+      <view 
+        class="course-item" 
+        wx:for="{{todayCourses}}" 
+        wx:key="index"
+        data-course="{{item}}"
+        bindtap="onCourseTap"
+      >
+        <view class="course-time">
+          <text class="time-text">{{item.start_time}}</text>
+          <text class="time-divider">-</text>
+          <text class="time-text">{{item.end_time}}</text>
+        </view>
+        <view class="course-info">
+          <text class="course-name">{{item.course_info.course_name}}</text>
+          <text class="course-location">📍 {{item.course_info.location}}</text>
+          <text class="course-teacher">👨‍🏫 {{item.course_info.teacher}}</text>
+        </view>
+        <view class="course-arrow">></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 无课程提示 -->
+  <view class="no-courses card fade-in" wx:else>
+    <view class="empty-state">
+      <text class="empty-icon">📅</text>
+      <text class="empty-text">今日无课程安排</text>
+      <text class="empty-desc">好好休息或自主学习吧！</text>
+    </view>
+  </view>
+
+  <!-- 成绩摘要 -->
+  <view class="grades-summary card fade-in" wx:if="{{gradesSummary}}">
+    <view class="card-header">
+      <text class="card-title">成绩概览</text>
+      <text class="more-btn" bindtap="viewGradesDetail">查看详情 ></text>
+    </view>
+    <view class="summary-grid">
+      <view class="summary-item">
+        <text class="summary-value">{{gradesSummary.overall_stats.gpa}}</text>
+        <text class="summary-label">总GPA</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-value">{{gradesSummary.overall_stats.total_credits}}</text>
+        <text class="summary-label">总学分</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-value">{{gradesSummary.overall_stats.total_courses}}</text>
+        <text class="summary-label">总课程</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-value">{{gradesSummary.overall_stats.weighted_average}}</text>
+        <text class="summary-label">加权平均</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 系统公告 -->
+  <view class="announcements card fade-in" wx:if="{{announcements.length > 0}}">
+    <view class="card-title">📢 系统公告</view>
+    <view class="announcement-list">
+      <view 
+        class="announcement-item" 
+        wx:for="{{announcements}}" 
+        wx:key="id"
+        data-announcement="{{item}}"
+        bindtap="onAnnouncementTap"
+      >
+        <view class="announcement-content">
+          <text class="announcement-title">{{item.title}}</text>
+          <text class="announcement-time">{{item.time}}</text>
+        </view>
+        <view class="announcement-arrow">></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部间距 -->
+  <view class="bottom-spacer"></view>
+</view>

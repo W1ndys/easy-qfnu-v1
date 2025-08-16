@@ -1,0 +1,545 @@
+/* 数据统计页面样式 */
+
+.container {
+  padding: 20rpx;
+  background: #f8f8f8;
+  min-height: 100vh;
+}
+
+/* 标签栏 */
+.tab-bar {
+  display: flex;
+  margin-bottom: 30rpx;
+  padding: 8rpx;
+  background: #f0f0f0;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.tab-item {
+  flex: 1;
+  padding: 20rpx 16rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #666;
+  border-radius: 8rpx;
+  transition: all 0.3s ease;
+}
+
+.tab-item.active {
+  background: #007AFF;
+  color: white;
+  font-weight: 600;
+}
+
+/* 搜索卡片 */
+.search-card {
+  margin-bottom: 30rpx;
+}
+
+.search-header {
+  margin-bottom: 30rpx;
+}
+
+.search-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.search-desc {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 80rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid #e9ecef;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  background: #fafafa;
+}
+
+.search-input:focus {
+  border-color: #007AFF;
+  background: white;
+}
+
+.search-btn {
+  height: 80rpx;
+  padding: 0 32rpx;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.search-btn.loading {
+  background: #ccc;
+}
+
+/* 搜索历史 */
+.search-history {
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 30rpx;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.history-title {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.clear-btn {
+  font-size: 24rpx;
+  color: #007AFF;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  background: #f8f9fa;
+  border-radius: 8rpx;
+  transition: background-color 0.3s ease;
+}
+
+.history-item:active {
+  background: #e9ecef;
+}
+
+.history-course {
+  font-size: 26rpx;
+  color: #333;
+}
+
+.history-time {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* 统计结果 */
+.stats-result {
+  margin-bottom: 30rpx;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.result-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.detail-btn {
+  font-size: 26rpx;
+  color: #007AFF;
+}
+
+.stats-section {
+  margin-bottom: 40rpx;
+  padding-bottom: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.stats-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.data-badge {
+  padding: 8rpx 16rpx;
+  border-radius: 50rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.data-badge.historical {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.data-badge.crowdsourced {
+  background: #e8f5e8;
+  color: #388e3c;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  border: 2rpx solid #e9ecef;
+}
+
+.stat-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #007AFF;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 综合统计 */
+.combined-stats {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 40rpx;
+  border-radius: 16rpx;
+  text-align: center;
+}
+
+.combined-header {
+  margin-bottom: 20rpx;
+}
+
+.combined-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.combined-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.combined-score {
+  font-size: 48rpx;
+  font-weight: 700;
+  margin-bottom: 12rpx;
+}
+
+.combined-desc {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+/* 班内排名 */
+.rank-card {
+  margin-bottom: 30rpx;
+}
+
+.rank-header {
+  margin-bottom: 30rpx;
+}
+
+.rank-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.rank-desc {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.rank-search {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 40rpx;
+}
+
+.rank-btn {
+  width: 100%;
+  height: 80rpx;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.rank-btn:disabled {
+  background: #ccc;
+}
+
+.rank-hint {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.rank-result {
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 30rpx;
+}
+
+.rank-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.rank-course {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.rank-detail-btn {
+  font-size: 26rpx;
+  color: #007AFF;
+}
+
+.rank-display {
+  display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+  margin-bottom: 30rpx;
+}
+
+.rank-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  border-radius: 16rpx;
+  color: white;
+}
+
+.rank-position {
+  font-size: 48rpx;
+  font-weight: 700;
+  margin-bottom: 8rpx;
+}
+
+.rank-label {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+.rank-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20rpx;
+}
+
+.rank-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+}
+
+.rank-stat-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #007AFF;
+  margin-bottom: 8rpx;
+}
+
+.rank-stat-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.rank-analysis {
+  text-align: center;
+  padding: 24rpx;
+  border-radius: 12rpx;
+}
+
+.analysis-text {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.analysis-text.above {
+  color: #28a745;
+  background: #d4edda;
+}
+
+.analysis-text.below {
+  color: #dc3545;
+  background: #f8d7da;
+}
+
+/* 数据贡献 */
+.contribute-card {
+  margin-bottom: 30rpx;
+}
+
+.contribute-header {
+  margin-bottom: 30rpx;
+}
+
+.contribute-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.contribute-desc {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.contribute-setting {
+  margin-bottom: 40rpx;
+  padding-bottom: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+}
+
+.setting-info {
+  flex: 1;
+  margin-right: 30rpx;
+}
+
+.setting-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.setting-desc {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.4;
+}
+
+.contribute-info {
+  margin-bottom: 40rpx;
+}
+
+.info-section {
+  margin-bottom: 30rpx;
+}
+
+.info-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.info-content {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.manual-contribute {
+  text-align: center;
+}
+
+.contribute-btn {
+  width: 100%;
+  height: 80rpx;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.contribute-note {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 40rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 30rpx;
+  opacity: 0.3;
+}
+
+.empty-text {
+  font-size: 30rpx;
+  color: #999;
+  margin-bottom: 20rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #ccc;
+}

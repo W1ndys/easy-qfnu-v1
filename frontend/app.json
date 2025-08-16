@@ -1,0 +1,56 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/index/index",
+    "pages/grades/grades",
+    "pages/schedule/schedule",
+    "pages/stats/stats",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#007AFF",
+    "navigationBarTitleText": "Easy-QFNUJW",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#007AFF",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "🏠 首页"
+      },
+      {
+        "pagePath": "pages/grades/grades",
+        "text": "📊 成绩"
+      },
+      {
+        "pagePath": "pages/schedule/schedule",
+        "text": "📅 课表"
+      },
+      {
+        "pagePath": "pages/stats/stats",
+        "text": "📈 统计"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "👤 我的"
+      }
+    ]
+  },
+  "networkTimeout": {
+    "request": 10000,
+    "downloadFile": 10000
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于获取当前位置信息"
+    }
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

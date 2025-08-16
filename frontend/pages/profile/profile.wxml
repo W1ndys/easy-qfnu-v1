@@ -1,0 +1,113 @@
+<!--个人中心页面-->
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card card" bindtap="onUserInfoTap" wx:if="{{userInfo}}">
+    <view class="user-background">
+      <view class="user-content">
+        <view class="user-avatar">{{userInfo.avatar}}</view>
+        <view class="user-details">
+          <text class="user-name">{{userInfo.name}}</text>
+          <text class="user-id">学号：{{userInfo.studentId}}</text>
+          <text class="user-join">加入时间：{{userInfo.joinDate}}</text>
+        </view>
+      </view>
+      <view class="user-decoration">
+        <text class="decoration-text">Easy-QFNUJW</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷统计 -->
+  <view class="quick-stats card">
+    <view class="stats-title">使用统计</view>
+    <view class="stats-grid">
+      <view class="stat-item">
+        <text class="stat-value">{{appVersion}}</text>
+        <text class="stat-label">当前版本</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">30</text>
+        <text class="stat-label">使用天数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">158</text>
+        <text class="stat-label">查询次数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">12</text>
+        <text class="stat-label">贡献数据</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-list">
+    <view 
+      class="menu-item card"
+      wx:for="{{menuItems}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="onMenuItemTap"
+    >
+      <view class="menu-icon">{{item.icon}}</view>
+      <view class="menu-content">
+        <text class="menu-name">{{item.name}}</text>
+        <text class="menu-desc">{{item.desc}}</text>
+      </view>
+      <view class="menu-arrow">></view>
+    </view>
+  </view>
+
+  <!-- 应用信息 -->
+  <view class="app-info card">
+    <view class="info-header">
+      <text class="info-title">应用信息</text>
+    </view>
+    
+    <view class="info-list">
+      <view class="info-item">
+        <text class="info-label">应用名称</text>
+        <text class="info-value">Easy-QFNUJW</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">版本号</text>
+        <text class="info-value">{{appVersion}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">应用类型</text>
+        <text class="info-value">第三方教务助手</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">适用学校</text>
+        <text class="info-value">曲阜师范大学</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 免责声明 -->
+  <view class="disclaimer card">
+    <view class="disclaimer-header">
+      <text class="disclaimer-icon">⚠️</text>
+      <text class="disclaimer-title">免责声明</text>
+    </view>
+    <view class="disclaimer-content">
+      <text class="disclaimer-text">
+        • 本应用为第三方开发的教务辅助工具，与曲阜师范大学官方无关
+        • 所有数据来源于学校教务系统，如有疑问请以官方系统为准
+        • 请遵守学校相关规定，合理使用本工具
+        • 使用本应用即表示同意相关条款和隐私政策
+      </text>
+    </view>
+  </view>
+
+  <!-- 退出登录按钮 -->
+  <view class="logout-section">
+    <button class="logout-btn" bindtap="logout">
+      <text class="logout-icon">🚪</text>
+      <text class="logout-text">退出登录</text>
+    </button>
+  </view>
+
+  <!-- 底部间距 -->
+  <view class="bottom-spacer"></view>
+</view>

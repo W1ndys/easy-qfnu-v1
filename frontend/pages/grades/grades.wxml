@@ -1,0 +1,158 @@
+<!--成绩查询页面-->
+<view class="container">
+  <!-- 统计卡片 -->
+  <view class="stats-card card" wx:if="{{gradeStats}}">
+    <view class="stats-header">
+      <text class="stats-title">成绩统计</text>
+      <text class="detail-btn" bindtap="showStatsDetail">详情</text>
+    </view>
+    <view class="stats-grid">
+      <view class="stat-item">
+        <text class="stat-value">{{gradeStats.gpa}}</text>
+        <text class="stat-label">总GPA</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{gradeStats.weighted_average}}</text>
+        <text class="stat-label">加权平均</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{gradeStats.total_credits}}</text>
+        <text class="stat-label">总学分</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{gradeStats.total_courses}}</text>
+        <text class="stat-label">总课程</text>
+      </view>
+    </view>
+    
+    <!-- 额外统计 -->
+    <view class="extra-stats">
+      <view class="extra-stat excellent">
+        <text class="extra-label">优秀课程</text>
+        <text class="extra-value">{{gradeStats.excellent_courses}}门</text>
+      </view>
+      <view class="extra-stat failed" wx:if="{{gradeStats.failed_courses > 0}}">
+        <text class="extra-label">挂科课程</text>
+        <text class="extra-value">{{gradeStats.failed_courses}}门</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 筛选和排序 -->
+  <view class="filter-card card">
+    <view class="filter-row">
+      <!-- 学期筛选 -->
+      <view class="filter-item">
+        <text class="filter-label">学期筛选：</text>
+        <view class="semester-picker" bindtap="showSemesterPicker">
+          <text class="semester-text">{{selectedSemester || '全部学期'}}</text>
+          <text class="picker-arrow">📅</text>
+        </view>
+      </view>
+      
+      <!-- 导出按钮 -->
+      <view class="export-btn" bindtap="exportGrades">
+        <text class="export-icon">📤</text>
+        <text class="export-text">导出</text>
+      </view>
+    </view>
+
+    <!-- 排序选项 -->
+    <view class="sort-row">
+      <text class="sort-label">排序：</text>
+      <view class="sort-options">
+        <view 
+          class="sort-option {{sortBy === 'semester' ? 'active' : ''}}"
+          data-sort="semester"
+          bindtap="onSortChange"
+        >
+          学期{{semesterSortIcon}}
+        </view>
+        <view 
+          class="sort-option {{sortBy === 'score' ? 'active' : ''}}"
+          data-sort="score"
+          bindtap="onSortChange"
+        >
+          成绩{{scoreSortIcon}}
+        </view>
+        <view 
+          class="sort-option {{sortBy === 'credit' ? 'active' : ''}}"
+          data-sort="credit"
+          bindtap="onSortChange"
+        >
+          学分{{creditSortIcon}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 成绩列表 -->
+  <view class="grades-list">
+    <view 
+      class="grade-item card"
+      wx:for="{{grades}}" 
+      wx:key="index"
+      data-grade="{{item}}"
+      bindtap="showGradeDetail"
+    >
+      <view class="grade-header">
+        <text class="course-name">{{item.course_name}}</text>
+        <view class="score-badge {{item.score >= 90 ? 'excellent' : item.score >= 80 ? 'good' : item.score >= 60 ? 'pass' : 'fail'}}">
+          {{item.score}}
+        </view>
+      </view>
+      
+      <view class="grade-details">
+        <view class="detail-row">
+          <text class="detail-label">学期：</text>
+          <text class="detail-value">{{item.semester}}</text>
+        </view>
+        <view class="detail-row">
+          <text class="detail-label">学分：</text>
+          <text class="detail-value">{{item.credit}}</text>
+        </view>
+        <view class="detail-row">
+          <text class="detail-label">绩点：</text>
+          <text class="detail-value">{{item.grade_point}}</text>
+        </view>
+        <view class="detail-row" wx:if="{{item.teacher}}">
+          <text class="detail-label">教师：</text>
+          <text class="detail-value">{{item.teacher}}</text>
+        </view>
+      </view>
+      
+      <view class="grade-footer">
+        <text class="course-type">{{item.course_type || '必修'}}</text>
+        <text class="view-detail">查看详情 ></text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!isLoading && grades.length === 0}}">
+    <text class="empty-icon">📊</text>
+    <text class="empty-text">暂无成绩数据</text>
+    <text class="empty-desc">下拉刷新试试</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{isLoading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+</view>
+
+<!-- 学期选择器 -->
+<view class="picker-overlay {{showSemesterPicker ? 'show' : ''}}" bindtap="hideSemesterPicker">
+  <view class="picker-content" catchtap="">
+    <view class="picker-header">
+      <text class="picker-title">选择学期</text>
+      <text class="picker-close" bindtap="hideSemesterPicker">✕</text>
+    </view>
+    <picker-view class="picker-view" bindchange="onSemesterChange">
+      <picker-view-column>
+        <view class="picker-item">全部学期</view>
+        <view class="picker-item" wx:for="{{semesters}}" wx:key="index">{{item}}</view>
+      </picker-view-column>
+    </picker-view>
+  </view>
+</view>

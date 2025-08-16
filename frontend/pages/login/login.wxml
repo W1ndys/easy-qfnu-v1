@@ -1,0 +1,71 @@
+<!-- 登录页面 -->
+<view class="login-container">
+  <!-- 顶部Logo和标题 -->
+  <view class="login-header">
+    <view class="logo">🎓</view>
+    <text class="app-title">Easy-QFNUJW</text>
+    <text class="app-subtitle">曲阜师范大学教务助手</text>
+    <text class="app-desc">第三方教务辅助工具，让学习更简单</text>
+  </view>
+  <!-- 登录表单 -->
+  <view class="login-form">
+    <!-- 学号输入 -->
+    <view class="form-group">
+      <text class="form-label">学号</text>
+      <view class="input-wrapper">
+        <input class="form-input {{errors.studentId ? 'error' : ''}}" type="number" placeholder="请输入您的学号" value="{{studentId}}" bindinput="onStudentIdInput" maxlength="12" />
+        <text class="input-icon">👤</text>
+      </view>
+      <text wx:if="{{errors.studentId}}" class="form-error">{{errors.studentId}}</text>
+    </view>
+    <!-- 密码输入 -->
+    <view class="form-group">
+      <text class="form-label">密码</text>
+      <view class="input-wrapper">
+        <input class="form-input {{errors.password ? 'error' : ''}}" type="{{showPassword ? 'text' : 'password'}}" placeholder="请输入教务系统密码" value="{{password}}" bindinput="onPasswordInput" />
+        <text class="password-toggle" bindtap="togglePasswordVisibility">
+          {{showPassword ? '🙈' : '👁️'}}
+        </text>
+      </view>
+      <text wx:if="{{errors.password}}" class="form-error">{{errors.password}}</text>
+    </view>
+    <!-- 隐私协议 -->
+    <view class="privacy-section">
+      <checkbox-group bindchange="onPrivacyChange">
+        <label class="privacy-label">
+          <checkbox value="agree" checked="{{agreePrivacy}}" />
+          <text class="privacy-text">
+            我已阅读并同意
+            <text class="link" bindtap="showUserAgreement">《用户协议》</text>
+            和
+            <text class="link" bindtap="showPrivacyPolicy">《隐私政策》</text>
+          </text>
+        </label>
+      </checkbox-group>
+    </view>
+    <!-- 登录按钮 -->
+    <button class="btn btn-primary {{isLoading ? 'btn-disabled' : ''}}" bindtap="handleLogin" disabled="{{isLoading}}" loading="{{isLoading}}">
+      {{isLoading ? '登录中...' : '登录'}}
+    </button>
+    <!-- 辅助操作 -->
+    <view class="login-actions">
+      <text class="action-link" bindtap="forgotPassword">忘记密码？</text>
+      <text class="action-link" bindtap="contactUs">联系我们</text>
+    </view>
+  </view>
+  <!-- 安全提示 -->
+  <view class="security-notice">
+    <view class="notice-title">🔒 安全承诺</view>
+    <view class="notice-content">
+      <text>• 不存储您的密码信息</text>
+      <text>• 数据传输采用HTTPS加密</text>
+      <text>• 仅用于获取教务信息</text>
+      <text>• 严格保护您的隐私</text>
+    </view>
+  </view>
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text class="version-text">Version 4.0.0</text>
+    <text class="copyright">© 2024 Easy-QFNUJW</text>
+  </view>
+</view>

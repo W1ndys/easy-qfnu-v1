@@ -1,0 +1,156 @@
+<!--课程表页面-->
+<view class="container">
+  <!-- 头部控制栏 -->
+  <view class="header-controls card">
+    <!-- 视图切换 -->
+    <view class="view-toggle">
+      <view 
+        class="toggle-btn {{viewMode === 'week' ? 'active' : ''}}"
+        data-mode="week"
+        bindtap="switchViewMode"
+      >
+        周视图
+      </view>
+      <view 
+        class="toggle-btn {{viewMode === 'today' ? 'active' : ''}}"
+        data-mode="today"
+        bindtap="switchViewMode"
+      >
+        今日
+      </view>
+    </view>
+
+    <!-- 导出按钮 -->
+    <view class="export-btn" bindtap="exportSchedule">
+      <text class="export-icon">📤</text>
+    </view>
+  </view>
+
+  <!-- 周视图 -->
+  <view class="week-view" wx:if="{{viewMode === 'week'}}">
+    <!-- 周次控制 -->
+    <view class="week-control card">
+      <view class="week-nav">
+        <view 
+          class="nav-btn {{currentWeek <= 1 ? 'disabled' : ''}}"
+          data-direction="prev"
+          bindtap="changeWeek"
+        >
+          ← 上一周
+        </view>
+        <view class="week-info" bindtap="goToCurrentWeek">
+          <text class="semester-text">{{currentSemester}}</text>
+          <text class="week-text">第{{currentWeek}}周</text>
+        </view>
+        <view 
+          class="nav-btn {{currentWeek >= 20 ? 'disabled' : ''}}"
+          data-direction="next"
+          bindtap="changeWeek"
+        >
+          下一周 →
+        </view>
+      </view>
+    </view>
+
+    <!-- 课程表格 -->
+    <view class="schedule-table card">
+      <!-- 表头 -->
+      <view class="table-header">
+        <view class="time-header">时间</view>
+        <view class="day-header" wx:for="{{weekDays}}" wx:key="index">
+          {{item}}
+        </view>
+      </view>
+
+      <!-- 表格内容 -->
+      <view class="table-body">
+        <view class="time-row" wx:for="{{timeSlots}}" wx:for-item="slot" wx:for-index="slotIndex" wx:key="slotIndex">
+          <!-- 时间列 -->
+          <view class="time-cell">
+            <text class="period-text">{{slot.period}}</text>
+            <text class="time-text">{{slot.time}}</text>
+          </view>
+
+          <!-- 课程列 -->
+          <view class="course-cell" wx:for="{{weekDays}}" wx:for-index="dayIndex" wx:key="dayIndex">
+            <view 
+              class="course-item"
+              wx:for="{{coursesGrid[slotIndex][dayIndex]}}"
+              wx:for-item="course"
+              wx:key="index"
+              data-course="{{course}}"
+              bindtap="onCourseTap"
+            >
+              <text class="course-name">{{course.course_info.course_name}}</text>
+              <text class="course-location">{{course.course_info.location}}</text>
+              <text class="course-teacher">{{course.course_info.teacher}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日视图 -->
+  <view class="today-view" wx:if="{{viewMode === 'today'}}">
+    <!-- 日期信息 -->
+    <view class="date-info card">
+      <view class="date-header">
+        <text class="date-title">今日课程</text>
+        <text class="date-text">{{currentDate}}</text>
+      </view>
+    </view>
+
+    <!-- 今日课程列表 -->
+    <view class="today-courses" wx:if="{{todayCourses.length > 0}}">
+      <view 
+        class="today-course-item card"
+        wx:for="{{todayCourses}}"
+        wx:key="index"
+        data-course="{{item}}"
+        bindtap="onTodayCourseTap"
+      >
+        <view class="course-time-badge {{item.statusClass}}">
+          <text class="time-start">{{item.start_time}}</text>
+          <text class="time-divider">-</text>
+          <text class="time-end">{{item.end_time}}</text>
+        </view>
+
+        <view class="course-details">
+          <text class="course-title">{{item.course_info.course_name}}</text>
+          <view class="course-meta">
+            <text class="meta-item">📍 {{item.course_info.location}}</text>
+            <text class="meta-item">👨‍🏫 {{item.course_info.teacher}}</text>
+            <text class="meta-item">📚 {{item.class_period}}</text>
+          </view>
+        </view>
+
+        <view class="course-status">
+          <text class="status-text {{item.statusClass}}">{{item.statusText}}</text>
+          <text class="course-arrow">></text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日无课 -->
+    <view class="no-courses-today card" wx:else>
+      <view class="empty-state">
+        <text class="empty-icon">📅</text>
+        <text class="empty-text">今日无课程安排</text>
+        <text class="empty-desc">好好休息或自主学习吧！</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{isLoading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!isLoading && schedule.length === 0 && viewMode === 'week'}}">
+    <text class="empty-icon">📚</text>
+    <text class="empty-text">暂无课程表数据</text>
+    <text class="empty-desc">请检查网络或下拉刷新</text>
+  </view>
+</view>
