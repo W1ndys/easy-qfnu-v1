@@ -74,17 +74,11 @@ Page({
     if (!studentId.trim()) {
       errors.studentId = '请输入学号'
       isValid = false
-    } else if (!/^\d+$/.test(studentId.trim())) {
-      errors.studentId = '学号格式不正确'
-      isValid = false
     }
 
     // 验证密码
     if (!password.trim()) {
       errors.password = '请输入密码'
-      isValid = false
-    } else if (password.length < 6) {
-      errors.password = '密码长度至少6位'
       isValid = false
     }
 
