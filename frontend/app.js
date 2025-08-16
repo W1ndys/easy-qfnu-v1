@@ -70,36 +70,16 @@ App({
 
   // 初始化应用
   initApp() {
-    // 获取系统信息（使用新的API）
-    try {
-      const systemInfo = {}
-      
-      // 获取设备信息
-      const deviceInfo = wx.getDeviceInfo()
-      Object.assign(systemInfo, deviceInfo)
-      
-      // 获取窗口信息
-      const windowInfo = wx.getWindowInfo()
-      Object.assign(systemInfo, windowInfo)
-      
-      // 获取应用基础信息
-      const appBaseInfo = wx.getAppBaseInfo()
-      Object.assign(systemInfo, appBaseInfo)
-      
-      this.globalData.systemInfo = systemInfo
-      console.log('系统信息:', systemInfo)
-    } catch (error) {
-      // 兼容旧版本
-      wx.getSystemInfo({
-        success: (res) => {
-          this.globalData.systemInfo = res
-          console.log('系统信息:', res)
-        },
-        fail: (err) => {
-          console.warn('获取系统信息失败:', err)
-        }
-      })
-    }
+    // 获取系统信息（兼容旧版本）
+    wx.getSystemInfo({
+      success: (res) => {
+        this.globalData.systemInfo = res
+        console.log('系统信息:', res)
+      },
+      fail: (err) => {
+        console.warn('获取系统信息失败:', err)
+      }
+    })
   },
 
   // 登录

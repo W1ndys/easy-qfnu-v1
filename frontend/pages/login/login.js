@@ -74,7 +74,7 @@ Page({
     if (!studentId.trim()) {
       errors.studentId = '请输入学号'
       isValid = false
-    } else if (!/^\d{10,12}$/.test(studentId.trim())) {
+    } else if (!/^\d+$/.test(studentId.trim())) {
       errors.studentId = '学号格式不正确'
       isValid = false
     }
@@ -102,7 +102,7 @@ Page({
   },
 
   // 登录处理
-  async handleLogin() {
+  handleLogin() {
     if (!this.validateForm()) {
       return
     }
@@ -111,9 +111,7 @@ Page({
 
     this.setData({ isLoading: true })
 
-    try {
-      await app.login(studentId.trim(), password)
-      
+    app.login(studentId.trim(), password).then(() => {
       // 保存学号（不保存密码）
       wx.setStorageSync('last_student_id', studentId.trim())
       
@@ -126,7 +124,7 @@ Page({
         })
       }, 1000)
 
-    } catch (error) {
+    }).catch((error) => {
       console.error('登录失败:', error)
       
       let errorMessage = '登录失败'
@@ -141,9 +139,9 @@ Page({
       }
       
       app.showError(errorMessage)
-    } finally {
+    }).finally(() => {
       this.setData({ isLoading: false })
-    }
+    })
   },
 
   // 查看用户协议

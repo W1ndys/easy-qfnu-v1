@@ -1,0 +1,68 @@
+<!--调试页面-->
+<view class="container">
+  <view class="header">
+    <text class="title">📱 设备兼容性检测</text>
+    <text class="desc">检测小程序在当前设备上的运行状态</text>
+  </view>
+
+  <!-- 系统信息 -->
+  <view class="card">
+    <view class="card-title">系统信息</view>
+    <view class="info-list">
+      <view class="info-item">
+        <text class="label">设备型号:</text>
+        <text class="value">{{systemInfo.model || '未知'}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">操作系统:</text>
+        <text class="value">{{systemInfo.platform || '未知'}} {{systemInfo.system || ''}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">微信版本:</text>
+        <text class="value">{{systemInfo.version || '未知'}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">基础库:</text>
+        <text class="value">{{systemInfo.SDKVersion || '未知'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 测试结果 -->
+  <view class="card">
+    <view class="card-title">功能测试</view>
+    <view class="test-list">
+      <view 
+        class="test-item" 
+        wx:for="{{testResults}}" 
+        wx:key="name"
+      >
+        <view class="test-info">
+          <text class="test-name">{{item.name}}</text>
+          <text class="test-result">{{item.result}}</text>
+        </view>
+        <view class="test-status {{item.status}}">
+          {{item.status === 'success' ? '✅' : '❌'}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="actions">
+    <button class="btn-primary" bindtap="goToLogin">
+      🚀 进入应用
+    </button>
+  </view>
+
+  <!-- 说明信息 -->
+  <view class="tips">
+    <text class="tips-title">💡 兼容性说明</text>
+    <text class="tips-content">
+• 建议微信版本 7.0.0 以上
+• 建议基础库版本 2.10.0 以上
+• 如遇问题请更新微信版本
+• 部分功能需要网络连接
+    </text>
+  </view>
+</view>

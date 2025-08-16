@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/debug/debug",
     "pages/login/login",
     "pages/index/index",
     "pages/grades/grades",
@@ -46,11 +47,5 @@
     "request": 10000,
     "downloadFile": 10000
   },
-  "permission": {
-    "scope.userLocation": {
-      "desc": "用于获取当前位置信息"
-    }
-  },
-  "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "sitemapLocation": "sitemap.json"
 }
