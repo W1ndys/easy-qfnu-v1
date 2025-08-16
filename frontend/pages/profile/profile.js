@@ -4,7 +4,7 @@ const app = getApp()
 Page({
   data: {
     userInfo: null,
-    appVersion: '4.0.0',
+    appVersion: '0.0.1',
     menuItems: [
       {
         id: 'settings',
@@ -308,7 +308,7 @@ Page({
       wx.hideLoading()
       wx.showModal({
         title: '检查更新',
-        content: '当前已是最新版本 v4.0.0',
+        content: '当前已是最新版本 v0.0.1',
         showCancel: false,
         confirmText: '知道了'
       })

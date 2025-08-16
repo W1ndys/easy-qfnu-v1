@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Easy-QFNUJW API",
     description="曲阜师范大学教务辅助工具后端API",
-    version="4.0.0",
+    version="0.0.1",
     lifespan=lifespan,
 )
 
@@ -85,7 +85,7 @@ app.include_router(
 @app.get("/")
 async def root():
     """根路径"""
-    return {"message": "Easy-QFNUJW API Server", "version": "4.0.0"}
+    return {"message": "Easy-QFNUJW API Server", "version": "0.0.1"}
 
 
 @app.get("/health")

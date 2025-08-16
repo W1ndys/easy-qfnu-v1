@@ -11,7 +11,7 @@ Page({
 
   runTests() {
     const tests = []
-    
+
     // 测试1: 系统信息
     try {
       const systemInfo = wx.getSystemInfoSync()
@@ -48,7 +48,7 @@ Page({
 
     // 测试3: 网络请求
     wx.request({
-      url: 'https://www.baidu.com',
+      url: 'https://api.easy-qfnujw.com/api/v1/health',
       success: (res) => {
         tests.push({
           name: '网络请求',

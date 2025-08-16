@@ -1,119 +1,131 @@
-<!--首页-->
+<!--首页 - 简洁灰白设计-->
 <view class="container">
-  <!-- 用户信息卡片 -->
-  <view class="user-card card fade-in">
-    <view class="user-header">
-      <view class="user-avatar">👤</view>
-      <view class="user-info">
-        <text class="user-greeting">{{greeting}}！</text>
-        <text class="user-name" wx:if="{{userInfo}}">{{userInfo.name}}</text>
-        <text class="current-time">{{currentTime}}</text>
+  <!-- 用户信息头部 -->
+  <view class="user-header fade-in">
+    <view class="user-info">
+      <view class="user-avatar">👨‍🎓</view>
+      <view class="user-details">
+        <text class="user-name">{{userInfo.name || '同学'}}</text>
+        <text class="user-id">学号：{{userInfo.studentId || '未知'}}</text>
+        <view class="user-status">
+          <view class="status-dot"></view>
+          <text>已登录</text>
+        </view>
       </view>
-      <view class="settings-btn" bindtap="goToSettings">⚙️</view>
+    </view>
+    
+    <view class="quick-stats">
+      <view class="stat-item">
+        <text class="stat-value">{{stats.totalCourses || '-'}}</text>
+        <text class="stat-label">本学期课程</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.avgGpa || '-'}}</text>
+        <text class="stat-label">平均绩点</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.totalCredits || '-'}}</text>
+        <text class="stat-label">已修学分</text>
+      </view>
     </view>
   </view>
 
-  <!-- 快捷操作 -->
-  <view class="quick-actions card fade-in">
-    <view class="card-title">快捷操作</view>
-    <view class="actions-grid">
-      <view 
-        class="action-item" 
-        wx:for="{{quickActions}}" 
-        wx:key="id"
-        data-path="{{item.path}}"
-        bindtap="onQuickActionTap"
-      >
-        <text class="action-icon">{{item.icon}}</text>
-        <text class="action-name">{{item.name}}</text>
+  <!-- 功能菜单 -->
+  <view class="menu-grid fade-in">
+    <view class="grid-row">
+      <view class="menu-item" bindtap="navigateToGrades">
+        <view class="menu-icon">📊</view>
+        <text class="menu-title">成绩查询</text>
+        <text class="menu-desc">查看各科成绩和绩点</text>
+      </view>
+      <view class="menu-item" bindtap="navigateToSchedule">
+        <view class="menu-icon">📅</view>
+        <text class="menu-title">课程表</text>
+        <text class="menu-desc">查看本周课程安排</text>
+      </view>
+    </view>
+    
+    <view class="grid-row">
+      <view class="menu-item" bindtap="navigateToStats">
+        <view class="menu-icon">📈</view>
+        <text class="menu-title">成绩统计</text>
+        <text class="menu-desc">课程数据分析</text>
+      </view>
+      <view class="menu-item" bindtap="checkCourseCapacity">
+        <view class="menu-icon">🎯</view>
+        <text class="menu-title">选课助手</text>
+        <text class="menu-desc">课程容量查询</text>
       </view>
     </view>
   </view>
 
   <!-- 今日课程 -->
-  <view class="today-courses card fade-in" wx:if="{{todayCourses.length > 0}}">
+  <view class="today-courses fade-in">
     <view class="card-header">
       <text class="card-title">今日课程</text>
-      <text class="more-btn" bindtap="viewMoreCourses">查看更多 ></text>
+      <text class="view-all" bindtap="navigateToSchedule">查看全部 ></text>
     </view>
-    <view class="courses-list">
+    
+    <view wx:if="{{todayCourses.length > 0}}" class="course-list">
       <view 
-        class="course-item" 
+        class="course-item"
         wx:for="{{todayCourses}}" 
-        wx:key="index"
-        data-course="{{item}}"
-        bindtap="onCourseTap"
-      >
-        <view class="course-time">
-          <text class="time-text">{{item.start_time}}</text>
-          <text class="time-divider">-</text>
-          <text class="time-text">{{item.end_time}}</text>
-        </view>
-        <view class="course-info">
-          <text class="course-name">{{item.course_info.course_name}}</text>
-          <text class="course-location">📍 {{item.course_info.location}}</text>
-          <text class="course-teacher">👨‍🏫 {{item.course_info.teacher}}</text>
-        </view>
-        <view class="course-arrow">></view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 无课程提示 -->
-  <view class="no-courses card fade-in" wx:else>
-    <view class="empty-state">
-      <text class="empty-icon">📅</text>
-      <text class="empty-text">今日无课程安排</text>
-      <text class="empty-desc">好好休息或自主学习吧！</text>
-    </view>
-  </view>
-
-  <!-- 成绩摘要 -->
-  <view class="grades-summary card fade-in" wx:if="{{gradesSummary}}">
-    <view class="card-header">
-      <text class="card-title">成绩概览</text>
-      <text class="more-btn" bindtap="viewGradesDetail">查看详情 ></text>
-    </view>
-    <view class="summary-grid">
-      <view class="summary-item">
-        <text class="summary-value">{{gradesSummary.overall_stats.gpa}}</text>
-        <text class="summary-label">总GPA</text>
-      </view>
-      <view class="summary-item">
-        <text class="summary-value">{{gradesSummary.overall_stats.total_credits}}</text>
-        <text class="summary-label">总学分</text>
-      </view>
-      <view class="summary-item">
-        <text class="summary-value">{{gradesSummary.overall_stats.total_courses}}</text>
-        <text class="summary-label">总课程</text>
-      </view>
-      <view class="summary-item">
-        <text class="summary-value">{{gradesSummary.overall_stats.weighted_average}}</text>
-        <text class="summary-label">加权平均</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 系统公告 -->
-  <view class="announcements card fade-in" wx:if="{{announcements.length > 0}}">
-    <view class="card-title">📢 系统公告</view>
-    <view class="announcement-list">
-      <view 
-        class="announcement-item" 
-        wx:for="{{announcements}}" 
         wx:key="id"
-        data-announcement="{{item}}"
-        bindtap="onAnnouncementTap"
       >
-        <view class="announcement-content">
-          <text class="announcement-title">{{item.title}}</text>
-          <text class="announcement-time">{{item.time}}</text>
+        <view class="course-header">
+          <text class="course-name">{{item.courseName}}</text>
+          <text class="course-time">{{item.timeSlot}}</text>
         </view>
-        <view class="announcement-arrow">></view>
+        <text class="course-info">{{item.teacher}} · {{item.location}}</text>
       </view>
+    </view>
+    
+    <view wx:else class="no-courses">
+      <view class="no-courses-icon">📚</view>
+      <text class="no-courses-text">今天没有课程</text>
+      <text class="no-courses-desc">好好休息，明天继续加油！</text>
     </view>
   </view>
 
-  <!-- 底部间距 -->
-  <view class="bottom-spacer"></view>
+  <!-- 系统通知 -->
+  <view class="notices fade-in">
+    <view class="card-header">
+      <text class="card-title">系统通知</text>
+      <text class="view-all">更多 ></text>
+    </view>
+    
+    <view class="notice-item">
+      <view class="notice-icon"></view>
+      <text class="notice-content">欢迎使用Easy-QFNUJW教务助手</text>
+      <text class="notice-time">刚刚</text>
+    </view>
+    
+    <view class="notice-item">
+      <view class="notice-icon"></view>
+      <text class="notice-content">数据仅供参考，请以学校官方为准</text>
+      <text class="notice-time">1分钟前</text>
+    </view>
+    
+    <view class="notice-item">
+      <view class="notice-icon"></view>
+      <text class="notice-content">建议定期更新获取最新数据</text>
+      <text class="notice-time">5分钟前</text>
+    </view>
+  </view>
+
+  <!-- 快捷操作按钮 -->
+  <view class="quick-actions">
+    <view class="action-btn" bindtap="refreshData">
+      🔄
+    </view>
+    <view class="action-btn secondary" bindtap="showSettings">
+      ⚙️
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{isLoading}}">
+    <view class="loading-icon"></view>
+    <text class="loading-text">正在加载数据...</text>
+  </view>
 </view>

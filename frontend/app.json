@@ -1,45 +1,45 @@
 {
   "pages": [
-    "pages/debug/debug",
     "pages/login/login",
     "pages/index/index",
     "pages/grades/grades",
     "pages/schedule/schedule",
     "pages/stats/stats",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/debug/debug"
   ],
   "window": {
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#007AFF",
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTitleText": "Easy-QFNUJW",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#F8F8F8"
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f8f9fa"
   },
   "tabBar": {
-    "color": "#7A7E83",
-    "selectedColor": "#007AFF",
-    "backgroundColor": "#FFFFFF",
-    "borderStyle": "black",
+    "color": "#95a5a6",
+    "selectedColor": "#2c3e50",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "🏠 首页"
+        "text": "首页"
       },
       {
         "pagePath": "pages/grades/grades",
-        "text": "📊 成绩"
+        "text": "成绩"
       },
       {
         "pagePath": "pages/schedule/schedule",
-        "text": "📅 课表"
+        "text": "课表"
       },
       {
         "pagePath": "pages/stats/stats",
-        "text": "📈 统计"
+        "text": "统计"
       },
       {
         "pagePath": "pages/profile/profile",
-        "text": "👤 我的"
+        "text": "我的"
       }
     ]
   },

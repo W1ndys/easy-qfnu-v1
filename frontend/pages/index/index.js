@@ -1,24 +1,19 @@
-// 首页
+// 首页 - 简洁灰白设计
 const app = getApp()
 
 Page({
   data: {
-    userInfo: null,
+    userInfo: {
+      name: '同学',
+      studentId: '未知'
+    },
+    stats: {
+      totalCourses: '-',
+      avgGpa: '-',
+      totalCredits: '-'
+    },
     todayCourses: [],
-    gradesSummary: null,
-    isLoading: false,
-    currentTime: '',
-    greeting: '',
-    weatherInfo: null,
-    quickActions: [
-      { id: 'grades', name: '成绩查询', icon: '📊', path: '/pages/grades/grades' },
-      { id: 'schedule', name: '课程表', icon: '📅', path: '/pages/schedule/schedule' },
-      { id: 'stats', name: '数据统计', icon: '📈', path: '/pages/stats/stats' },
-      { id: 'capacity', name: '课余量', icon: '👥', path: '/pages/capacity/capacity' }
-    ],
-    announcements: [
-      { id: 1, title: '欢迎使用Easy-QFNUJW', content: '这是一个第三方教务辅助工具，帮助您更便捷地查看教务信息。', time: '2024-01-15' }
-    ]
+    isLoading: false
   },
 
   onLoad() {
@@ -34,8 +29,7 @@ Page({
       return
     }
 
-    this.updateTime()
-    this.loadTodayCourses()
+    this.loadPageData()
   },
 
   onPullDownRefresh() {
@@ -44,174 +38,126 @@ Page({
 
   // 初始化页面
   initPage() {
-    this.updateTime()
-    this.setGreeting()
     this.loadUserInfo()
-    this.loadTodayCourses()
-    this.loadGradesSummary()
-  },
-
-  // 刷新数据
-  async refreshData() {
-    wx.showNavigationBarLoading()
-    
-    try {
-      await Promise.all([
-        this.loadTodayCourses(),
-        this.loadGradesSummary()
-      ])
-      
-      app.showSuccess('刷新成功')
-    } catch (error) {
-      console.error('刷新失败:', error)
-      app.showError('刷新失败')
-    } finally {
-      wx.hideNavigationBarLoading()
-      wx.stopPullDownRefresh()
-    }
-  },
-
-  // 更新当前时间
-  updateTime() {
-    const now = new Date()
-    const timeString = now.toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-    const dateString = now.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'long'
-    })
-    
-    this.setData({
-      currentTime: `${dateString} ${timeString}`
-    })
-
-    // 每分钟更新一次时间
-    setTimeout(() => {
-      this.updateTime()
-    }, 60000)
-  },
-
-  // 设置问候语
-  setGreeting() {
-    const hour = new Date().getHours()
-    let greeting = ''
-    
-    if (hour >= 5 && hour < 12) {
-      greeting = '早上好'
-    } else if (hour >= 12 && hour < 18) {
-      greeting = '下午好'
-    } else {
-      greeting = '晚上好'
-    }
-    
-    this.setData({ greeting })
+    this.loadPageData()
   },
 
   // 加载用户信息
   loadUserInfo() {
-    const studentId = app.globalData.studentId
+    const studentId = app.globalData.studentId || '未知'
     this.setData({
       userInfo: {
         studentId: studentId,
-        name: `同学 ${studentId.slice(-4)}` // 显示学号后4位
+        name: studentId !== '未知' ? `同学 ${studentId.slice(-4)}` : '同学'
       }
+    })
+  },
+
+  // 加载页面数据
+  loadPageData() {
+    this.loadTodayCourses()
+    this.loadStats()
+  },
+
+  // 刷新数据
+  refreshData() {
+    wx.showNavigationBarLoading()
+    this.setData({ isLoading: true })
+
+    Promise.all([
+      this.loadTodayCourses(),
+      this.loadStats()
+    ]).then(() => {
+      app.showSuccess('刷新成功')
+    }).catch(error => {
+      console.error('刷新失败:', error)
+      app.showError('刷新失败')
+    }).finally(() => {
+      this.setData({ isLoading: false })
+      wx.hideNavigationBarLoading()
+      wx.stopPullDownRefresh()
     })
   },
 
   // 加载今日课程
-  async loadTodayCourses() {
-    try {
-      const result = await app.request({
-        url: '/schedule/today',
-        method: 'GET'
-      })
+  loadTodayCourses() {
+    return app.request({
+      url: '/schedule/today',
+      method: 'GET'
+    }).then(result => {
+      const courses = (result.courses || []).map(course => ({
+        id: course.id || Math.random(),
+        courseName: course.course_name || '未知课程',
+        teacher: course.teacher || '未知教师',
+        location: course.location || '未知地点',
+        timeSlot: `${course.start_time || ''}${course.end_time ? '-' + course.end_time : ''}`
+      }))
 
-      this.setData({
-        todayCourses: result.courses || []
-      })
-
-    } catch (error) {
+      this.setData({ todayCourses: courses })
+    }).catch(error => {
       console.error('加载今日课程失败:', error)
-      // 不显示错误提示，避免打扰用户
-    }
+      this.setData({ todayCourses: [] })
+    })
   },
 
-  // 加载成绩摘要
-  async loadGradesSummary() {
-    try {
-      const result = await app.request({
-        url: '/grades/summary',
-        method: 'GET'
-      })
-
+  // 加载统计数据
+  loadStats() {
+    return Promise.all([
+      app.request({ url: '/grades/summary', method: 'GET' }),
+      app.request({ url: '/schedule/summary', method: 'GET' })
+    ]).then(([gradesSummary, scheduleSummary]) => {
       this.setData({
-        gradesSummary: result
+        stats: {
+          totalCourses: scheduleSummary.total_courses || '-',
+          avgGpa: gradesSummary.gpa ? gradesSummary.gpa.toFixed(2) : '-',
+          totalCredits: gradesSummary.total_credits || '-'
+        }
       })
-
-    } catch (error) {
-      console.error('加载成绩摘要失败:', error)
-      // 不显示错误提示
-    }
-  },
-
-  // 快捷操作点击
-  onQuickActionTap(e) {
-    const { path } = e.currentTarget.dataset
-    
-    if (path.startsWith('/pages/')) {
-      // TabBar页面
-      if (['grades', 'schedule', 'stats'].some(tab => path.includes(tab))) {
-        wx.switchTab({ url: path })
-      } else {
-        wx.navigateTo({ url: path })
-      }
-    }
-  },
-
-  // 课程卡片点击
-  onCourseTap(e) {
-    const course = e.currentTarget.dataset.course
-    
-    wx.showModal({
-      title: course.course_info.course_name,
-      content: `教师：${course.course_info.teacher}\n地点：${course.course_info.location}\n时间：${course.start_time}-${course.end_time}`,
-      showCancel: false,
-      confirmText: '知道了'
+    }).catch(error => {
+      console.error('加载统计数据失败:', error)
+      this.setData({
+        stats: {
+          totalCourses: '-',
+          avgGpa: '-',
+          totalCredits: '-'
+        }
+      })
     })
   },
 
-  // 查看更多课程
-  viewMoreCourses() {
-    wx.switchTab({
-      url: '/pages/schedule/schedule'
-    })
-  },
-
-  // 查看成绩详情
-  viewGradesDetail() {
+  // 导航到成绩页面
+  navigateToGrades() {
     wx.switchTab({
       url: '/pages/grades/grades'
     })
   },
 
-  // 公告点击
-  onAnnouncementTap(e) {
-    const announcement = e.currentTarget.dataset.announcement
-    
+  // 导航到课表页面
+  navigateToSchedule() {
+    wx.switchTab({
+      url: '/pages/schedule/schedule'
+    })
+  },
+
+  // 导航到统计页面
+  navigateToStats() {
+    wx.switchTab({
+      url: '/pages/stats/stats'
+    })
+  },
+
+  // 查询课程容量
+  checkCourseCapacity() {
     wx.showModal({
-      title: announcement.title,
-      content: announcement.content,
+      title: '选课助手',
+      content: '此功能正在开发中，敬请期待！',
       showCancel: false,
       confirmText: '知道了'
     })
   },
 
-  // 进入设置页面
-  goToSettings() {
+  // 显示设置
+  showSettings() {
     wx.switchTab({
       url: '/pages/profile/profile'
     })

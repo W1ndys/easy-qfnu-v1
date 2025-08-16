@@ -1,71 +1,98 @@
-<!-- 登录页面 -->
-<view class="login-container">
-  <!-- 顶部Logo和标题 -->
+<!--登录页面 - 简洁灰白设计-->
+<view class="container">
+  <!-- 顶部装饰 -->
+  <view class="top-decoration"></view>
+  
+  <!-- 头部区域 -->
   <view class="login-header">
     <view class="logo">🎓</view>
     <text class="app-title">Easy-QFNUJW</text>
     <text class="app-subtitle">曲阜师范大学教务助手</text>
     <text class="app-desc">第三方教务辅助工具，让学习更简单</text>
   </view>
+
   <!-- 登录表单 -->
   <view class="login-form">
-    <!-- 学号输入 -->
-    <view class="form-group">
-      <text class="form-label">学号</text>
-      <view class="input-wrapper">
-        <input class="form-input {{errors.studentId ? 'error' : ''}}" type="number" placeholder="请输入您的学号" value="{{studentId}}" bindinput="onStudentIdInput" maxlength="12" />
-        <text class="input-icon">👤</text>
+    <view class="login-card">
+      <view class="form-title">账号登录</view>
+      
+      <!-- 学号输入 -->
+      <view class="input-group">
+        <text class="input-label">学号</text>
+        <view class="input-wrapper">
+          <text class="input-icon">👤</text>
+          <input 
+            class="input-field {{errors.studentId ? 'error' : ''}}"
+            placeholder="请输入您的学号"
+            value="{{studentId}}"
+            bindinput="onStudentIdInput"
+            maxlength="20"
+            type="text"
+          />
+        </view>
+        <text class="input-error" wx:if="{{errors.studentId}}">{{errors.studentId}}</text>
       </view>
-      <text wx:if="{{errors.studentId}}" class="form-error">{{errors.studentId}}</text>
-    </view>
-    <!-- 密码输入 -->
-    <view class="form-group">
-      <text class="form-label">密码</text>
-      <view class="input-wrapper">
-        <input class="form-input {{errors.password ? 'error' : ''}}" type="{{showPassword ? 'text' : 'password'}}" placeholder="请输入教务系统密码" value="{{password}}" bindinput="onPasswordInput" />
-        <text class="password-toggle" bindtap="togglePasswordVisibility">
-          {{showPassword ? '🙈' : '👁️'}}
-        </text>
-      </view>
-      <text wx:if="{{errors.password}}" class="form-error">{{errors.password}}</text>
-    </view>
-    <!-- 隐私协议 -->
-    <view class="privacy-section">
-      <checkbox-group bindchange="onPrivacyChange">
-        <label class="privacy-label">
-          <checkbox value="agree" checked="{{agreePrivacy}}" />
-          <text class="privacy-text">
-            我已阅读并同意
-            <text class="link" bindtap="showUserAgreement">《用户协议》</text>
-            和
-            <text class="link" bindtap="showPrivacyPolicy">《隐私政策》</text>
+
+      <!-- 密码输入 -->
+      <view class="input-group">
+        <text class="input-label">密码</text>
+        <view class="input-wrapper">
+          <text class="input-icon">🔒</text>
+          <input 
+            class="input-field {{errors.password ? 'error' : ''}}"
+            placeholder="请输入教务系统密码"
+            value="{{password}}"
+            bindinput="onPasswordInput"
+            password="{{!showPassword}}"
+            maxlength="50"
+          />
+          <text class="password-toggle" bindtap="togglePassword">
+            {{showPassword ? '🙈' : '👁️'}}
           </text>
-        </label>
-      </checkbox-group>
-    </view>
-    <!-- 登录按钮 -->
-    <button class="btn btn-primary {{isLoading ? 'btn-disabled' : ''}}" bindtap="handleLogin" disabled="{{isLoading}}" loading="{{isLoading}}">
-      {{isLoading ? '登录中...' : '登录'}}
-    </button>
-    <!-- 辅助操作 -->
-    <view class="login-actions">
-      <text class="action-link" bindtap="forgotPassword">忘记密码？</text>
-      <text class="action-link" bindtap="contactUs">联系我们</text>
+        </view>
+        <text class="input-error" wx:if="{{errors.password}}">{{errors.password}}</text>
+      </view>
+
+      <!-- 辅助选项 -->
+      <view class="form-options">
+        <view class="remember-me" bindtap="toggleRemember">
+          <view class="checkbox {{rememberMe ? 'checked' : ''}}">
+            <text wx:if="{{rememberMe}}">✓</text>
+          </view>
+          <text>记住学号</text>
+        </view>
+        <text class="forgot-password" bindtap="showHelp">登录帮助</text>
+      </view>
+
+      <!-- 登录按钮 -->
+      <button 
+        class="login-button {{isLoading ? 'loading' : ''}}"
+        bindtap="handleLogin"
+        disabled="{{isLoading}}"
+      >
+        {{isLoading ? '登录中...' : '登录'}}
+      </button>
     </view>
   </view>
-  <!-- 安全提示 -->
-  <view class="security-notice">
-    <view class="notice-title">🔒 安全承诺</view>
-    <view class="notice-content">
-      <text>• 不存储您的密码信息</text>
-      <text>• 数据传输采用HTTPS加密</text>
-      <text>• 仅用于获取教务信息</text>
-      <text>• 严格保护您的隐私</text>
+
+  <!-- 底部信息 -->
+  <view class="login-footer">
+    <view class="footer-links">
+      <text class="footer-link" bindtap="showUserAgreement">用户协议</text>
+      <text class="footer-link" bindtap="showPrivacyPolicy">隐私政策</text>
+      <text class="footer-link" bindtap="contactUs">联系我们</text>
     </view>
+    <text class="footer-info">
+      本应用为第三方开发的教务辅助工具
+      不会保存您的密码，请放心使用
+    </text>
   </view>
-  <!-- 版本信息 -->
-  <view class="version-info">
-    <text class="version-text">Version 4.0.0</text>
-    <text class="copyright">© 2024 Easy-QFNUJW</text>
+
+  <!-- 加载遮罩 -->
+  <view class="loading-overlay" wx:if="{{isLoading}}">
+    <view class="loading-content">
+      <view class="loading-icon"></view>
+      <text class="loading-text">正在登录验证...</text>
+    </view>
   </view>
 </view>

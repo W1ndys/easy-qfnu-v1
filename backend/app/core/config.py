@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     # 应用基础配置
     PROJECT_NAME: str = "Easy-QFNUJW"
-    VERSION: str = "4.0.0"
+    VERSION: str = "0.0.1"
     DEBUG: bool = False
 
     # 服务器配置

@@ -7,7 +7,7 @@ Page({
     password: '',
     isLoading: false,
     showPassword: false,
-    agreePrivacy: false,
+    rememberMe: false,
     errors: {
       studentId: '',
       password: ''
@@ -51,22 +51,22 @@ Page({
   },
 
   // 切换密码显示状态
-  togglePasswordVisibility() {
+  togglePassword() {
     this.setData({
       showPassword: !this.data.showPassword
     })
   },
 
-  // 隐私协议勾选
-  onPrivacyChange(e) {
+  // 切换记住学号
+  toggleRemember() {
     this.setData({
-      agreePrivacy: e.detail.value.length > 0
+      rememberMe: !this.data.rememberMe
     })
   },
 
   // 表单验证
   validateForm() {
-    const { studentId, password, agreePrivacy } = this.data
+    const { studentId, password } = this.data
     const errors = {}
     let isValid = true
 
@@ -88,15 +88,6 @@ Page({
       isValid = false
     }
 
-    // 验证隐私协议
-    if (!agreePrivacy) {
-      wx.showToast({
-        title: '请先同意用户协议',
-        icon: 'none'
-      })
-      isValid = false
-    }
-
     this.setData({ errors })
     return isValid
   },
@@ -112,8 +103,10 @@ Page({
     this.setData({ isLoading: true })
 
     app.login(studentId.trim(), password).then(() => {
-      // 保存学号（不保存密码）
-      wx.setStorageSync('last_student_id', studentId.trim())
+      // 保存学号（如果勾选了记住学号）
+      if (this.data.rememberMe) {
+        wx.setStorageSync('last_student_id', studentId.trim())
+      }
       
       app.showSuccess('登录成功')
       
@@ -149,16 +142,8 @@ Page({
     wx.showModal({
       title: '用户协议',
       content: '这是Easy-QFNUJW用户协议的内容。本应用是第三方教务辅助工具，不会存储您的密码，仅用于获取教务信息。使用本应用即表示您同意我们的服务条款。',
-      showCancel: true,
-      cancelText: '关闭',
-      confirmText: '同意',
-      success: (res) => {
-        if (res.confirm) {
-          this.setData({
-            agreePrivacy: true
-          })
-        }
-      }
+      showCancel: false,
+      confirmText: '知道了'
     })
   },
 
@@ -172,11 +157,11 @@ Page({
     })
   },
 
-  // 忘记密码
-  forgotPassword() {
+  // 显示帮助信息
+  showHelp() {
     wx.showModal({
-      title: '忘记密码',
-      content: '请联系学校教务处或使用学校官方渠道重置密码。本应用无法重置您的教务系统密码。',
+      title: '登录帮助',
+      content: '如遇登录问题：\n1. 检查学号和密码是否正确\n2. 确认网络连接正常\n3. 尝试在学校官网登录\n4. 联系学校教务处重置密码',
       showCancel: false,
       confirmText: '知道了'
     })
@@ -186,7 +171,7 @@ Page({
   contactUs() {
     wx.showModal({
       title: '联系我们',
-      content: '如有问题请加QQ群：123456789 或发送邮件至：support@example.com',
+      content: '如有问题请加QQ群：1053432087 或发送邮件至：w1ndys@qq.com',
       showCancel: true,
       cancelText: '关闭',
       confirmText: '加QQ群',

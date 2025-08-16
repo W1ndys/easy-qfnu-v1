@@ -1,113 +1,217 @@
-<!--个人中心页面-->
+<!--个人中心页面 - 简洁灰白设计-->
 <view class="container">
-  <!-- 用户信息卡片 -->
-  <view class="user-card card" bindtap="onUserInfoTap" wx:if="{{userInfo}}">
-    <view class="user-background">
-      <view class="user-content">
-        <view class="user-avatar">{{userInfo.avatar}}</view>
-        <view class="user-details">
-          <text class="user-name">{{userInfo.name}}</text>
-          <text class="user-id">学号：{{userInfo.studentId}}</text>
-          <text class="user-join">加入时间：{{userInfo.joinDate}}</text>
+  <!-- 用户信息头部 -->
+  <view class="user-header">
+    <view class="user-info">
+      <view class="user-avatar">👨‍🎓</view>
+      <view class="user-details">
+        <text class="user-name">{{userInfo.name || '同学'}}</text>
+        <text class="user-id">学号：{{userInfo.studentId || '未知'}}</text>
+        <view class="user-status">
+          <view class="status-dot"></view>
+          <text>在线状态</text>
         </view>
-      </view>
-      <view class="user-decoration">
-        <text class="decoration-text">Easy-QFNUJW</text>
       </view>
     </view>
   </view>
 
-  <!-- 快捷统计 -->
-  <view class="quick-stats card">
-    <view class="stats-title">使用统计</view>
+  <!-- 统计卡片 -->
+  <view class="stats-cards">
     <view class="stats-grid">
-      <view class="stat-item">
-        <text class="stat-value">{{appVersion}}</text>
-        <text class="stat-label">当前版本</text>
+      <view class="stat-card">
+        <text class="stat-value stat-gpa">{{stats.gpa || '-'}}</text>
+        <text class="stat-label">平均绩点</text>
       </view>
-      <view class="stat-item">
-        <text class="stat-value">30</text>
-        <text class="stat-label">使用天数</text>
+      <view class="stat-card">
+        <text class="stat-value stat-credits">{{stats.totalCredits || '-'}}</text>
+        <text class="stat-label">总学分</text>
       </view>
-      <view class="stat-item">
-        <text class="stat-value">158</text>
-        <text class="stat-label">查询次数</text>
-      </view>
-      <view class="stat-item">
-        <text class="stat-value">12</text>
-        <text class="stat-label">贡献数据</text>
+      <view class="stat-card">
+        <text class="stat-value stat-courses">{{stats.totalCourses || '-'}}</text>
+        <text class="stat-label">课程数</text>
       </view>
     </view>
   </view>
 
   <!-- 功能菜单 -->
-  <view class="menu-list">
-    <view 
-      class="menu-item card"
-      wx:for="{{menuItems}}"
-      wx:key="id"
-      data-id="{{item.id}}"
-      bindtap="onMenuItemTap"
-    >
-      <view class="menu-icon">{{item.icon}}</view>
-      <view class="menu-content">
-        <text class="menu-name">{{item.name}}</text>
-        <text class="menu-desc">{{item.desc}}</text>
+  <view class="menu-sections">
+    <!-- 学习相关 -->
+    <view class="menu-section fade-in">
+      <view class="section-title">学习工具</view>
+      <view class="menu-list">
+        <view class="menu-item" bindtap="navigateToGrades">
+          <view class="menu-icon primary">📊</view>
+          <view class="menu-content">
+            <text class="menu-title">成绩查询</text>
+            <text class="menu-desc">查看各学期成绩详情</text>
+          </view>
+          <text class="menu-arrow">></text>
+        </view>
+        
+        <view class="menu-item" bindtap="navigateToSchedule">
+          <view class="menu-icon success">📅</view>
+          <view class="menu-content">
+            <text class="menu-title">课程表</text>
+            <text class="menu-desc">查看本周课程安排</text>
+          </view>
+          <text class="menu-arrow">></text>
+        </view>
+        
+        <view class="menu-item" bindtap="navigateToStats">
+          <view class="menu-icon warning">📈</view>
+          <view class="menu-content">
+            <text class="menu-title">数据统计</text>
+            <text class="menu-desc">学习数据分析报告</text>
+          </view>
+          <text class="menu-arrow">></text>
+        </view>
       </view>
-      <view class="menu-arrow">></view>
+    </view>
+
+    <!-- 应用设置 -->
+    <view class="menu-section fade-in">
+      <view class="section-title">应用设置</view>
+      <view class="menu-list">
+        <view class="menu-item" bindtap="showSettings">
+          <view class="menu-icon primary">⚙️</view>
+          <view class="menu-content">
+            <text class="menu-title">应用设置</text>
+            <text class="menu-desc">个性化配置选项</text>
+          </view>
+          <text class="menu-arrow">></text>
+        </view>
+        
+        <view class="menu-item" bindtap="clearCache">
+          <view class="menu-icon warning">🗑️</view>
+          <view class="menu-content">
+            <text class="menu-title">清理缓存</text>
+            <text class="menu-desc">清除本地缓存数据</text>
+          </view>
+          <text class="menu-arrow">></text>
+        </view>
+        
+        <view class="menu-item" bindtap="checkUpdate">
+          <view class="menu-icon success">🔄</view>
+          <view class="menu-content">
+            <text class="menu-title">检查更新</text>
+            <text class="menu-desc">获取最新版本</text>
+          </view>
+          <view class="menu-badge" wx:if="{{hasUpdate}}">NEW</view>
+          <text class="menu-arrow">></text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 帮助支持 -->
+    <view class="menu-section fade-in">
+      <view class="section-title">帮助支持</view>
+      <view class="menu-list">
+        <view class="menu-item" bindtap="showUserGuide">
+          <view class="menu-icon primary">📖</view>
+          <view class="menu-content">
+            <text class="menu-title">使用指南</text>
+            <text class="menu-desc">了解应用功能和使用方法</text>
+          </view>
+          <text class="menu-arrow">></text>
+        </view>
+        
+        <view class="menu-item" bindtap="showFeedback">
+          <view class="menu-icon warning">💬</view>
+          <view class="menu-content">
+            <text class="menu-title">意见反馈</text>
+            <text class="menu-desc">提出建议和问题报告</text>
+          </view>
+          <text class="menu-arrow">></text>
+        </view>
+        
+        <view class="menu-item" bindtap="showAbout">
+          <view class="menu-icon success">ℹ️</view>
+          <view class="menu-content">
+            <text class="menu-title">关于应用</text>
+            <text class="menu-desc">版本信息和开发团队</text>
+          </view>
+          <text class="menu-arrow">></text>
+        </view>
+      </view>
     </view>
   </view>
 
-  <!-- 应用信息 -->
-  <view class="app-info card">
-    <view class="info-header">
-      <text class="info-title">应用信息</text>
-    </view>
-    
-    <view class="info-list">
-      <view class="info-item">
-        <text class="info-label">应用名称</text>
-        <text class="info-value">Easy-QFNUJW</text>
-      </view>
-      <view class="info-item">
-        <text class="info-label">版本号</text>
-        <text class="info-value">{{appVersion}}</text>
-      </view>
-      <view class="info-item">
-        <text class="info-label">应用类型</text>
-        <text class="info-value">第三方教务助手</text>
-      </view>
-      <view class="info-item">
-        <text class="info-label">适用学校</text>
-        <text class="info-value">曲阜师范大学</text>
-      </view>
-    </view>
+  <!-- 版本信息 -->
+  <view class="version-info fade-in">
+    <view class="app-logo">🎓</view>
+    <text class="app-name">Easy-QFNUJW</text>
+    <text class="app-version">版本 v4.0.0</text>
+    <text class="app-desc">曲阜师范大学教务辅助工具</text>
+    <text class="developer-info">第三方开发 · 仅供学习使用</text>
   </view>
 
-  <!-- 免责声明 -->
-  <view class="disclaimer card">
-    <view class="disclaimer-header">
-      <text class="disclaimer-icon">⚠️</text>
-      <text class="disclaimer-title">免责声明</text>
-    </view>
-    <view class="disclaimer-content">
-      <text class="disclaimer-text">
-        • 本应用为第三方开发的教务辅助工具，与曲阜师范大学官方无关
-        • 所有数据来源于学校教务系统，如有疑问请以官方系统为准
-        • 请遵守学校相关规定，合理使用本工具
-        • 使用本应用即表示同意相关条款和隐私政策
-      </text>
-    </view>
-  </view>
-
-  <!-- 退出登录按钮 -->
+  <!-- 退出登录 -->
   <view class="logout-section">
-    <button class="logout-btn" bindtap="logout">
-      <text class="logout-icon">🚪</text>
-      <text class="logout-text">退出登录</text>
+    <button class="logout-btn" bindtap="confirmLogout">
+      退出登录
     </button>
   </view>
 
-  <!-- 底部间距 -->
-  <view class="bottom-spacer"></view>
+  <!-- 设置弹窗 -->
+  <view class="settings-modal" wx:if="{{showSettingsModal}}" bindtap="hideSettings">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">应用设置</text>
+      </view>
+      
+      <view class="modal-body">
+        <view class="setting-item">
+          <view>
+            <text class="setting-label">自动刷新</text>
+            <text class="setting-desc">进入页面时自动获取最新数据</text>
+          </view>
+          <view class="setting-control">
+            <view 
+              class="switch {{settings.autoRefresh ? 'active' : ''}}"
+              data-key="autoRefresh"
+              bindtap="toggleSetting"
+            >
+              <view class="switch-thumb"></view>
+            </view>
+          </view>
+        </view>
+        
+        <view class="setting-item">
+          <view>
+            <text class="setting-label">数据缓存</text>
+            <text class="setting-desc">缓存数据以提高加载速度</text>
+          </view>
+          <view class="setting-control">
+            <view 
+              class="switch {{settings.enableCache ? 'active' : ''}}"
+              data-key="enableCache"
+              bindtap="toggleSetting"
+            >
+              <view class="switch-thumb"></view>
+            </view>
+          </view>
+        </view>
+        
+        <view class="setting-item">
+          <view>
+            <text class="setting-label">消息推送</text>
+            <text class="setting-desc">接收重要通知和更新提醒</text>
+          </view>
+          <view class="setting-control">
+            <view 
+              class="switch {{settings.enableNotification ? 'active' : ''}}"
+              data-key="enableNotification"
+              bindtap="toggleSetting"
+            >
+              <view class="switch-thumb"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="modal-footer">
+        <button class="modal-close-btn" bindtap="hideSettings">完成</button>
+      </view>
+    </view>
+  </view>
 </view>
