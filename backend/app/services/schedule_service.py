@@ -13,18 +13,17 @@ import re
 from app.core.config import settings
 from app.core.security import SessionExpiredError
 from app.core.database import DatabaseManager
-from app.services.auth_service import AuthService
+from app.services.base_service import BaseService
 from app.models.schedule import Schedule, CourseInfo, ScheduleResponse, CourseCapacity
 
 logger = logging.getLogger(__name__)
 
 
-class ScheduleService:
+class ScheduleService(BaseService):
     """课表服务类"""
 
     def __init__(self, db: DatabaseManager):
-        self.db = db
-        self.auth_service = AuthService(db)
+        super().__init__(db)
 
     async def get_student_schedule(
         self,
@@ -65,10 +64,8 @@ class ScheduleService:
                 settings.QFNU_SCHEDULE_URL, params=params, timeout=10
             )
 
-            # 检查是否需要重新登录
-            if "login" in response.url.lower():
-                await self.auth_service.clear_session(student_id)
-                raise SessionExpiredError("Session已过期")
+            # 检查session是否过期
+            await self.handle_session_expired(student_id, response.text, response.url)
 
             # 解析课表数据
             schedule_data = self._parse_schedule_html(response.text)
@@ -117,13 +114,13 @@ class ScheduleService:
                 return schedule_list
 
             # 解析课表网格
-            rows = schedule_table.find_all("tr")
+            rows = schedule_table.find_all("tr")  # type: ignore
 
             for row_idx, row in enumerate(rows[1:], 1):  # 跳过表头
-                cells = row.find_all(["td", "th"])
+                cells = row.find_all(["td", "th"])  # type: ignore
 
                 for col_idx, cell in enumerate(cells[1:], 1):  # 跳过时间列
-                    course_divs = cell.find_all("div", class_="kbcontent")
+                    course_divs = cell.find_all("div", class_="kbcontent")  # type: ignore
 
                     for course_div in course_divs:
                         course_text = course_div.get_text(strip=True)
@@ -326,10 +323,8 @@ class ScheduleService:
                 capacity_url, params={"course_id": course_id}, timeout=10
             )
 
-            # 检查是否需要重新登录
-            if "login" in response.url.lower():
-                await self.auth_service.clear_session(student_id)
-                raise SessionExpiredError("Session已过期")
+            # 检查session是否过期
+            await self.handle_session_expired(student_id, response.text, response.url)
 
             # 解析容量信息（这里需要根据实际页面结构实现）
             capacity_info = self._parse_capacity_html(response.text, course_id)
@@ -343,9 +338,7 @@ class ScheduleService:
             logger.error(f"获取课程容量过程发生错误: {e}")
             raise
 
-    def _parse_capacity_html(
-        self, html_content: str, course_id: str
-    ) -> CourseCapacity:
+    def _parse_capacity_html(self, html_content: str, course_id: str) -> CourseCapacity:
         """
         解析课程容量页面HTML
 
