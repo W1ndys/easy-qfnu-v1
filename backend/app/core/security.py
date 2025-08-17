@@ -3,7 +3,7 @@
 JWT令牌生成、验证和用户认证
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Optional, Dict, Any
 import jwt
 from passlib.context import CryptContext
@@ -32,13 +32,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode = data.copy()
 
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(
+        expire = datetime.now(UTC) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
 
-    to_encode.update({"exp": expire, "iat": datetime.utcnow()})
+    to_encode.update({"exp": expire, "iat": datetime.now(UTC)})
 
     try:
         encoded_jwt = jwt.encode(
@@ -67,7 +67,7 @@ def verify_token(token: str) -> Optional[Dict[str, Any]]:
 
         # 检查令牌是否过期
         exp = payload.get("exp")
-        if exp and datetime.utcnow() > datetime.fromtimestamp(exp):
+        if exp and datetime.now(UTC) > datetime.fromtimestamp(exp, UTC):
             logger.warning("JWT令牌已过期")
             return None
 

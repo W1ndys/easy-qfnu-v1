@@ -181,7 +181,7 @@ class AuthService:
             raise
 
     async def get_or_create_user(
-        self, student_id: str, openid: str = None
+        self, student_id: str, openid: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         获取或创建用户记录

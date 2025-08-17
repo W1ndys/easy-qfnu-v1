@@ -54,3 +54,11 @@ class CourseCapacity(BaseModel):
     enrolled_count: int
     available_spots: int
     is_full: bool
+
+
+class ScheduleResponse(BaseModel):
+    """课表响应模型"""
+
+    schedule: List[Schedule]
+    current_week: int
+    semester: str

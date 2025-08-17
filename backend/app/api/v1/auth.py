@@ -68,7 +68,7 @@ async def login(login_data: LoginRequest, db=Depends(get_db)):
         # 生成JWT令牌
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"sub": user.student_id, "user_id": user.id},
+            data={"sub": user["student_id"], "user_id": user["id"]},
             expires_delta=access_token_expires,
         )
 
