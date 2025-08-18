@@ -25,13 +25,13 @@ def read_root():
 
 @app.post("/login/")
 async def login(form_data: UserLogin):
-    # 2. 调用真实的登录函数
-    success = login_to_university(
+    # 2. 调用真实的登录函数，现在返回session对象或None
+    session = login_to_university(
         student_id=form_data.student_id, password=form_data.password
     )
 
     # 3. 根据登录结果，返回不同响应
-    if not success:
+    if session is None:
         # 如果登录失败，抛出一个HTTPException
         # 这会自动向前端返回一个 401 Unauthorized 错误
         raise HTTPException(status_code=401, detail="学号或密码错误，登录失败")
@@ -40,5 +40,9 @@ async def login(form_data: UserLogin):
     # 这里的 "YOUR_SECRET_KEY" 应该是一个复杂且保密的字符串
     token_data = {"sub": form_data.student_id}
     access_token = jwt.encode(token_data, "YOUR_SECRET_KEY", algorithm="HS256")
+
+    # 注意：这里我们暂时关闭session，因为当前API设计中没有保存session的地方
+    # 在实际项目中，您可能需要将session保存到某个地方（如Redis）以供后续使用
+    session.close()
 
     return {"access_token": access_token, "token_type": "bearer"}

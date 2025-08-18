@@ -42,10 +42,10 @@ def get_random_code(session):
         return None
 
 
-def login_to_university(student_id: str, password: str, max_retries: int = 3) -> bool:
+def login_to_university(student_id: str, password: str, max_retries: int = 3):
     """
     尝试登录到学校教务系统。
-    成功返回 True，失败返回 False。
+    成功返回 session 对象，失败返回 None。
     请求体只有两个，一个是RANDOMCODE，一个是encoded，是学号和密码分别base64编码之后用%%%拼接
     学号和密码base64编码之后用%%%拼接
 
@@ -53,6 +53,10 @@ def login_to_university(student_id: str, password: str, max_retries: int = 3) ->
         student_id: 学号
         password: 密码
         max_retries: 最大重试次数（主要用于验证码识别错误的重试）
+
+    Returns:
+        requests.Session: 登录成功时返回已登录的session对象
+        None: 登录失败时返回None
     """
     print(f"正在尝试使用学号 {student_id} 登录...")
 
@@ -65,71 +69,79 @@ def login_to_university(student_id: str, password: str, max_retries: int = 3) ->
         print(f"第 {attempt + 1} 次尝试...")
 
         try:
-            with requests.Session() as session:
-                # 先获取验证码，确保在同一个session中
-                print("正在获取验证码...")
-                random_code = get_random_code(session)
+            # 创建一个新的session对象
+            session = requests.Session()
 
-                if random_code is None:
-                    print(f"第 {attempt + 1} 次尝试：获取验证码失败，准备重试...")
-                    if attempt < max_retries - 1:
-                        continue
-                    else:
-                        print("获取验证码失败次数已达上限。")
-                        return False
+            # 先获取验证码，确保在同一个session中
+            print("正在获取验证码...")
+            random_code = get_random_code(session)
 
-                form_data = {
-                    "RANDOMCODE": random_code,
-                    "encoded": encoded,
-                }
-
-                print(f"登录数据: RANDOMCODE={random_code}, encoded={encoded[:20]}...")
-
-                response = session.post(
-                    LOGIN_URL, headers=HEADERS, data=form_data, timeout=10
-                )
-
-                print(f"登录响应状态码: {response.status_code}")
-
-                # 检查常见的失败提示
-                if "密码错误" in response.text or "用户名或密码错误" in response.text:
-                    print("登录失败：用户名或密码错误。")
-                    return False
-
-                if "验证码错误" in response.text or "验证码不正确" in response.text:
-                    print(f"第 {attempt + 1} 次尝试：验证码错误，准备重试...")
-                    if attempt < max_retries - 1:
-                        continue
-                    else:
-                        print("验证码重试次数已用完。")
-                        return False
-
-                # 登录后，访问主页判断是否登录成功
-                main_page_url = "http://zhjw.qfnu.edu.cn/jsxsd/framework/xsMain.jsp"
-                main_page_resp = session.get(main_page_url, headers=HEADERS, timeout=10)
-
-                if (
-                    "教学一体化服务平台" in main_page_resp.text
-                    or "学生个人中心" in main_page_resp.text
-                ):
-                    print("登录成功！")
-                    return True
-
-                # 如果没有明确的错误信息，可能是其他问题
-                print(f"登录响应内容片段: {response.text[:200]}...")
-                print("登录失败：可能是验证码识别错误或其他未知原因。")
-
+            if random_code is None:
+                print(f"第 {attempt + 1} 次尝试：获取验证码失败，准备重试...")
+                session.close()  # 关闭失败的session
                 if attempt < max_retries - 1:
-                    print("准备重试...")
                     continue
+                else:
+                    print("获取验证码失败次数已达上限。")
+                    return None
+
+            form_data = {
+                "RANDOMCODE": random_code,
+                "encoded": encoded,
+            }
+
+            print(f"登录数据: RANDOMCODE={random_code}, encoded={encoded[:20]}...")
+
+            response = session.post(
+                LOGIN_URL, headers=HEADERS, data=form_data, timeout=10
+            )
+
+            print(f"登录响应状态码: {response.status_code}")
+
+            # 检查常见的失败提示
+            if "密码错误" in response.text or "用户名或密码错误" in response.text:
+                print("登录失败：用户名或密码错误。")
+                session.close()  # 关闭失败的session
+                return None
+
+            if "验证码错误" in response.text or "验证码不正确" in response.text:
+                print(f"第 {attempt + 1} 次尝试：验证码错误，准备重试...")
+                session.close()  # 关闭失败的session
+                if attempt < max_retries - 1:
+                    continue
+                else:
+                    print("验证码重试次数已用完。")
+                    return None
+
+            # 登录后，访问主页判断是否登录成功
+            main_page_url = "http://zhjw.qfnu.edu.cn/jsxsd/framework/xsMain.jsp"
+            main_page_resp = session.get(main_page_url, headers=HEADERS, timeout=10)
+
+            if (
+                "教学一体化服务平台" in main_page_resp.text
+                or "学生个人中心" in main_page_resp.text
+            ):
+                print("登录成功！")
+                return session  # 返回成功登录的session对象
+
+            # 如果没有明确的错误信息，可能是其他问题
+            print(f"登录响应内容片段: {response.text[:200]}...")
+            print("登录失败：可能是验证码识别错误或其他未知原因。")
+
+            session.close()  # 关闭失败的session
+            if attempt < max_retries - 1:
+                print("准备重试...")
+                continue
 
         except requests.exceptions.RequestException as e:
             print(f"网络请求出错: {e}")
+            if "session" in locals():
+                session.close()  # 关闭session
             if attempt < max_retries - 1:
                 print("网络错误，准备重试...")
                 continue
             else:
-                return False
+                return None
 
     print(f"登录失败：已尝试 {max_retries} 次。")
-    return False
+    return None
