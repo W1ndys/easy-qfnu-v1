@@ -1,6 +1,6 @@
-# Easy-QFNUJW 后端项目
+# Easy-QFNU 后端项目
 
-Easy-QFNUJW 是一个基于 FastAPI 的曲阜师范大学教务辅助工具后端服务。
+Easy-QFNU 是一个基于 FastAPI 的曲阜师范大学教务辅助工具后端服务。
 
 ## 项目特点
 
@@ -191,8 +191,8 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 构建和运行：
 ```bash
-docker build -t easy-qfnujw-backend .
-docker run -p 8000:8000 easy-qfnujw-backend
+docker build -t Easy-QFNU-backend .
+docker run -p 8000:8000 Easy-QFNU-backend
 ```
 
 ## 安全特性

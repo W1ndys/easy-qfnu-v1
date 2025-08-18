@@ -13,7 +13,7 @@
 					<text class="logo-text">📚</text>
 				</view>
 			</view>
-			<text class="app-title">Easy-QFNUJW</text>
+			<text class="app-title">Easy-QFNU</text>
 			<text class="app-subtitle">曲阜师范大学教务辅助工具</text>
 			<text class="disclaimer">非官方应用</text>
 		</view>

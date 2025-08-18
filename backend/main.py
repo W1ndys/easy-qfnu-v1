@@ -1,5 +1,5 @@
 """
-Easy-QFNUJW 微信小程序后端主程序
+Easy-QFNU 微信小程序后端主程序
 FastAPI + SQLite 架构
 """
 
@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
 
 # 创建FastAPI应用实例
 app = FastAPI(
-    title="Easy-QFNUJW API",
+    title="Easy-QFNU API",
     description="曲阜师范大学教务辅助工具后端API",
     version="0.0.1",
     lifespan=lifespan,
@@ -85,13 +85,13 @@ app.include_router(
 @app.get("/")
 async def root():
     """根路径"""
-    return {"message": "Easy-QFNUJW API Server", "version": "0.0.1"}
+    return {"message": "Easy-QFNU API Server", "version": "0.0.1"}
 
 
 @app.get("/health")
 async def health_check():
     """健康检查接口"""
-    return {"status": "healthy", "service": "easy-qfnujw-api"}
+    return {"status": "healthy", "service": "Easy-QFNU-api"}
 
 
 if __name__ == "__main__":

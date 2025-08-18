@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     """应用程序配置"""
 
     # 应用基础配置
-    PROJECT_NAME: str = "Easy-QFNUJW"
+    PROJECT_NAME: str = "Easy-QFNU"
     VERSION: str = "0.0.1"
     DEBUG: bool = False
 
