@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import jwt
 from fastapi import Depends
-from scraper import login_to_university, get_grades
+from scraper import login_to_university, get_grades, calculate_gpa_advanced
 from database import save_session, get_session
 from auth import get_current_user
 
@@ -16,6 +16,12 @@ app = FastAPI()
 class UserLogin(BaseModel):
     student_id: str
     password: str
+
+
+class GPACalculateRequest(BaseModel):
+    semester: str = ""  # 空字符串表示全部学期
+    exclude_indices: list[int] = []  # 要排除的课程序号列表
+    remove_retakes: bool = False  # 是否去除重修补考，取最高绩点
 
 
 @app.get("/")
@@ -74,6 +80,71 @@ async def read_user_grades(student_id: str = Depends(get_current_user)):
         )
 
     return {"student_id": student_id, "grades": grades_data}
+
+
+@app.post("/calculate-gpa/")
+async def calculate_custom_gpa(
+    request: GPACalculateRequest, student_id: str = Depends(get_current_user)
+):
+    """
+    自定义GPA计算接口。
+    支持指定学期、排除特定课程、处理重修补考等功能。
+    """
+    print(f"正在为学号 {student_id} 计算自定义GPA...")
+
+    # 从数据库获取该用户的 session
+    session = get_session(student_id=student_id)
+    if session is None:
+        raise HTTPException(status_code=401, detail="Session不存在或已失效，请重新登录")
+
+    # 获取成绩数据
+    grades_result = get_grades(session=session, semester=request.semester)
+    session.close()
+
+    if not grades_result.get("success", False):
+        raise HTTPException(
+            status_code=500,
+            detail=f"获取成绩失败: {grades_result.get('message', '未知错误')}",
+        )
+
+    grades_data = grades_result.get("data", [])
+
+    # 计算自定义GPA
+    gpa_result = calculate_gpa_advanced(
+        grades_data=grades_data,
+        exclude_indices=request.exclude_indices,
+        remove_retakes=request.remove_retakes,
+    )
+
+    return {
+        "student_id": student_id,
+        "request_params": {
+            "semester": request.semester if request.semester else "全部学期",
+            "excluded_courses": len(request.exclude_indices),
+            "remove_retakes": request.remove_retakes,
+        },
+        "gpa_result": gpa_result,
+        "total_courses_analyzed": len(grades_data),
+    }
+
+
+@app.get("/semesters/")
+async def get_available_semesters_api(student_id: str = Depends(get_current_user)):
+    """
+    获取可用的学期列表。
+    """
+    from scraper import get_available_semesters
+
+    # 从数据库获取该用户的 session
+    session = get_session(student_id=student_id)
+    if session is None:
+        raise HTTPException(status_code=401, detail="Session不存在或已失效，请重新登录")
+
+    # 获取学期列表
+    semesters_result = get_available_semesters(session=session)
+    session.close()
+
+    return {"student_id": student_id, "semesters": semesters_result}
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ import base64
 import ddddocr
 from bs4 import BeautifulSoup
 import re
+from typing import Optional, List
 
 # 伪造一个浏览器头，让请求看起来更像真实用户
 HEADERS = {
@@ -292,10 +293,18 @@ def get_grades(session: requests.Session, semester: str = ""):
             except Exception as debug_e:
                 print(f"调试：保存响应内容失败: {debug_e}")
 
+        # 计算各种GPA数据
+        gpa_results = {
+            "basic_gpa": calculate_gpa_advanced(grades_data),
+            "no_retakes_gpa": calculate_gpa_advanced(grades_data, remove_retakes=True),
+        }
+
         return {
             "success": True,
             "message": f"成功获取{len(grades_data)}条成绩记录",
             "data": grades_data,
+            "gpa_analysis": gpa_results,
+            "total_courses": len(grades_data),
         }
 
     except requests.exceptions.RequestException as e:
@@ -373,9 +382,209 @@ def get_available_semesters(session: requests.Session):
         return {"success": False, "message": f"获取学期列表时出错: {e}", "data": []}
 
 
+def calculate_gpa_advanced(
+    grades_data: list,
+    exclude_indices: Optional[List[int]] = None,
+    remove_retakes: bool = False,
+):
+    """
+    高级GPA计算功能，支持多种计算模式。
+
+    Args:
+        grades_data: 成绩数据列表
+        exclude_indices: 要排除的课程序号列表
+        remove_retakes: 是否去除重修补考，取最高绩点
+
+    Returns:
+        dict: 包含详细GPA计算结果的字典
+    """
+    try:
+        if exclude_indices is None:
+            exclude_indices = []
+
+        # 过滤数据
+        filtered_data = []
+        for grade_item in grades_data:
+            # 排除指定序号的课程
+            sequence = grade_item.get("序号", "")
+            if sequence and str(sequence) in [str(idx) for idx in exclude_indices]:
+                continue
+            filtered_data.append(grade_item)
+
+        # 处理重修补考（如果启用）
+        if remove_retakes:
+            filtered_data = _process_retakes(filtered_data)
+
+        # 按学年分组计算
+        yearly_gpa = _calculate_yearly_gpa(filtered_data)
+
+        # 计算总体GPA
+        total_gpa = _calculate_total_gpa(filtered_data)
+
+        return {
+            "success": True,
+            "total_gpa": total_gpa,
+            "yearly_gpa": yearly_gpa,
+            "excluded_count": len(exclude_indices),
+            "retakes_processed": remove_retakes,
+            "message": "GPA计算完成",
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "total_gpa": {},
+            "yearly_gpa": {},
+            "excluded_count": 0,
+            "retakes_processed": False,
+            "message": f"计算GPA时出错: {e}",
+        }
+
+
+def _process_retakes(grades_data: list):
+    """
+    处理重修补考，保留最高绩点的成绩。
+
+    Args:
+        grades_data: 成绩数据列表
+
+    Returns:
+        list: 处理后的成绩数据列表
+    """
+    # 按课程名称分组
+    course_groups = {}
+    for grade_item in grades_data:
+        course_name = grade_item.get("课程名称", "")
+        course_code = grade_item.get("课程编号", "")
+        key = f"{course_code}_{course_name}"
+
+        if key not in course_groups:
+            course_groups[key] = []
+        course_groups[key].append(grade_item)
+
+    # 对每个课程组，保留绩点最高的记录
+    processed_data = []
+    for course_list in course_groups.values():
+        if len(course_list) == 1:
+            processed_data.append(course_list[0])
+        else:
+            # 找出绩点最高的记录
+            best_record = course_list[0]
+            best_gpa = 0.0
+
+            for record in course_list:
+                try:
+                    gpa = float(record.get("绩点", "0"))
+                    if gpa > best_gpa:
+                        best_gpa = gpa
+                        best_record = record
+                except ValueError:
+                    continue
+
+            processed_data.append(best_record)
+
+    return processed_data
+
+
+def _calculate_yearly_gpa(grades_data: list):
+    """
+    按学年计算加权GPA。
+
+    Args:
+        grades_data: 成绩数据列表
+
+    Returns:
+        dict: 按学年组织的GPA数据
+    """
+    yearly_data = {}
+
+    for grade_item in grades_data:
+        semester = grade_item.get("开课学期", "")
+        if not semester:
+            continue
+
+        # 提取学年 (例如: "2022-2023-1" -> "2022-2023")
+        try:
+            year = "-".join(semester.split("-")[:2])
+        except:
+            continue
+
+        if year not in yearly_data:
+            yearly_data[year] = []
+        yearly_data[year].append(grade_item)
+
+    # 为每个学年计算GPA
+    yearly_gpa = {}
+    for year, year_grades in yearly_data.items():
+        gpa_result = _calculate_total_gpa(year_grades)
+        yearly_gpa[year] = gpa_result
+
+    return yearly_gpa
+
+
+def _calculate_total_gpa(grades_data: list):
+    """
+    计算总体加权GPA。
+
+    Args:
+        grades_data: 成绩数据列表
+
+    Returns:
+        dict: GPA计算结果
+    """
+    total_credit = 0.0
+    total_grade_point = 0.0
+    course_count = 0
+    valid_courses = []
+
+    for grade_item in grades_data:
+        credit_str = grade_item.get("学分", "0")
+        grade_point_str = grade_item.get("绩点", "0")
+
+        try:
+            credit = float(credit_str) if credit_str and credit_str != "" else 0.0
+            grade_point = (
+                float(grade_point_str)
+                if grade_point_str and grade_point_str != ""
+                else 0.0
+            )
+
+            if credit > 0 and grade_point >= 0:  # 绩点可以为0
+                total_credit += credit
+                total_grade_point += credit * grade_point
+                course_count += 1
+                valid_courses.append(
+                    {
+                        "course_name": grade_item.get("课程名称", ""),
+                        "credit": credit,
+                        "grade_point": grade_point,
+                        "semester": grade_item.get("开课学期", ""),
+                    }
+                )
+
+        except ValueError:
+            continue
+
+    if total_credit > 0:
+        weighted_gpa = total_grade_point / total_credit
+        return {
+            "weighted_gpa": round(weighted_gpa, 3),
+            "total_credit": round(total_credit, 1),
+            "course_count": course_count,
+            "courses": valid_courses,
+        }
+    else:
+        return {
+            "weighted_gpa": 0.0,
+            "total_credit": 0.0,
+            "course_count": 0,
+            "courses": [],
+        }
+
+
 def calculate_gpa(grades_data: list):
     """
-    根据成绩数据计算GPA。
+    简单GPA计算（保持向后兼容）。
 
     Args:
         grades_data: 成绩数据列表
@@ -383,56 +592,21 @@ def calculate_gpa(grades_data: list):
     Returns:
         dict: 包含GPA计算结果的字典
     """
-    try:
-        total_credit = 0.0
-        total_grade_point = 0.0
-        course_count = 0
-
-        for grade_item in grades_data:
-            # 获取学分和绩点
-            credit_str = grade_item.get("学分", "0")
-            grade_point_str = grade_item.get("绩点", "0")
-
-            try:
-                credit = float(credit_str) if credit_str and credit_str != "" else 0.0
-                grade_point = (
-                    float(grade_point_str)
-                    if grade_point_str and grade_point_str != ""
-                    else 0.0
-                )
-
-                if credit > 0 and grade_point > 0:
-                    total_credit += credit
-                    total_grade_point += credit * grade_point
-                    course_count += 1
-
-            except ValueError:
-                # 如果无法转换为数字，跳过该条记录
-                continue
-
-        if total_credit > 0:
-            gpa = total_grade_point / total_credit
-            return {
-                "success": True,
-                "gpa": round(gpa, 2),
-                "total_credit": total_credit,
-                "course_count": course_count,
-                "message": f"计算完成：总学分{total_credit}，课程数{course_count}",
-            }
-        else:
-            return {
-                "success": False,
-                "gpa": 0.0,
-                "total_credit": 0.0,
-                "course_count": 0,
-                "message": "没有有效的成绩数据用于计算GPA",
-            }
-
-    except Exception as e:
+    result = calculate_gpa_advanced(grades_data)
+    if result["success"]:
+        total_gpa = result["total_gpa"]
+        return {
+            "success": True,
+            "gpa": total_gpa.get("weighted_gpa", 0.0),
+            "total_credit": total_gpa.get("total_credit", 0.0),
+            "course_count": total_gpa.get("course_count", 0),
+            "message": f"计算完成：总学分{total_gpa.get('total_credit', 0)}，课程数{total_gpa.get('course_count', 0)}",
+        }
+    else:
         return {
             "success": False,
             "gpa": 0.0,
             "total_credit": 0.0,
             "course_count": 0,
-            "message": f"计算GPA时出错: {e}",
+            "message": result["message"],
         }
