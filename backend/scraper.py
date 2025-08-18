@@ -149,13 +149,13 @@ def login_to_university(student_id: str, password: str, max_retries: int = 3):
     return None
 
 
-def get_grades(session: requests.Session, semester: str = "2025-2026-1"):
+def get_grades(session: requests.Session, semester: str = ""):
     """
     获取当前登录用户的成绩。
 
     Args:
         session: 已登录的requests.Session对象
-        semester: 学期参数，格式为 "2025-2026-1"，默认为当前学期
+        semester: 学期参数，格式为 "2024-2025-2"，空字符串表示获取全部学期
 
     Returns:
         dict: 包含成绩信息的字典，格式为：
@@ -184,24 +184,35 @@ def get_grades(session: requests.Session, semester: str = "2025-2026-1"):
             ]
         }
     """
-    print(f"正在获取学期 {semester} 的成绩...")
+    print(f"正在获取学期 {semester if semester else '全部学期'} 的成绩...")
 
     try:
-        # 构建请求URL
-        grades_url = f"http://zhjw.qfnu.edu.cn/jsxsd/kscj/cjcx_list?kksj={semester}"
+        # 构建请求URL - 使用POST方法
+        grades_url = "http://zhjw.qfnu.edu.cn/jsxsd/kscj/cjcx_list"
 
         # 设置请求头
         headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Cache-Control": "max-age=0",
+            "Origin": "http://zhjw.qfnu.edu.cn",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Referer": "http://zhjw.qfnu.edu.cn/jsxsd/kscj/cjcx_query",
             "Accept-Encoding": "gzip, deflate",
             "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-            "Referer": "http://zhjw.qfnu.edu.cn/jsxsd/kscj/cjcx_frm",
             "Upgrade-Insecure-Requests": "1",
         }
 
-        # 发送GET请求获取成绩页面
-        response = session.get(grades_url, headers=headers, timeout=10)
+        # 构建POST数据
+        post_data = {
+            "kksj": semester,  # 学期参数，空字符串表示全部学期
+            "kcxz": "",  # 课程性质，空表示全部
+            "kcmc": "",  # 课程名称，空表示全部
+            "xsfs": "all",  # 显示方式，all表示显示全部
+        }
+
+        # 发送POST请求获取成绩页面
+        response = session.post(grades_url, headers=headers, data=post_data, timeout=10)
 
         if response.status_code != 200:
             return {
@@ -227,7 +238,8 @@ def get_grades(session: requests.Session, semester: str = "2025-2026-1"):
         headers = []
         for th in headers_row.find_all("th"):  # type: ignore
             header_text = th.get_text(strip=True)
-            headers.append(header_text)
+            if header_text:  # 只添加非空的列名
+                headers.append(header_text)
 
         print(f"表格列名: {headers}")
 
@@ -239,24 +251,46 @@ def get_grades(session: requests.Session, semester: str = "2025-2026-1"):
         for row in data_rows:
             cells = row.find_all("td")  # type: ignore
 
+            # 如果没有td元素，跳过该行
+            if not cells:
+                continue
+
             # 检查是否是"未查询到数据"的行
             if len(cells) == 1 and "未查询到数据" in cells[0].get_text(strip=True):
                 print("未查询到成绩数据")
                 break
 
-            # 如果单元格数量与表头不匹配，跳过该行
-            if len(cells) != len(headers):
-                continue
+            # 如果单元格数量少于预期，可能需要调整解析逻辑
+            if len(cells) < len(headers):
+                print(
+                    f"警告：数据行单元格数量({len(cells)})少于表头数量({len(headers)})"
+                )
+                # 继续处理，用空字符串填充缺失的单元格
 
             # 提取每行数据
             row_data = {}
-            for i, cell in enumerate(cells):
-                if i < len(headers):
-                    row_data[headers[i]] = cell.get_text(strip=True)
+            for i, header in enumerate(headers):
+                if i < len(cells):
+                    cell_text = cells[i].get_text(strip=True)
+                    row_data[header] = cell_text
+                else:
+                    row_data[header] = ""  # 填充空值
 
-            grades_data.append(row_data)
+            # 只有当行数据包含有效信息时才添加（至少有序号或课程名称）
+            if row_data.get("序号") or row_data.get("课程名称"):
+                grades_data.append(row_data)
 
         print(f"成功获取 {len(grades_data)} 条成绩记录")
+
+        # 调试信息：保存响应内容到文件以便分析
+        if len(grades_data) == 0:
+            print("调试：未获取到成绩数据，保存响应内容用于分析...")
+            try:
+                with open("debug_response.html", "w", encoding="utf-8") as f:
+                    f.write(response.text)
+                print("调试：响应内容已保存到 debug_response.html")
+            except Exception as debug_e:
+                print(f"调试：保存响应内容失败: {debug_e}")
 
         return {
             "success": True,
