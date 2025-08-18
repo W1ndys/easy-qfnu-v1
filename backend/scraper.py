@@ -2,6 +2,8 @@
 import requests
 import base64
 import ddddocr
+from bs4 import BeautifulSoup
+import re
 
 # 伪造一个浏览器头，让请求看起来更像真实用户
 HEADERS = {
@@ -145,3 +147,258 @@ def login_to_university(student_id: str, password: str, max_retries: int = 3):
 
     print(f"登录失败：已尝试 {max_retries} 次。")
     return None
+
+
+def get_grades(session: requests.Session, semester: str = "2025-2026-1"):
+    """
+    获取当前登录用户的成绩。
+
+    Args:
+        session: 已登录的requests.Session对象
+        semester: 学期参数，格式为 "2025-2026-1"，默认为当前学期
+
+    Returns:
+        dict: 包含成绩信息的字典，格式为：
+        {
+            "success": bool,
+            "message": str,
+            "data": [
+                {
+                    "序号": str,
+                    "开课学期": str,
+                    "课程编号": str,
+                    "课程名称": str,
+                    "分组名": str,
+                    "成绩": str,
+                    "成绩标识": str,
+                    "学分": str,
+                    "总学时": str,
+                    "绩点": str,
+                    "补重学期": str,
+                    "考核方式": str,
+                    "考试性质": str,
+                    "课程属性": str,
+                    "课程性质": str,
+                    "课程类别": str
+                }
+            ]
+        }
+    """
+    print(f"正在获取学期 {semester} 的成绩...")
+
+    try:
+        # 构建请求URL
+        grades_url = f"http://zhjw.qfnu.edu.cn/jsxsd/kscj/cjcx_list?kksj={semester}"
+
+        # 设置请求头
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Encoding": "gzip, deflate",
+            "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Referer": "http://zhjw.qfnu.edu.cn/jsxsd/kscj/cjcx_frm",
+            "Upgrade-Insecure-Requests": "1",
+        }
+
+        # 发送GET请求获取成绩页面
+        response = session.get(grades_url, headers=headers, timeout=10)
+
+        if response.status_code != 200:
+            return {
+                "success": False,
+                "message": f"请求失败，状态码: {response.status_code}",
+                "data": [],
+            }
+
+        # 解析HTML响应
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # 查找成绩表格
+        table = soup.find("table", {"id": "dataList"})
+        if not table:
+            return {"success": False, "message": "未找到成绩表格", "data": []}
+
+        # 获取表头
+        headers_row = table.find("tr")  # type: ignore
+        if not headers_row:
+            return {"success": False, "message": "未找到表格头部", "data": []}
+
+        # 提取列名
+        headers = []
+        for th in headers_row.find_all("th"):  # type: ignore
+            header_text = th.get_text(strip=True)
+            headers.append(header_text)
+
+        print(f"表格列名: {headers}")
+
+        # 获取所有数据行（跳过表头）
+        data_rows = table.find_all("tr")[1:]  # type: ignore
+
+        grades_data = []
+
+        for row in data_rows:
+            cells = row.find_all("td")  # type: ignore
+
+            # 检查是否是"未查询到数据"的行
+            if len(cells) == 1 and "未查询到数据" in cells[0].get_text(strip=True):
+                print("未查询到成绩数据")
+                break
+
+            # 如果单元格数量与表头不匹配，跳过该行
+            if len(cells) != len(headers):
+                continue
+
+            # 提取每行数据
+            row_data = {}
+            for i, cell in enumerate(cells):
+                if i < len(headers):
+                    row_data[headers[i]] = cell.get_text(strip=True)
+
+            grades_data.append(row_data)
+
+        print(f"成功获取 {len(grades_data)} 条成绩记录")
+
+        return {
+            "success": True,
+            "message": f"成功获取{len(grades_data)}条成绩记录",
+            "data": grades_data,
+        }
+
+    except requests.exceptions.RequestException as e:
+        print(f"网络请求出错: {e}")
+        return {"success": False, "message": f"网络请求出错: {e}", "data": []}
+    except Exception as e:
+        print(f"解析成绩数据时出错: {e}")
+        return {"success": False, "message": f"解析成绩数据时出错: {e}", "data": []}
+
+
+def get_available_semesters(session: requests.Session):
+    """
+    获取可用的学期列表。
+
+    Args:
+        session: 已登录的requests.Session对象
+
+    Returns:
+        dict: 包含可用学期信息的字典
+    """
+    try:
+        # 访问成绩查询页面，获取可用学期
+        query_url = "http://zhjw.qfnu.edu.cn/jsxsd/kscj/cjcx_query"
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Upgrade-Insecure-Requests": "1",
+        }
+
+        response = session.get(query_url, headers=headers, timeout=10)
+
+        if response.status_code != 200:
+            return {
+                "success": False,
+                "message": f"获取学期列表失败，状态码: {response.status_code}",
+                "data": [],
+            }
+
+        # 解析HTML以获取学期选项
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # 查找学期选择下拉框
+        semester_select = soup.find("select", {"id": "kksj"}) or soup.find(
+            "select", {"name": "kksj"}
+        )
+
+        if not semester_select:
+            # 如果没有找到下拉框，返回默认学期
+            current_year = "2025"
+            return {
+                "success": True,
+                "message": "使用默认学期列表",
+                "data": [
+                    f"{current_year}-{int(current_year)+1}-1",  # 第一学期
+                    f"{current_year}-{int(current_year)+1}-2",  # 第二学期
+                ],
+            }
+
+        semesters = []
+        for option in semester_select.find_all("option"):  # type: ignore
+            value = option.get("value")  # type: ignore
+            if value and str(value).strip():
+                semesters.append(str(value).strip())
+
+        return {
+            "success": True,
+            "message": f"成功获取{len(semesters)}个学期",
+            "data": semesters,
+        }
+
+    except Exception as e:
+        print(f"获取学期列表时出错: {e}")
+        return {"success": False, "message": f"获取学期列表时出错: {e}", "data": []}
+
+
+def calculate_gpa(grades_data: list):
+    """
+    根据成绩数据计算GPA。
+
+    Args:
+        grades_data: 成绩数据列表
+
+    Returns:
+        dict: 包含GPA计算结果的字典
+    """
+    try:
+        total_credit = 0.0
+        total_grade_point = 0.0
+        course_count = 0
+
+        for grade_item in grades_data:
+            # 获取学分和绩点
+            credit_str = grade_item.get("学分", "0")
+            grade_point_str = grade_item.get("绩点", "0")
+
+            try:
+                credit = float(credit_str) if credit_str and credit_str != "" else 0.0
+                grade_point = (
+                    float(grade_point_str)
+                    if grade_point_str and grade_point_str != ""
+                    else 0.0
+                )
+
+                if credit > 0 and grade_point > 0:
+                    total_credit += credit
+                    total_grade_point += credit * grade_point
+                    course_count += 1
+
+            except ValueError:
+                # 如果无法转换为数字，跳过该条记录
+                continue
+
+        if total_credit > 0:
+            gpa = total_grade_point / total_credit
+            return {
+                "success": True,
+                "gpa": round(gpa, 2),
+                "total_credit": total_credit,
+                "course_count": course_count,
+                "message": f"计算完成：总学分{total_credit}，课程数{course_count}",
+            }
+        else:
+            return {
+                "success": False,
+                "gpa": 0.0,
+                "total_credit": 0.0,
+                "course_count": 0,
+                "message": "没有有效的成绩数据用于计算GPA",
+            }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "gpa": 0.0,
+            "total_credit": 0.0,
+            "course_count": 0,
+            "message": f"计算GPA时出错: {e}",
+        }

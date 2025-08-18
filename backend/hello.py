@@ -1,11 +1,14 @@
-# hello.py (这是完整修改后的文件)
+# hello.py (集成了数据库操作的最终版本)
 
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import jwt
+from fastapi import Depends
+from scraper import login_to_university, get_grades
+from database import save_session, get_session
+from auth import get_current_user
 
-# 1. 从我们的业务逻辑文件中导入登录函数
-from scraper import login_to_university
 
 app = FastAPI()
 
@@ -20,29 +23,58 @@ def read_root():
     return {"message": "Hello, World!"}
 
 
-# ... 其他GET接口 ...
-
-
 @app.post("/login/")
 async def login(form_data: UserLogin):
-    # 2. 调用真实的登录函数，现在返回session对象或None
     session = login_to_university(
         student_id=form_data.student_id, password=form_data.password
     )
 
-    # 3. 根据登录结果，返回不同响应
     if session is None:
-        # 如果登录失败，抛出一个HTTPException
-        # 这会自动向前端返回一个 401 Unauthorized 错误
         raise HTTPException(status_code=401, detail="学号或密码错误，登录失败")
 
-    # 如果登录成功，生成一个(伪)JWT Token
-    # 这里的 "YOUR_SECRET_KEY" 应该是一个复杂且保密的字符串
-    token_data = {"sub": form_data.student_id}
-    access_token = jwt.encode(token_data, "YOUR_SECRET_KEY", algorithm="HS256")
+    # --- 2. 关键修改点 ---
+    try:
+        # 登录成功后，将 session 对象保存到数据库
+        save_session(student_id=form_data.student_id, session_obj=session)
+    finally:
+        # 无论如何，关闭这个临时的 session 对象，因为它已经被序列化保存了
+        session.close()
 
-    # 注意：这里我们暂时关闭session，因为当前API设计中没有保存session的地方
-    # 在实际项目中，您可能需要将session保存到某个地方（如Redis）以供后续使用
-    session.close()
+    token_data = {"sub": form_data.student_id}
+    access_token = jwt.encode(token_data, "1111", algorithm="HS256")
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+# --- 5. 创建新的 /grades 接口 ---
+@app.get("/grades/")
+async def read_user_grades(student_id: str = Depends(get_current_user)):
+    """
+    获取当前登录用户的成绩。
+    这个接口受 get_current_user 依赖保护。
+    """
+    # 因为通过了“安检”，我们已经拿到了验证过的 student_id
+    print(f"正在为学号 {student_id} 查询成绩...")
+
+    # 从数据库获取该用户的 session
+    session = get_session(student_id=student_id)
+    if session is None:
+        # 如果数据库里没有session，说明需要重新登录
+        raise HTTPException(status_code=401, detail="Session不存在或已失效，请重新登录")
+
+    # 使用 session 获取成绩
+    grades_data = get_grades(session=session)
+    session.close()  # 使用完后关闭
+
+    if grades_data is None:
+        # 爬取失败，可能是学校官网问题或session真的过期了
+        # 这里也引导用户重新登录，可以刷新session
+        raise HTTPException(
+            status_code=500, detail="获取成绩失败，请稍后重试或重新登录"
+        )
+
+    return {"student_id": student_id, "grades": grades_data}
+
+
+if __name__ == "__main__":
+    uvicorn.run("hello:app", host="127.0.0.1", port=8000, reload=True)
