@@ -7,7 +7,7 @@ import jwt
 reusable_oauth2 = HTTPBearer()
 
 SECRET_KEY = "1111"
-ALGORITHM = "HS26"
+ALGORITHM = "HS256"
 
 
 def get_current_user(
