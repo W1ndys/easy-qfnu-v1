@@ -152,18 +152,18 @@ def login_to_university(student_id: str, password: str, max_retries: int = 3):
 
 def get_grades(session: requests.Session, semester: str = ""):
     """
-    获取当前登录用户的成绩。
+    获取当前登录用户的成绩及GPA分析（新版接口说明）。
 
-    Args:
+    参数:
         session: 已登录的requests.Session对象
-        semester: 学期参数，格式为 "2024-2025-2"，空字符串表示获取全部学期
+        semester: 学期参数，格式如 "2024-2025-2"，空字符串表示获取全部学期
 
-    Returns:
-        dict: 包含成绩信息的字典，格式为：
+    返回:
+        dict: 返回结构如下，包含成绩列表和GPA分析（新版接口结构）：
         {
-            "success": bool,
-            "message": str,
-            "data": [
+            "success": bool,           # 是否成功
+            "message": str,            # 提示信息
+            "data": [                  # 成绩数据列表，每项为一门课程
                 {
                     "序号": str,
                     "开课学期": str,
@@ -182,16 +182,20 @@ def get_grades(session: requests.Session, semester: str = ""):
                     "课程性质": str,
                     "课程类别": str
                 }
-            ]
+            ],
+            "gpa_analysis": {          # GPA分析结果（新版接口要求嵌套结构）
+                "basic_gpa": {...},        # 基础GPA分析
+                "no_retakes_gpa": {...}    # 去重修/补考后GPA分析
+            },
+            "total_courses": int       # 总课程数量
         }
     """
     print(f"正在获取学期 {semester if semester else '全部学期'} 的成绩...")
 
     try:
-        # 构建请求URL - 使用POST方法
+        # 新版接口：POST请求获取成绩
         grades_url = "http://zhjw.qfnu.edu.cn/jsxsd/kscj/cjcx_list"
 
-        # 设置请求头
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "Cache-Control": "max-age=0",
@@ -204,7 +208,6 @@ def get_grades(session: requests.Session, semester: str = ""):
             "Upgrade-Insecure-Requests": "1",
         }
 
-        # 构建POST数据
         post_data = {
             "kksj": semester,  # 学期参数，空字符串表示全部学期
             "kcxz": "",  # 课程性质，空表示全部
@@ -212,7 +215,6 @@ def get_grades(session: requests.Session, semester: str = ""):
             "xsfs": "all",  # 显示方式，all表示显示全部
         }
 
-        # 发送POST请求获取成绩页面
         response = session.post(grades_url, headers=headers, data=post_data, timeout=10)
 
         if response.status_code != 200:
@@ -239,7 +241,7 @@ def get_grades(session: requests.Session, semester: str = ""):
         headers = []
         for th in headers_row.find_all("th"):  # type: ignore
             header_text = th.get_text(strip=True)
-            if header_text:  # 只添加非空的列名
+            if header_text:
                 headers.append(header_text)
 
         print(f"表格列名: {headers}")
@@ -283,30 +285,28 @@ def get_grades(session: requests.Session, semester: str = ""):
 
         print(f"成功获取 {len(grades_data)} 条成绩记录")
 
-        # 调试信息：保存响应内容到文件以便分析
-        if len(grades_data) == 0:
-            print("调试：未获取到成绩数据，保存响应内容用于分析...")
-            try:
-                with open("debug_response.html", "w", encoding="utf-8") as f:
-                    f.write(response.text)
-                print("调试：响应内容已保存到 debug_response.html")
-            except Exception as debug_e:
-                print(f"调试：保存响应内容失败: {debug_e}")
+        # 1. 分别计算两种模式下的GPA
+        basic_gpa_result = calculate_gpa_advanced(grades_data, remove_retakes=False)
+        no_retakes_gpa_result = calculate_gpa_advanced(grades_data, remove_retakes=True)
 
-        # 计算各种GPA数据
-        gpa_results = {
-            "basic_gpa": calculate_gpa_advanced(grades_data),
-            "no_retakes_gpa": calculate_gpa_advanced(grades_data, remove_retakes=True),
+        # 2. 提取 total_gpa 数据，构建符合 Schema 的结构
+        basic_gpa_data = basic_gpa_result.get("total_gpa", {})
+        no_retakes_gpa_data = no_retakes_gpa_result.get("total_gpa", {})
+
+        # 3. 按照新版API要求的嵌套结构，组装 gpa_analysis 字典
+        gpa_analysis_results = {
+            "basic_gpa": basic_gpa_data,
+            "no_retakes_gpa": no_retakes_gpa_data,
         }
 
+        # 4. 返回新版接口要求的完整结构
         return {
             "success": True,
             "message": f"成功获取{len(grades_data)}条成绩记录",
             "data": grades_data,
-            "gpa_analysis": gpa_results,
+            "gpa_analysis": gpa_analysis_results,
             "total_courses": len(grades_data),
         }
-
     except requests.exceptions.RequestException as e:
         print(f"网络请求出错: {e}")
         return {"success": False, "message": f"网络请求出错: {e}", "data": []}
