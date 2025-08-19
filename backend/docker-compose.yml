@@ -35,6 +35,3 @@ services:
     restart: unless-stopped
     profiles:
       - with-nginx
-```
-
-```
