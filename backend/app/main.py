@@ -43,4 +43,11 @@ app.include_router(average_scores_router.router, prefix="/api/v1", tags=["平均
 
 if __name__ == "__main__":
     # 这里的 "app.main:app" 指向的是 app文件夹下的main.py文件中的app实例
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(
+        "app.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
+    )
