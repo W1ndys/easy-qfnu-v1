@@ -12,7 +12,8 @@
         title="没有查询到任何成绩记录"
         description="请检查网络连接或稍后重试"
         :show-retry="true"
-        @retry="fetchGrades" />
+        @retry="fetchGrades"
+      />
 
       <!-- 有数据时显示 -->
       <view v-else>
@@ -23,7 +24,8 @@
           :effective-gpa="effectiveGpa"
           :yearly-gpa="yearlyGpa"
           :semester-gpa="semesterGpa"
-          :total-courses="totalCourses" />
+          :total-courses="totalCourses"
+        />
 
         <!-- 成绩列表 -->
         <GradesList :semesters="semesters" />
@@ -68,7 +70,7 @@ const fetchGrades = async () => {
 
   try {
     const res = await uni.request({
-      url: "https://api.easy-qfnu.top/api/v1/grades",
+      url: "http://127.0.0.1:8000/api/v1/grades",
       method: "GET",
       // 【核心】在请求头中带上Token，用于身份认证
       header: {

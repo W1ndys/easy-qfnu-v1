@@ -1,0 +1,1024 @@
+<template>
+  <view class="page-container">
+    <!-- 背景装饰 -->
+    <view class="background-decoration">
+      <view class="circle circle-1"></view>
+      <view class="circle circle-2"></view>
+      <view class="circle circle-3"></view>
+    </view>
+
+    <!-- 页面头部 -->
+    <view class="page-header">
+      <view class="header-content">
+        <text class="page-title">平均分查询</text>
+        <text class="page-subtitle">Academic Score Analysis</text>
+      </view>
+    </view>
+
+    <!-- 主内容区域 -->
+    <view class="content-wrapper">
+      <!-- 搜索表单卡片 -->
+      <view class="search-card modern-card">
+        <view class="card-header">
+          <view class="header-icon">
+            <uni-icons type="search" size="24" color="#9b0400"></uni-icons>
+          </view>
+          <view class="header-text">
+            <text class="card-title">课程信息查询</text>
+            <text class="card-subtitle">输入课程信息开始查询</text>
+          </view>
+        </view>
+
+        <view class="form-content">
+          <view class="form-group">
+            <view class="input-label">
+              <uni-icons type="book" size="20" color="#495057"></uni-icons>
+              <text>课程名称/代码</text>
+            </view>
+            <view class="input-wrapper">
+              <input
+                class="modern-input"
+                :class="{
+                  'input-error': courseError,
+                  'input-focus': courseFocused,
+                }"
+                v-model="searchForm.course"
+                placeholder="请输入课程名称或课程代码（至少4个字符）"
+                @confirm="handleSearch"
+                @input="validateCourse"
+                @focus="courseFocused = true"
+                @blur="courseFocused = false" />
+              <view
+                class="input-line"
+                :class="{ active: courseFocused }"></view>
+            </view>
+            <text class="input-hint" :class="{ 'hint-error': courseError }">
+              {{ courseHint }}
+            </text>
+          </view>
+
+          <view class="form-group">
+            <view class="input-label">
+              <uni-icons type="person" size="20" color="#495057"></uni-icons>
+              <text>教师姓名（选填）</text>
+            </view>
+            <view class="input-wrapper">
+              <input
+                class="modern-input"
+                :class="{
+                  'input-error': teacherError,
+                  'input-focus': teacherFocused,
+                }"
+                v-model="searchForm.teacher"
+                placeholder="不填则查询所有老师（至少2个字符）"
+                @confirm="handleSearch"
+                @input="validateTeacher"
+                @focus="teacherFocused = true"
+                @blur="teacherFocused = false" />
+              <view
+                class="input-line"
+                :class="{ active: teacherFocused }"></view>
+            </view>
+            <text
+              class="input-hint"
+              :class="{ 'hint-error': teacherError }"
+              v-if="searchForm.teacher.trim()">
+              {{ teacherHint }}
+            </text>
+          </view>
+
+          <view class="button-group">
+            <button
+              class="action-btn primary-btn"
+              @click="handleSearch"
+              :loading="loading"
+              :disabled="!canSearch">
+              <uni-icons
+                type="search"
+                size="20"
+                color="#ffffff"
+                v-if="!loading"></uni-icons>
+              <text>{{ loading ? "查询中..." : "开始查询" }}</text>
+            </button>
+            <button class="action-btn secondary-btn" @click="handleReset">
+              <uni-icons type="refresh" size="20" color="#495057"></uni-icons>
+              <text>重置</text>
+            </button>
+          </view>
+        </view>
+      </view>
+
+      <!-- 查询结果 -->
+      <view class="results-section" v-if="hasResults">
+        <view class="results-header">
+          <view class="results-info">
+            <text class="results-title">查询结果</text>
+            <text class="results-count"
+              >共找到 {{ Object.keys(resultData).length }} 门课程</text
+            >
+          </view>
+        </view>
+
+        <view
+          class="course-card modern-card"
+          v-for="(teachers, courseName) in resultData"
+          :key="courseName">
+          <view class="course-header">
+            <view class="course-info">
+              <view class="course-icon">
+                <uni-icons type="book" size="24" color="#ffffff"></uni-icons>
+              </view>
+              <text class="course-name">{{ courseName }}</text>
+            </view>
+          </view>
+
+          <view class="course-content">
+            <view
+              class="teacher-section"
+              v-for="(semesters, teacherName) in teachers"
+              :key="teacherName">
+              <view class="teacher-header">
+                <view class="teacher-info">
+                  <view class="teacher-avatar">
+                    <uni-icons
+                      type="person"
+                      size="20"
+                      color="#9b0400"></uni-icons>
+                  </view>
+                  <text class="teacher-name">{{ teacherName }}</text>
+                </view>
+              </view>
+
+              <view class="semester-grid">
+                <view
+                  class="semester-card"
+                  v-for="(data, semester) in semesters"
+                  :key="semester">
+                  <view class="semester-header">
+                    <view class="semester-badge">
+                      <text class="semester-name">{{ semester }}</text>
+                    </view>
+                    <text class="update-time" v-if="data.update_time">
+                      {{ formatTime(data.update_time) }}
+                    </text>
+                  </view>
+
+                  <view class="score-grid">
+                    <view class="score-item primary">
+                      <view class="score-icon">
+                        <uni-icons
+                          type="bars"
+                          size="20"
+                          color="#9b0400"></uni-icons>
+                      </view>
+                      <view class="score-content">
+                        <text class="score-label">平均分</text>
+                        <text class="score-value">{{
+                          data.average_score.toFixed(2)
+                        }}</text>
+                      </view>
+                    </view>
+
+                    <view class="score-item secondary">
+                      <view class="score-icon">
+                        <uni-icons
+                          type="person"
+                          size="20"
+                          color="#6c757d"></uni-icons>
+                      </view>
+                      <view class="score-content">
+                        <text class="score-label">参与人数</text>
+                        <text class="score-value"
+                          >{{ data.student_count }}人</text
+                        >
+                      </view>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state modern-card" v-else-if="searched && !loading">
+        <view class="empty-content">
+          <view class="empty-icon">
+            <uni-icons type="info" size="80" color="#adb5bd"></uni-icons>
+          </view>
+          <text class="empty-title">未找到相关数据</text>
+          <text class="empty-subtitle">{{ emptyMessage }}</text>
+          <button class="action-btn primary-btn retry-btn" @click="handleReset">
+            <uni-icons type="refresh" size="20" color="#ffffff"></uni-icons>
+            <text>重新搜索</text>
+          </button>
+        </view>
+      </view>
+
+      <!-- 初始状态 -->
+      <view class="initial-state modern-card" v-else-if="!searched && !loading">
+        <view class="initial-content">
+          <view class="initial-icon">
+            <uni-icons type="search" size="80" color="#9b0400"></uni-icons>
+          </view>
+          <text class="initial-title">欢迎使用平均分查询</text>
+          <text class="initial-subtitle">请输入课程信息开始查询学术数据</text>
+        </view>
+      </view>
+
+      <!-- 加载状态 -->
+      <view class="loading-state modern-card" v-else-if="loading">
+        <view class="loading-content">
+          <view class="loading-spinner">
+            <uni-icons
+              type="spinner-cycle"
+              size="60"
+              color="#9b0400"></uni-icons>
+          </view>
+          <text class="loading-text">正在查询数据...</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      searchForm: {
+        course: "",
+        teacher: "",
+      },
+      resultData: {},
+      loading: false,
+      searched: false,
+      emptyMessage: "未找到相关数据",
+      courseError: false,
+      teacherError: false,
+      courseFocused: false,
+      teacherFocused: false,
+    };
+  },
+
+  computed: {
+    hasResults() {
+      return Object.keys(this.resultData).length > 0;
+    },
+
+    courseHint() {
+      const length = this.searchForm.course.trim().length;
+      if (length === 0) {
+        return "请输入课程名称或代码";
+      } else if (length < 4) {
+        return `至少需要4个字符，当前${length}个字符`;
+      } else {
+        return `已输入${length}个字符`;
+      }
+    },
+
+    teacherHint() {
+      const length = this.searchForm.teacher.trim().length;
+      if (length === 0) {
+        return "";
+      } else if (length < 2) {
+        return `至少需要2个字符，当前${length}个字符`;
+      } else {
+        return `已输入${length}个字符`;
+      }
+    },
+
+    canSearch() {
+      const courseLength = this.searchForm.course.trim().length;
+      const teacherLength = this.searchForm.teacher.trim().length;
+
+      return courseLength >= 4 && (teacherLength === 0 || teacherLength >= 2);
+    },
+  },
+
+  onLoad() {
+    uni.setNavigationBarTitle({
+      title: "平均分查询",
+    });
+  },
+
+  methods: {
+    validateCourse() {
+      const length = this.searchForm.course.trim().length;
+      this.courseError = length > 0 && length < 4;
+    },
+
+    validateTeacher() {
+      const length = this.searchForm.teacher.trim().length;
+      this.teacherError = length > 0 && length < 2;
+    },
+
+    async handleSearch() {
+      if (!this.searchForm.course.trim()) {
+        uni.showToast({
+          title: "请输入课程名称或代码",
+          icon: "none",
+        });
+        return;
+      }
+
+      if (this.searchForm.course.trim().length < 4) {
+        uni.showToast({
+          title: "课程名称至少需要4个字符",
+          icon: "none",
+        });
+        return;
+      }
+
+      if (
+        this.searchForm.teacher.trim() &&
+        this.searchForm.teacher.trim().length < 2
+      ) {
+        uni.showToast({
+          title: "教师姓名至少需要2个字符",
+          icon: "none",
+        });
+        return;
+      }
+
+      this.loading = true;
+      this.searched = true;
+
+      try {
+        const params = {
+          course: this.searchForm.course.trim(),
+        };
+
+        if (this.searchForm.teacher.trim()) {
+          params.teacher = this.searchForm.teacher.trim();
+        }
+
+        const response = await this.queryAverageScores(params);
+
+        if (response.code === 200) {
+          this.resultData = response.data;
+          if (!this.hasResults) {
+            this.emptyMessage = "未找到相关数据";
+          }
+        } else {
+          this.resultData = {};
+          this.emptyMessage = response.message || "查询失败";
+          uni.showToast({
+            title: this.emptyMessage,
+            icon: "none",
+          });
+        }
+      } catch (error) {
+        console.error("查询平均分失败:", error);
+        this.resultData = {};
+        this.emptyMessage = "网络错误，请重试";
+        uni.showToast({
+          title: "查询失败",
+          icon: "none",
+        });
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    handleReset() {
+      this.searchForm = {
+        course: "",
+        teacher: "",
+      };
+      this.resultData = {};
+      this.searched = false;
+      this.courseError = false;
+      this.teacherError = false;
+    },
+
+    async queryAverageScores(params) {
+      // 假设您有一个全局的API基础URL配置
+      const baseURL = getApp().globalData.apiBaseURL || "http://127.0.0.1:8000";
+      const token = uni.getStorageSync("token");
+
+      if (!token) {
+        uni.showToast({
+          title: "请先登录",
+          icon: "none",
+        });
+        uni.reLaunch({ url: "/pages/index/index" });
+        return;
+      }
+
+      return new Promise((resolve, reject) => {
+        uni.request({
+          url: `${baseURL}/api/v1/average-scores`,
+          method: "GET",
+          data: params,
+          header: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          success: (res) => {
+            if (res.statusCode === 401) {
+              uni.showToast({
+                title: "登录已过期，请重新登录",
+                icon: "none",
+              });
+              uni.removeStorageSync("token");
+              uni.reLaunch({ url: "/pages/index/index" });
+              return;
+            }
+            resolve(res.data);
+          },
+          fail: (err) => {
+            reject(err);
+          },
+        });
+      });
+    },
+
+    formatTime(timeStr) {
+      if (!timeStr) return "";
+      // 简单的时间格式化，您可以根据实际格式调整
+      return timeStr.replace("T", " ").split(".")[0];
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import "../../styles/common.scss";
+
+// 页面容器
+.page-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+// 背景装饰
+.background-decoration {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(155, 4, 0, 0.08);
+
+  &.circle-1 {
+    width: 200rpx;
+    height: 200rpx;
+    top: 10%;
+    right: -50rpx;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  &.circle-2 {
+    width: 150rpx;
+    height: 150rpx;
+    bottom: 20%;
+    left: -30rpx;
+    animation: float 8s ease-in-out infinite reverse;
+  }
+
+  &.circle-3 {
+    width: 100rpx;
+    height: 100rpx;
+    top: 30%;
+    left: 20%;
+    animation: float 4s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20rpx) rotate(180deg);
+  }
+}
+
+// 页面头部
+.page-header {
+  padding: 60rpx 40rpx 40rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.header-content {
+  text-align: center;
+}
+
+.page-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 12rpx;
+  letter-spacing: 1rpx;
+}
+
+.page-subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+// 内容区域
+.content-wrapper {
+  padding: 0 40rpx 40rpx;
+  position: relative;
+  z-index: 1;
+}
+
+// 现代化卡片
+.modern-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20rpx);
+  border-radius: var(--radius-large);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 40rpx;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4rpx);
+    box-shadow: 0 24rpx 80rpx rgba(0, 0, 0, 0.15);
+  }
+}
+
+// 搜索卡片
+.search-card {
+  padding: 50rpx;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin-bottom: 50rpx;
+}
+
+.header-icon {
+  width: 80rpx;
+  height: 80rpx;
+  background: rgba(155, 4, 0, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.card-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.card-subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+// 表单样式
+.form-group {
+  margin-bottom: 50rpx;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.input-label {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.modern-input {
+  width: 100%;
+  height: 88rpx;
+  border: 2rpx solid #e9ecef;
+  border-radius: var(--radius-small);
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  background: #f8fafc;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: #9b0400;
+    background: #ffffff;
+    box-shadow: 0 0 0 6rpx rgba(155, 4, 0, 0.1);
+  }
+
+  &.input-error {
+    border-color: #dc3545;
+    background: rgba(220, 53, 69, 0.05);
+  }
+}
+
+.input-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rpx;
+  background: linear-gradient(90deg, #9b0400, #c70500);
+  border-radius: 2rpx;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+
+  &.active {
+    transform: scaleX(1);
+  }
+}
+
+.input-hint {
+  display: block;
+  font-size: 22rpx;
+  color: var(--text-light);
+  margin-top: 12rpx;
+  transition: color 0.3s ease;
+
+  &.hint-error {
+    color: #dc3545;
+  }
+}
+
+// 按钮组
+.button-group {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 60rpx;
+}
+
+.action-btn {
+  flex: 1;
+  height: 72rpx;
+  border-radius: 9999rpx;
+  font-size: 26rpx;
+  padding: 16rpx 24rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  transition: all 0.3s ease;
+  border: none;
+
+  &::after {
+    border: none;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  text {
+    font-weight: inherit;
+  }
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #9b0400, #c70500);
+  color: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.3);
+
+  &:disabled {
+    background: #adb5bd;
+    color: #6c757d;
+    box-shadow: none;
+  }
+
+  &:active:not(:disabled) {
+    box-shadow: 0 4rpx 12rpx rgba(155, 4, 0, 0.4);
+  }
+}
+
+.secondary-btn {
+  background: #f8f9fa;
+  color: var(--text-primary);
+  border: 2rpx solid #e9ecef;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+
+  &:active {
+    background: #e9ecef;
+    border-color: #dee2e6;
+  }
+}
+
+// 结果区域
+.results-section {
+  margin-top: 20rpx;
+}
+
+.results-header {
+  padding: 40rpx;
+  text-align: center;
+}
+
+.results-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.results-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.results-count {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+// 课程卡片
+.course-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.course-header {
+  background: linear-gradient(135deg, #495057, #6c757d);
+  padding: 40rpx;
+}
+
+.course-info {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.course-icon {
+  width: 60rpx;
+  height: 60rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.course-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #ffffff;
+  flex: 1;
+}
+
+.course-content {
+  padding: 40rpx;
+}
+
+// 教师区域
+.teacher-section {
+  margin-bottom: 40rpx;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.teacher-header {
+  margin-bottom: 30rpx;
+}
+
+.teacher-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.teacher-avatar {
+  width: 50rpx;
+  height: 50rpx;
+  background: rgba(155, 4, 0, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.teacher-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+// 学期网格
+.semester-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.semester-card {
+  background: #f8fafc;
+  border-radius: var(--radius-small);
+  padding: 30rpx;
+  border: 1rpx solid #e9ecef;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #ffffff;
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  }
+}
+
+.semester-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.semester-badge {
+  background: linear-gradient(135deg, #9b0400, #c70500);
+  color: #ffffff;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.update-time {
+  font-size: 20rpx;
+  color: var(--text-light);
+}
+
+// 分数网格
+.score-grid {
+  display: flex;
+  gap: 20rpx;
+}
+
+.score-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: #ffffff;
+  padding: 24rpx;
+  border-radius: var(--radius-small);
+  border: 1rpx solid #e9ecef;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2rpx);
+    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  }
+}
+
+.score-icon {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.score-label {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.score-value {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.primary .score-icon {
+  background: rgba(155, 4, 0, 0.1);
+}
+
+.primary .score-value {
+  color: #9b0400;
+}
+
+.secondary .score-icon {
+  background: rgba(108, 117, 125, 0.1);
+}
+
+.secondary .score-value {
+  color: #6c757d;
+}
+
+// 状态页面样式
+.empty-state,
+.initial-state,
+.loading-state {
+  padding: 100rpx 50rpx;
+}
+
+.empty-content,
+.initial-content,
+.loading-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30rpx;
+}
+
+.empty-icon,
+.initial-icon,
+.loading-spinner {
+  opacity: 0.6;
+}
+
+.empty-title,
+.initial-title,
+.loading-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.empty-subtitle,
+.initial-subtitle {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  width: 200rpx;
+  margin-top: 20rpx;
+}
+
+// 加载动画
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+// 响应式适配
+@media (max-width: 600rpx) {
+  .content-wrapper {
+    padding: 0 20rpx 40rpx;
+  }
+
+  .search-card {
+    padding: 30rpx;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .score-grid {
+    flex-direction: column;
+  }
+
+  .page-title {
+    font-size: 36rpx;
+  }
+}
+</style>

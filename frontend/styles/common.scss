@@ -17,19 +17,19 @@
 
 // 现代化按钮样式
 @mixin modern-button($color: var(--primary-color)) {
-  padding: 24rpx 48rpx;
-  border-radius: var(--radius-small);
+  padding: 16rpx 32rpx;
+  border-radius: 9999rpx;
   background: var(--primary-gradient);
   color: #ffffff;
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 600;
   border: none;
   transition: all 0.3s ease;
-  box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.3);
+  box-shadow: 0 6rpx 18rpx rgba(155, 4, 0, 0.3);
   
   &:active {
-    transform: translateY(2rpx);
-    box-shadow: 0 4rpx 12rpx rgba(155, 4, 0, 0.4);
+    transform: translateY(1rpx);
+    box-shadow: 0 3rpx 9rpx rgba(155, 4, 0, 0.4);
   }
   
   &::after {

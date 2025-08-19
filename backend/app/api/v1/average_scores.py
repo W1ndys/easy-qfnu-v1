@@ -1,10 +1,11 @@
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pathlib import Path
 from sqlalchemy import create_engine, Column, Integer, String, Float, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
+from app.core.security import get_current_user
 import os
 
 router = APIRouter()
@@ -69,14 +70,15 @@ def get_average_scores(
     try:
         session = get_db_session()
 
-        # 构建查询 - 支持按课程名称或课程代码查询
+        # 构建查询 - 支持按课程名称或课程代码模糊查询
         query = session.query(AverageScore).filter(
-            (AverageScore.course_name == course_identifier)
-            | (AverageScore.course_code == course_identifier)
+            (AverageScore.course_name.like(f"%{course_identifier}%"))
+            | (AverageScore.course_code.like(f"%{course_identifier}%"))
         )
 
         if teacher:
-            query = query.filter(AverageScore.teacher == teacher)
+            # 教师姓名也支持模糊查询
+            query = query.filter(AverageScore.teacher.like(f"%{teacher}%"))
 
         query = query.order_by(AverageScore.teacher, AverageScore.semester)
         results = query.all()
@@ -119,16 +121,27 @@ def get_average_scores(
     "/average-scores", summary="查询平均分", response_model=AverageScoreResponse
 )
 async def query_average_scores(
-    course: str = Query(..., description="课程名称或课程代码（必填）", min_length=1),
-    teacher: Optional[str] = Query(
-        None, description="教师姓名（选填，为空则查询所有老师）", min_length=1
+    course: str = Query(
+        ...,
+        description="课程名称或课程代码（必填，支持模糊查询，至少4个字符）",
+        min_length=4,
     ),
+    teacher: Optional[str] = Query(
+        None,
+        description="教师姓名（选填，支持模糊查询，至少4个字符，为空则查询所有老师）",
+        min_length=4,
+    ),
+    current_user: str = Depends(get_current_user),
 ) -> AverageScoreResponse:
     """
     查询指定课程的平均分数据
 
-    - **course**: 课程名称或课程代码（必填）
-    - **teacher**: 教师姓名（选填，不填则查询该课程所有老师的数据）
+    - **course**: 课程名称或课程代码（必填，支持模糊查询，至少4个字符）
+    - **teacher**: 教师姓名（选填，支持模糊查询，至少4个字符，不填则查询该课程所有老师的数据）
+
+    **权限要求：** 需要有效的JWT Token认证
+    **模糊查询：** 所有查询参数都支持模糊匹配
+    **长度限制：** 搜索词至少需要4个字符，防止查询结果过多
 
     返回格式：课程->老师->学期->基准人数和平均分
     """

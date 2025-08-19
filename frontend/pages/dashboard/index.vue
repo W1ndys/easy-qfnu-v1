@@ -80,7 +80,13 @@ const features = ref([
     text: "成绩查询",
     description: "查看成绩与GPA分析",
     icon: "paperplane",
-    url: "/pages/grades/grades",
+    url: "/pages/grades/index",
+  },
+  {
+    text: "平均分查询",
+    description: "查看课程平均分数据",
+    icon: "bars",
+    url: "/pages/average-scores/index",
   },
   {
     text: "课表查询",
@@ -101,7 +107,6 @@ const features = ref([
     url: "",
   },
 ]);
-
 // --- 页面生命周期函数 ---
 onLoad(() => {
   checkLoginStatus();
@@ -322,9 +327,10 @@ const handleLogout = () => {
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  padding: 24rpx;
-  border-radius: var(--radius-small);
-  font-size: 28rpx;
+  height: 72rpx;
+  padding: 16rpx 24rpx;
+  border-radius: 9999rpx;
+  font-size: 26rpx;
   font-weight: 600;
   border: none;
   transition: all 0.3s ease;

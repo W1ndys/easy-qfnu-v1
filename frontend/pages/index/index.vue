@@ -121,7 +121,7 @@ const checkLoginStatus = () => {
       if (isTokenValid(token)) {
         console.log("Token验证通过，准备跳转到dashboard");
         uni.reLaunch({
-          url: "/pages/dashboard/dashboard",
+          url: "/pages/dashboard/index",
         });
       } else {
         console.log("Token无效，清除并停留在登录页");
@@ -161,7 +161,7 @@ const handleLogin = async () => {
   try {
     // 3. 使用 uni.request 发起网络请求
     const res = await uni.request({
-      url: "https://api.easy-qfnu.top/api/v1/login", // 确保后端在运行
+      url: "http://127.0.0.1:8000/api/v1/login", // 确保后端在运行
       method: "POST",
       data: {
         student_id: formData.value.studentId,
@@ -397,12 +397,12 @@ const handleLogin = async () => {
 
 .login-btn {
   width: 100%;
-  height: 96rpx;
-  line-height: 96rpx;
-  border-radius: 16rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 9999rpx;
   background: linear-gradient(135deg, #9b0400 0%, #c41e3a 100%);
   color: #ffffff;
-  font-size: 32rpx;
+  font-size: 28rpx;
   font-weight: 600;
   margin-bottom: 40rpx;
   transition: all 0.3s ease;

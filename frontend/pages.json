@@ -7,24 +7,25 @@
 			}
 		},
 		{
-			"path": "pages/dashboard/dashboard",
+			"path": "pages/dashboard/index",
 			"style": {
 				"navigationBarTitleText": "个人中心",
 				"enablePullDownRefresh": false
 			}
 		},
 		{
-			"path": "pages/grades/grades",
+			"path": "pages/grades/index",
 			"style": {
 				"navigationBarTitleText": "成绩查询",
 				"enablePullDownRefresh": false
 			}
 		},
 		{
-			"path": "pages/schedule/schedule",
+			"path": "pages/average-scores/index",
 			"style": {
-				"navigationBarTitleText": "课表查询",
-				"enablePullDownRefresh": false
+				"navigationBarTitleText": "平均分查询",
+				"navigationBarBackgroundColor": "#007aff",
+				"navigationBarTextStyle": "white"
 			}
 		}
 	],
