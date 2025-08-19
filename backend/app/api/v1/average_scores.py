@@ -115,7 +115,9 @@ def get_average_scores(
         raise HTTPException(status_code=500, detail=f"数据库查询错误: {str(e)}")
 
 
-@router.get("/average-scores", response_model=AverageScoreResponse)
+@router.get(
+    "/average-scores", summary="查询平均分", response_model=AverageScoreResponse
+)
 async def query_average_scores(
     course: str = Query(..., description="课程名称或课程代码（必填）", min_length=1),
     teacher: Optional[str] = Query(
