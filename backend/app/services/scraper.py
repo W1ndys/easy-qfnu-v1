@@ -288,18 +288,28 @@ def get_grades(session: requests.Session, semester: str = ""):
         basic_gpa_data = basic_gpa_result.get("total_gpa", {})
         no_retakes_gpa_data = no_retakes_gpa_result.get("total_gpa", {})
 
-        # 3. 按照新版API要求的嵌套结构，组装 gpa_analysis 字典
+        # 3. 提取学期和学年GPA数据
+        semester_gpa_data = basic_gpa_result.get("semester_gpa", {})
+        yearly_gpa_data = basic_gpa_result.get("yearly_gpa", {})
+
+        # 4. 总的有效加权绩点（去除重修补考的结果）
+        effective_gpa_data = no_retakes_gpa_data
+
+        # 5. 按照新版API要求的嵌套结构，组装 gpa_analysis 字典
         gpa_analysis_results = {
             "basic_gpa": basic_gpa_data,
             "no_retakes_gpa": no_retakes_gpa_data,
         }
 
-        # 4. 返回新版接口要求的完整结构
+        # 6. 返回新版接口要求的完整结构
         return {
             "success": True,
             "message": f"成功获取{len(grades_data)}条成绩记录",
             "data": grades_data,
             "gpa_analysis": gpa_analysis_results,
+            "semester_gpa": semester_gpa_data,
+            "yearly_gpa": yearly_gpa_data,
+            "effective_gpa": effective_gpa_data,
             "total_courses": len(grades_data),
         }
     except requests.exceptions.RequestException as e:

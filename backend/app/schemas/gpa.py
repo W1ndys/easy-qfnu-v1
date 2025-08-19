@@ -45,6 +45,9 @@ class GradesResponse(BaseModel):
     message: str
     data: List[CourseGrade]
     gpa_analysis: Optional[Dict[str, GPAAnalysis]] = None
+    semester_gpa: Optional[Dict[str, GPAAnalysis]] = None
+    yearly_gpa: Optional[Dict[str, GPAAnalysis]] = None
+    effective_gpa: Optional[GPAAnalysis] = None  # 总的有效加权绩点（去除重修补考）
     total_courses: Optional[int] = None
 
 

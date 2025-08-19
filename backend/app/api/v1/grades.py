@@ -48,6 +48,9 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
 - 自动计算基础GPA和去除重修后GPA
 - 提供详细的学分统计和课程数量信息
 - 支持按学期、学年维度的GPA分析
+- 计算每个学期的加权平均绩点
+- 计算每个学年的加权平均绩点  
+- 提供总的有效加权绩点（去除重修补考，取最高绩点）
 
 **认证要求：**
 - 需要携带有效的JWT Token（Authorization: Bearer <token>）
@@ -56,6 +59,9 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
 **返回数据说明：**
 - `data`: 包含所有课程的详细成绩信息
 - `gpa_analysis`: 包含基础GPA和去重修GPA的分析结果
+- `semester_gpa`: 按学期分组的GPA分析结果
+- `yearly_gpa`: 按学年分组的GPA分析结果
+- `effective_gpa`: 总的有效加权绩点（去除重修补考，取最高绩点）
 - `total_courses`: 总课程数量
 
 **数据更新：**
@@ -105,6 +111,34 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
                                 "course_count": 9,
                                 "courses": [],
                             },
+                        },
+                        "semester_gpa": {
+                            "2023-2024-1": {
+                                "weighted_gpa": 3.8,
+                                "total_credit": 16.0,
+                                "course_count": 5,
+                                "courses": [],
+                            },
+                            "2023-2024-2": {
+                                "weighted_gpa": 3.9,
+                                "total_credit": 16.0,
+                                "course_count": 5,
+                                "courses": [],
+                            },
+                        },
+                        "yearly_gpa": {
+                            "2023-2024": {
+                                "weighted_gpa": 3.85,
+                                "total_credit": 32.0,
+                                "course_count": 10,
+                                "courses": [],
+                            },
+                        },
+                        "effective_gpa": {
+                            "weighted_gpa": 3.92,
+                            "total_credit": 28.0,
+                            "course_count": 9,
+                            "courses": [],
                         },
                         "total_courses": 15,
                     }
