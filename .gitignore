@@ -209,3 +209,5 @@ __marimo__/
 data/
 *.db
 node_modules/
+*git*.bat
+*git*.sh
