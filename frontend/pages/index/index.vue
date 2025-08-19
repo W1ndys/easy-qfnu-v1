@@ -41,6 +41,18 @@
           </uni-forms-item>
         </uni-forms>
 
+        <view class="agreement">
+          <checkbox-group @change="onAgreeChange">
+            <label class="agree-label">
+              <checkbox value="agree" :checked="agreed" />
+              <text class="agree-text">我已阅读并同意</text>
+              <text class="agreement-link" @click="openAgreement"
+                >《用户协议》</text
+              >
+            </label>
+          </checkbox-group>
+        </view>
+
         <button class="login-btn" @click="handleLogin" :loading="isLoading">
           <text v-if="!isLoading">登录</text>
           <text v-else>登录中...</text>
@@ -67,6 +79,31 @@ const formData = ref({
   password: "",
 });
 const isLoading = ref(false);
+
+// 同意协议
+const agreed = ref(false);
+const AGREEMENT_URL =
+  "https://cq4hqujcxu3.feishu.cn/docx/XvdmdJ5eIo3hxMxPJA9cODcYnhb";
+const onAgreeChange = (e) => {
+  try {
+    agreed.value =
+      Array.isArray(e.detail.value) && e.detail.value.includes("agree");
+  } catch (err) {
+    agreed.value = false;
+  }
+};
+const openAgreement = () => {
+  if (typeof window !== "undefined" && window.open) {
+    window.open(AGREEMENT_URL, "_blank");
+  } else {
+    uni.setClipboardData({
+      data: AGREEMENT_URL,
+      success() {
+        uni.showToast({ title: "链接已复制，请在浏览器中打开", icon: "none" });
+      },
+    });
+  }
+};
 
 // 页面加载时检查缓存的token
 onLoad(() => {
@@ -111,6 +148,11 @@ const handleLogin = async () => {
   // 简单的输入校验
   if (!formData.value.studentId || !formData.value.password) {
     uni.showToast({ title: "学号和密码不能为空", icon: "none" });
+    return;
+  }
+
+  if (!agreed.value) {
+    uni.showToast({ title: "请先阅读并同意用户协议", icon: "none" });
     return;
   }
 
@@ -218,9 +260,9 @@ const handleLogin = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   height: 100vh;
-  padding: 0 60rpx;
+  padding: 120rpx 60rpx 0;
   box-sizing: border-box;
   position: relative;
   z-index: 1;
@@ -291,6 +333,30 @@ const handleLogin = async () => {
 .login-form {
   width: 100%;
   margin-bottom: 50rpx;
+}
+
+.agreement {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30rpx;
+  font-size: 24rpx;
+  color: #4a5568;
+}
+
+.agree-label {
+  display: flex;
+  align-items: center;
+}
+
+.agree-text {
+  margin-left: 12rpx;
+  color: #4a5568;
+}
+
+.agreement-link {
+  margin-left: 6rpx;
+  color: #9b0400;
+  text-decoration: underline;
 }
 
 .form-item {
@@ -371,7 +437,7 @@ const handleLogin = async () => {
 // 响应式适配
 @media (max-height: 600px) {
   .content-wrapper {
-    padding: 40rpx 60rpx;
+    padding: 40rpx 60rpx 0;
   }
 
   .logo-section {
