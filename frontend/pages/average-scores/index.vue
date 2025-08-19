@@ -21,7 +21,7 @@
       <view class="search-card modern-card">
         <view class="card-header">
           <view class="header-icon">
-            <uni-icons type="search" size="24" color="#9b0400"></uni-icons>
+            <uni-icons type="search" size="24" color="#7f4515"></uni-icons>
           </view>
           <view class="header-text">
             <text class="card-title">课程信息查询</text>
@@ -143,7 +143,7 @@
                     <uni-icons
                       type="person"
                       size="20"
-                      color="#9b0400"></uni-icons>
+                      color="#7f4515"></uni-icons>
                   </view>
                   <text class="teacher-name">{{ teacherName }}</text>
                 </view>
@@ -169,7 +169,7 @@
                         <uni-icons
                           type="bars"
                           size="20"
-                          color="#9b0400"></uni-icons>
+                          color="#7f4515"></uni-icons>
                       </view>
                       <view class="score-content">
                         <text class="score-label">平均分</text>
@@ -220,7 +220,7 @@
       <view class="initial-state modern-card" v-else-if="!searched && !loading">
         <view class="initial-content">
           <view class="initial-icon">
-            <uni-icons type="search" size="80" color="#9b0400"></uni-icons>
+            <uni-icons type="search" size="80" color="#7f4515"></uni-icons>
           </view>
           <text class="initial-title">欢迎使用平均分查询</text>
           <text class="initial-subtitle">请输入课程信息开始查询学术数据</text>
@@ -234,7 +234,7 @@
             <uni-icons
               type="spinner-cycle"
               size="60"
-              color="#9b0400"></uni-icons>
+              color="#7f4515"></uni-icons>
           </view>
           <text class="loading-text">正在查询数据...</text>
         </view>
@@ -450,7 +450,7 @@ export default {
 // 页面容器
 .page-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #f7f8fa;
   position: relative;
   overflow: hidden;
 }
@@ -469,7 +469,7 @@ export default {
 .circle {
   position: absolute;
   border-radius: 50%;
-  background: rgba(155, 4, 0, 0.08);
+  background: rgba(127, 69, 21, 0.06);
 
   &.circle-1 {
     width: 200rpx;
@@ -545,14 +545,14 @@ export default {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20rpx);
   border-radius: var(--radius-large);
-  border: 1rpx solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.1);
+  border: 1rpx solid var(--border-light);
+  box-shadow: 0 20rpx 60rpx var(--shadow-light);
   margin-bottom: 40rpx;
   transition: all 0.3s ease;
 
   &:hover {
     transform: translateY(-4rpx);
-    box-shadow: 0 24rpx 80rpx rgba(0, 0, 0, 0.15);
+    box-shadow: 0 24rpx 80rpx var(--shadow-medium);
   }
 }
 
@@ -571,7 +571,7 @@ export default {
 .header-icon {
   width: 80rpx;
   height: 80rpx;
-  background: rgba(155, 4, 0, 0.1);
+  background: rgba(127, 69, 21, 0.08);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -632,9 +632,9 @@ export default {
   box-sizing: border-box;
 
   &:focus {
-    border-color: #9b0400;
+    border-color: #7f4515;
     background: #ffffff;
-    box-shadow: 0 0 0 6rpx rgba(155, 4, 0, 0.1);
+    box-shadow: 0 0 0 6rpx rgba(127, 69, 21, 0.1);
   }
 
   &.input-error {
@@ -649,7 +649,7 @@ export default {
   left: 0;
   right: 0;
   height: 4rpx;
-  background: linear-gradient(90deg, #9b0400, #c70500);
+  background: linear-gradient(90deg, #7f4515, #8c5527);
   border-radius: 2rpx;
   transform: scaleX(0);
   transition: transform 0.3s ease;
@@ -706,9 +706,9 @@ export default {
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, #9b0400, #c70500);
+  background: linear-gradient(135deg, #7f4515, #8c5527);
   color: #ffffff;
-  box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.3);
+  box-shadow: 0 8rpx 24rpx rgba(127, 69, 21, 0.25);
 
   &:disabled {
     background: #adb5bd;
@@ -861,7 +861,7 @@ export default {
 }
 
 .semester-badge {
-  background: linear-gradient(135deg, #9b0400, #c70500);
+  background: linear-gradient(135deg, #7f4515, #8c5527);
   color: #ffffff;
   padding: 8rpx 16rpx;
   border-radius: 20rpx;
@@ -926,11 +926,11 @@ export default {
 }
 
 .primary .score-icon {
-  background: rgba(155, 4, 0, 0.1);
+  background: rgba(127, 69, 21, 0.08);
 }
 
 .primary .score-value {
-  color: #9b0400;
+  color: #7f4515;
 }
 
 .secondary .score-icon {

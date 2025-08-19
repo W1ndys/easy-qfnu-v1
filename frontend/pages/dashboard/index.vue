@@ -20,30 +20,26 @@
       </view>
     </ModernCard>
 
-    <!-- 功能模块 -->
-    <ModernCard title="核心功能" class="features-card">
-      <view class="features-grid">
+    <!-- 2×2 导航网格 -->
+    <ModernCard class="grid-card">
+      <view class="grid-title">核心功能</view>
+      <view class="grid-2x2">
         <view
           v-for="(item, index) in features"
           :key="index"
-          class="feature-item"
+          class="grid-cell"
           :class="{ disabled: !item.url }"
           @click="handleNavigate(index)">
-          <view class="feature-icon">
+          <view class="cell-icon">
             <uni-icons
               :type="item.icon"
-              size="40"
-              :color="item.url ? '#9b0400' : '#bdc3c7'"></uni-icons>
+              size="30"
+              :color="item.url ? '#7F4515' : '#C0C6CF'" />
           </view>
-          <view class="feature-content">
-            <text class="feature-title">{{ item.text }}</text>
-            <text v-if="item.description" class="feature-description">{{
-              item.description
-            }}</text>
-          </view>
-          <view class="feature-arrow" v-if="item.url">
-            <uni-icons type="right" size="16" color="#bdc3c7"></uni-icons>
-          </view>
+          <text class="cell-title">{{ item.text }}</text>
+          <text v-if="item.description" class="cell-desc">{{
+            item.description
+          }}</text>
         </view>
       </view>
     </ModernCard>
@@ -155,7 +151,7 @@ const handleLogout = () => {
   uni.showModal({
     title: "确认退出",
     content: "确定要退出登录吗？",
-    confirmColor: "#9b0400",
+    confirmColor: "#7F4515",
     success: (res) => {
       if (res.confirm) {
         uni.removeStorageSync("token");
@@ -241,78 +237,65 @@ const handleLogout = () => {
   width: fit-content;
 }
 
-// 功能模块
-.features-card {
+// 2×2 导航网格样式
+.grid-card {
   margin-bottom: 40rpx;
 }
 
-.features-grid {
-  display: flex;
-  flex-direction: column;
+.grid-title {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  margin-bottom: 20rpx;
+}
+
+.grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20rpx;
 }
 
-.feature-item {
+.grid-cell {
+  background: #ffffff;
+  border: 1rpx solid var(--border-light);
+  border-radius: var(--radius-medium);
+  padding: 28rpx;
   display: flex;
-  align-items: center;
-  padding: 30rpx;
-  background: #f8fafc;
-  border-radius: var(--radius-small);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  border: 2rpx solid transparent;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10rpx;
+  transition: all 0.2s ease;
 
   &:active {
     transform: scale(0.98);
-    background: #f1f5f9;
   }
-
   &:not(.disabled):hover {
-    background: #ffffff;
-    border-color: rgba(155, 4, 0, 0.1);
-    box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.1);
+    box-shadow: 0 12rpx 34rpx var(--shadow-light);
+    transform: translateY(-2rpx);
   }
-
   &.disabled {
     opacity: 0.6;
-    cursor: not-allowed;
   }
 }
 
-.feature-icon {
-  margin-right: 24rpx;
+.cell-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  background: rgba(127, 69, 21, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80rpx;
-  height: 80rpx;
-  background: rgba(155, 4, 0, 0.05);
-  border-radius: 50%;
 }
 
-.feature-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-
-.feature-title {
+.cell-title {
   font-size: 30rpx;
-  font-weight: 600;
   color: var(--text-primary);
+  font-weight: 600;
 }
 
-.feature-description {
+.cell-desc {
   font-size: 24rpx;
-  color: var(--text-secondary);
-}
-
-.feature-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.5;
+  color: var(--text-light);
 }
 
 // 快捷操作

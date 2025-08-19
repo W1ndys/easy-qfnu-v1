@@ -178,7 +178,7 @@ const handleLogin = async () => {
       // 延时后跳转
       setTimeout(() => {
         uni.reLaunch({
-          url: "/pages/dashboard/dashboard",
+          url: "/pages/dashboard/index",
         });
       }, 1500);
     } else {
@@ -202,7 +202,7 @@ const handleLogin = async () => {
   position: relative;
   width: 100%;
   height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #f7f8fa;
   overflow: hidden;
 }
 
@@ -219,7 +219,7 @@ const handleLogin = async () => {
 .circle {
   position: absolute;
   border-radius: 50%;
-  background: rgba(155, 4, 0, 0.08);
+  background: rgba(127, 69, 21, 0.06);
 
   &.circle-1 {
     width: 200rpx;
@@ -281,7 +281,7 @@ const handleLogin = async () => {
   height: 120rpx;
   margin-bottom: 30rpx;
   border-radius: 24rpx;
-  box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.15);
+  box-shadow: 0 8rpx 24rpx rgba(127, 69, 21, 0.15);
 }
 
 .app-title {
@@ -355,7 +355,7 @@ const handleLogin = async () => {
 
 .agreement-link {
   margin-left: 6rpx;
-  color: #9b0400;
+  color: #7f4515;
   text-decoration: underline;
 }
 
@@ -376,9 +376,9 @@ const handleLogin = async () => {
   transition: all 0.3s ease !important;
 
   &:focus-within {
-    border-color: #9b0400 !important;
+    border-color: #7f4515 !important;
     background-color: #ffffff !important;
-    box-shadow: 0 0 0 6rpx rgba(155, 4, 0, 0.1) !important;
+    box-shadow: 0 0 0 6rpx rgba(127, 69, 21, 0.1) !important;
   }
 }
 
@@ -392,7 +392,7 @@ const handleLogin = async () => {
 }
 
 :deep(.uni-easyinput__content-icon) {
-  color: #9b0400 !important;
+  color: #7f4515 !important;
 }
 
 .login-btn {
@@ -400,17 +400,17 @@ const handleLogin = async () => {
   height: 72rpx;
   line-height: 72rpx;
   border-radius: 9999rpx;
-  background: linear-gradient(135deg, #9b0400 0%, #c41e3a 100%);
+  background: linear-gradient(135deg, #7f4515 0%, #8c5527 100%);
   color: #ffffff;
   font-size: 28rpx;
   font-weight: 600;
   margin-bottom: 40rpx;
   transition: all 0.3s ease;
-  box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.3);
+  box-shadow: 0 8rpx 24rpx rgba(127, 69, 21, 0.25);
 
   &:active {
     transform: translateY(2rpx);
-    box-shadow: 0 4rpx 12rpx rgba(155, 4, 0, 0.4);
+    box-shadow: 0 4rpx 12rpx rgba(127, 69, 21, 0.35);
   }
 
   &::after {
@@ -418,7 +418,7 @@ const handleLogin = async () => {
   }
 
   &[loading] {
-    background: linear-gradient(135deg, #9b0400 0%, #c41e3a 100%);
+    background: linear-gradient(135deg, #7f4515 0%, #8c5527 100%);
     opacity: 0.8;
   }
 }
