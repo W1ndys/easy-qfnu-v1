@@ -415,16 +415,19 @@ def calculate_gpa_advanced(
         if remove_retakes:
             filtered_data = _process_retakes(filtered_data)
 
-        # 按学年分组计算
-        yearly_gpa = _calculate_yearly_gpa(filtered_data)
-
         # 计算总体GPA
         total_gpa = _calculate_total_gpa(filtered_data)
+
+        # 计算详细的GPA分析（按学年、学期）
+        detailed_gpa = _calculate_detailed_gpa(filtered_data)
 
         return {
             "success": True,
             "total_gpa": total_gpa,
-            "yearly_gpa": yearly_gpa,
+            "yearly_gpa": detailed_gpa["yearly_gpa"],
+            "semester_gpa": detailed_gpa["semester_gpa"],
+            "available_years": detailed_gpa["available_years"],
+            "available_semesters": detailed_gpa["available_semesters"],
             "excluded_count": len(exclude_indices),
             "retakes_processed": remove_retakes,
             "message": "GPA计算完成",
@@ -486,17 +489,18 @@ def _process_retakes(grades_data: list):
     return processed_data
 
 
-def _calculate_yearly_gpa(grades_data: list):
+def _calculate_detailed_gpa(grades_data: list):
     """
-    按学年计算加权GPA。
+    计算详细的GPA分析，包括按学年、学期分组。
 
     Args:
         grades_data: 成绩数据列表
 
     Returns:
-        dict: 按学年组织的GPA数据
+        dict: 详细的GPA分析数据
     """
     yearly_data = {}
+    semester_data = {}
 
     for grade_item in grades_data:
         semester = grade_item.get("开课学期", "")
@@ -505,21 +509,39 @@ def _calculate_yearly_gpa(grades_data: list):
 
         # 提取学年 (例如: "2022-2023-1" -> "2022-2023")
         try:
-            year = "-".join(semester.split("-")[:2])
+            parts = semester.split("-")
+            year = "-".join(parts[:2])
+            full_semester = semester  # 完整学期，如 "2022-2023-1"
         except:
             continue
 
+        # 按学年分组
         if year not in yearly_data:
             yearly_data[year] = []
         yearly_data[year].append(grade_item)
 
-    # 为每个学年计算GPA
+        # 按具体学期分组
+        if full_semester not in semester_data:
+            semester_data[full_semester] = []
+        semester_data[full_semester].append(grade_item)
+
+    # 计算各维度GPA
     yearly_gpa = {}
     for year, year_grades in yearly_data.items():
         gpa_result = _calculate_total_gpa(year_grades)
         yearly_gpa[year] = gpa_result
 
-    return yearly_gpa
+    semester_gpa = {}
+    for semester, semester_grades in semester_data.items():
+        gpa_result = _calculate_total_gpa(semester_grades)
+        semester_gpa[semester] = gpa_result
+
+    return {
+        "yearly_gpa": yearly_gpa,
+        "semester_gpa": semester_gpa,
+        "available_years": sorted(yearly_data.keys()),
+        "available_semesters": sorted(semester_data.keys()),
+    }
 
 
 def _calculate_total_gpa(grades_data: list):
