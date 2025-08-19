@@ -1,0 +1,30 @@
+<view class="container">
+  <view class="profile-header">
+    <image class="avatar" src="/static/images/avatar.png"></image>
+    <view class="user-info">
+      <text class="welcome-text">欢迎你</text>
+      <text class="user-id">{{ studentId }}</text>
+    </view>
+  </view>
+  
+  <view class="grid-container">
+    <view class="grid-item" bindtap="handleNavigate" data-url="/pages/grades/grades">
+      <image class="grid-icon" src="/static/images/grades-icon.png"></image>
+      <text class="grid-text">成绩查询</text>
+    </view>
+    <view class="grid-item" bindtap="handleNavigate" data-url="/pages/schedule/schedule">
+      <image class="grid-icon" src="/static/images/schedule-icon.png"></image>
+      <text class="grid-text">课表查询</text>
+    </view>
+    <view class="grid-item coming-soon">
+      <image class="grid-icon" src="/static/images/gpa-icon.png"></image>
+      <text class="grid-text">GPA计算</text>
+    </view>
+    <view class="grid-item coming-soon">
+      <image class="grid-icon" src="/static/images/exam-icon.png"></image>
+      <text class="grid-text">考试安排</text>
+    </view>
+  </view>
+  
+  <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+</view>

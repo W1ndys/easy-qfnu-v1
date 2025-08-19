@@ -232,56 +232,51 @@ def get_grades(session: requests.Session, semester: str = ""):
         if not table:
             return {"success": False, "message": "未找到成绩表格", "data": []}
 
-        # 获取表头
+        # 我们定义一个中文到英文的映射关系
+        header_map = {
+            "序号": "index",
+            "开课学期": "semester",
+            "课程编号": "courseCode",
+            "课程名称": "courseName",
+            "分组名": "groupName",
+            "成绩": "score",
+            "成绩标识": "scoreTag",
+            "学分": "credit",
+            "总学时": "totalHours",
+            "绩点": "gpa",
+            "补重学期": "retakeSemester",
+            "考核方式": "assessmentMethod",
+            "考试性质": "examType",
+            "课程属性": "courseAttribute",
+            "课程性质": "courseNature",
+            "课程类别": "courseCategory",
+        }
+
+        # 从表头获取实际的列名顺序
         headers_row = table.find("tr")  # type: ignore
         if not headers_row:
             return {"success": False, "message": "未找到表格头部", "data": []}
 
-        # 提取列名
-        headers = []
-        for th in headers_row.find_all("th"):  # type: ignore
-            header_text = th.get_text(strip=True)
-            if header_text:
-                headers.append(header_text)
-
-        print(f"表格列名: {headers}")
-
-        # 获取所有数据行（跳过表头）
-        data_rows = table.find_all("tr")[1:]  # type: ignore
+        actual_headers = [th.get_text(strip=True) for th in headers_row.find_all("th")]  # type: ignore
 
         grades_data = []
+        data_rows = table.find_all("tr")[1:]  # type: ignore
 
         for row in data_rows:
             cells = row.find_all("td")  # type: ignore
-
-            # 如果没有td元素，跳过该行
-            if not cells:
+            if len(cells) < len(actual_headers):
                 continue
 
-            # 检查是否是"未查询到数据"的行
-            if len(cells) == 1 and "未查询到数据" in cells[0].get_text(strip=True):
-                print("未查询到成绩数据")
-                break
+            grade_item = {}
+            for i, cell in enumerate(cells):
+                # 使用英文键名来存储数据
+                header_text = actual_headers[i]
+                english_key = header_map.get(header_text)
+                if english_key:  # 只添加我们定义过的键
+                    grade_item[english_key] = cell.get_text(strip=True)
 
-            # 如果单元格数量少于预期，可能需要调整解析逻辑
-            if len(cells) < len(headers):
-                print(
-                    f"警告：数据行单元格数量({len(cells)})少于表头数量({len(headers)})"
-                )
-                # 继续处理，用空字符串填充缺失的单元格
-
-            # 提取每行数据
-            row_data = {}
-            for i, header in enumerate(headers):
-                if i < len(cells):
-                    cell_text = cells[i].get_text(strip=True)
-                    row_data[header] = cell_text
-                else:
-                    row_data[header] = ""  # 填充空值
-
-            # 只有当行数据包含有效信息时才添加（至少有序号或课程名称）
-            if row_data.get("序号") or row_data.get("课程名称"):
-                grades_data.append(row_data)
+            if grade_item:
+                grades_data.append(grade_item)
 
         print(f"成功获取 {len(grades_data)} 条成绩记录")
 
@@ -457,8 +452,8 @@ def _process_retakes(grades_data: list):
     # 按课程名称分组
     course_groups = {}
     for grade_item in grades_data:
-        course_name = grade_item.get("课程名称", "")
-        course_code = grade_item.get("课程编号", "")
+        course_name = grade_item.get("courseName", "")
+        course_code = grade_item.get("courseCode", "")
         key = f"{course_code}_{course_name}"
 
         if key not in course_groups:
@@ -477,7 +472,7 @@ def _process_retakes(grades_data: list):
 
             for record in course_list:
                 try:
-                    gpa = float(record.get("绩点", "0"))
+                    gpa = float(record.get("gpa", "0"))
                     if gpa > best_gpa:
                         best_gpa = gpa
                         best_record = record
@@ -503,7 +498,7 @@ def _calculate_detailed_gpa(grades_data: list):
     semester_data = {}
 
     for grade_item in grades_data:
-        semester = grade_item.get("开课学期", "")
+        semester = grade_item.get("semester", "")
         if not semester:
             continue
 
@@ -560,8 +555,8 @@ def _calculate_total_gpa(grades_data: list):
     valid_courses = []
 
     for grade_item in grades_data:
-        credit_str = grade_item.get("学分", "0")
-        grade_point_str = grade_item.get("绩点", "0")
+        credit_str = grade_item.get("credit", "0")
+        grade_point_str = grade_item.get("gpa", "0")
 
         try:
             credit = float(credit_str) if credit_str and credit_str != "" else 0.0
@@ -577,10 +572,10 @@ def _calculate_total_gpa(grades_data: list):
                 course_count += 1
                 valid_courses.append(
                     {
-                        "course_name": grade_item.get("课程名称", ""),
+                        "course_name": grade_item.get("courseName", ""),
                         "credit": credit,
                         "grade_point": grade_point,
-                        "semester": grade_item.get("开课学期", ""),
+                        "semester": grade_item.get("semester", ""),
                     }
                 )
 

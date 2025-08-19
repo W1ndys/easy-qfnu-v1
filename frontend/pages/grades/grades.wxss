@@ -1,0 +1,94 @@
+/* pages/grades/grades.wxss */
+page {
+  background-color: #f7f8fa;
+}
+
+.container {
+  padding: 20rpx;
+}
+
+/* 加载样式 */
+.loading-container {
+  text-align: center;
+  padding-top: 200rpx;
+  color: #999;
+}
+.loading-icon {
+  width: 40rpx;
+  height: 40rpx;
+  border: 4rpx solid #e9e9e9;
+  border-top-color: #07c160;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20rpx;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 空状态样式 */
+.empty-container {
+  text-align: center;
+  padding-top: 200rpx;
+  color: #999;
+}
+.empty-icon {
+  width: 150rpx;
+  height: 150rpx;
+  margin-bottom: 20rpx;
+}
+
+/* 学期卡片样式 */
+.semester-card {
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.semester-header {
+  padding: 20rpx 30rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  background-color: #f2f3f5;
+  color: #333;
+}
+
+.grade-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f2f3f5;
+}
+
+.grade-item:last-child {
+  border-bottom: none;
+}
+
+.course-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-name {
+  font-size: 30rpx;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.course-credit {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.score-info {
+  text-align: right;
+}
+
+.score {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #07c160;
+}

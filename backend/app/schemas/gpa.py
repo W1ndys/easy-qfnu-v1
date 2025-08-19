@@ -11,22 +11,22 @@ class GPACalculateRequest(BaseModel):
 class CourseGrade(BaseModel):
     """单个课程成绩信息"""
 
-    序号: str
-    开课学期: str
-    课程编号: str
-    课程名称: str
-    分组名: str
-    成绩: str
-    成绩标识: str
-    学分: str
-    总学时: str
-    绩点: str
-    补重学期: str
-    考核方式: str
-    考试性质: str
-    课程属性: str
-    课程性质: str
-    课程类别: str
+    index: str
+    semester: str
+    courseCode: str
+    courseName: str
+    groupName: str
+    score: str
+    scoreTag: str
+    credit: str
+    totalHours: str
+    gpa: str
+    retakeSemester: str
+    assessmentMethod: str
+    examType: str
+    courseAttribute: str
+    courseNature: str
+    courseCategory: str
 
 
 class GPAAnalysis(BaseModel):
