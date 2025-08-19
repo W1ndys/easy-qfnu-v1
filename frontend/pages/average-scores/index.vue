@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container">
+  <view class="page-container page-rounded-container">
     <!-- 背景装饰 -->
     <view class="background-decoration">
       <view class="circle circle-1"></view>
@@ -453,6 +453,15 @@ export default {
   background: #f7f8fa;
   position: relative;
   overflow: hidden;
+}
+
+// 外层圆角容器（与其他页面一致）
+.page-rounded-container {
+  background: #ffffff;
+  border-radius: 40rpx;
+  padding: 30rpx 30rpx 40rpx;
+  box-shadow: 0 20rpx 60rpx var(--shadow-light);
+  border: 1rpx solid var(--border-light);
 }
 
 // 背景装饰

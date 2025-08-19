@@ -24,8 +24,8 @@
 			"path": "pages/average-scores/index",
 			"style": {
 				"navigationBarTitleText": "平均分查询",
-				"navigationBarBackgroundColor": "#007aff",
-				"navigationBarTextStyle": "white"
+				"navigationBarBackgroundColor": "#f7f8fa",
+				"navigationBarTextStyle": "black"
 			}
 		}
 	],
@@ -38,7 +38,7 @@
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "Easy-QFNU",
-		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
+		"navigationBarBackgroundColor": "#f7f8fa",
+		"backgroundColor": "#f7f8fa"
 	}
 }

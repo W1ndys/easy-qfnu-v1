@@ -3,8 +3,8 @@
     <!-- 加载状态 -->
     <LoadingScreen v-if="isLoading" text="正在从教务系统同步成绩..." />
 
-    <!-- 内容区域 -->
-    <view v-else>
+    <!-- 内容区域：卡片容器（圆角）-->
+    <view v-else class="page-rounded-container">
       <!-- 空状态 -->
       <EmptyState
         v-if="semesters.length === 0"
@@ -12,8 +12,7 @@
         title="没有查询到任何成绩记录"
         description="请检查网络连接或稍后重试"
         :show-retry="true"
-        @retry="fetchGrades"
-      />
+        @retry="fetchGrades" />
 
       <!-- 有数据时显示 -->
       <view v-else>
@@ -24,8 +23,7 @@
           :effective-gpa="effectiveGpa"
           :yearly-gpa="yearlyGpa"
           :semester-gpa="semesterGpa"
-          :total-courses="totalCourses"
-        />
+          :total-courses="totalCourses" />
 
         <!-- 成绩列表 -->
         <GradesList :semesters="semesters" />
@@ -140,5 +138,14 @@ const groupGradesBySemester = (grades) => {
 </script>
 
 <style lang="scss" scoped>
-// 成绩页面已完全组件化，样式已移至相应组件中
+@import "../../styles/common.scss";
+
+// 成绩页外层圆角容器
+.page-rounded-container {
+  background: #ffffff;
+  border-radius: 40rpx;
+  padding: 30rpx;
+  box-shadow: 0 20rpx 60rpx var(--shadow-light);
+  border: 1rpx solid var(--border-light);
+}
 </style>
