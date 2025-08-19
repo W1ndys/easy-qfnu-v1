@@ -1,75 +1,122 @@
 <template>
-  <view class="container">
-    <view class="profile-header">
-      <image class="avatar" src="/static/images/avatar.png"></image>
-      <view class="user-info">
-        <text class="welcome-text">欢迎你</text>
-        <text class="user-id">{{ studentId }}</text>
-      </view>
-    </view>
-
-    <view class="grid-title">核心功能</view>
-    <uni-grid
-      :column="2"
-      :show-border="false"
-      :square="false"
-      @change="handleNavigate">
-      <uni-grid-item
-        v-for="(item, index) in features"
-        :key="index"
-        :index="index">
-        <view class="grid-item-box">
-          <image class="grid-icon" :src="item.icon"></image>
-          <text class="grid-text">{{ item.text }}</text>
+  <PageLayout>
+    <!-- 用户信息卡片 -->
+    <ModernCard class="profile-card" highlight>
+      <view class="profile-content">
+        <view class="avatar-section">
+          <view class="avatar-wrapper">
+            <image
+              class="avatar"
+              src="/static/logo.png"
+              mode="aspectFit"></image>
+            <view class="status-indicator"></view>
+          </view>
         </view>
-      </uni-grid-item>
-    </uni-grid>
+        <view class="user-info">
+          <text class="welcome-text">欢迎回来</text>
+          <text class="user-id">{{ studentId }}</text>
+          <text class="user-role">曲园er~</text>
+        </view>
+      </view>
+    </ModernCard>
 
-    <button class="logout-btn" @click="handleLogout">退出登录</button>
-  </view>
+    <!-- 功能模块 -->
+    <ModernCard title="核心功能" class="features-card">
+      <view class="features-grid">
+        <view
+          v-for="(item, index) in features"
+          :key="index"
+          class="feature-item"
+          :class="{ disabled: !item.url }"
+          @click="handleNavigate(index)">
+          <view class="feature-icon">
+            <uni-icons
+              :type="item.icon"
+              size="40"
+              :color="item.url ? '#9b0400' : '#bdc3c7'"></uni-icons>
+          </view>
+          <view class="feature-content">
+            <text class="feature-title">{{ item.text }}</text>
+            <text v-if="item.description" class="feature-description">{{
+              item.description
+            }}</text>
+          </view>
+          <view class="feature-arrow" v-if="item.url">
+            <uni-icons type="right" size="16" color="#bdc3c7"></uni-icons>
+          </view>
+        </view>
+      </view>
+    </ModernCard>
+
+    <!-- 快捷操作 -->
+    <ModernCard title="快捷操作">
+      <view class="quick-actions">
+        <button class="action-btn refresh-btn" @click="handleRefresh">
+          <uni-icons type="refresh" size="20" color="#ffffff"></uni-icons>
+          <text>刷新数据</text>
+        </button>
+        <button class="action-btn logout-btn" @click="handleLogout">
+          <uni-icons type="closeempty" size="20" color="#ffffff"></uni-icons>
+          <text>退出登录</text>
+        </button>
+      </view>
+    </ModernCard>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
-// 确保你的 jwt-decode.js 文件放在了项目的 utils 目录中
 import { decode } from "../../utils/jwt-decode.js";
+import PageLayout from "../../components/PageLayout/PageLayout.vue";
+import ModernCard from "../../components/ModernCard/ModernCard.vue";
 
 // --- 页面数据 ---
-// ref() 创建的是响应式变量，当 .value 改变时，<template>会自动更新
 const studentId = ref("加载中...");
 
-// 定义功能列表，数据驱动UI
+// 定义功能列表，使用现代化图标
 const features = ref([
   {
-    text: "成绩查询 & GPA",
-    icon: "/static/images/grades-icon.png",
+    text: "成绩查询",
+    description: "查看成绩与GPA分析",
+    icon: "paperplane",
     url: "/pages/grades/grades",
   },
   {
     text: "课表查询",
-    icon: "/static/images/schedule-icon.png",
+    description: "查看课程安排",
+    icon: "calendar",
     url: "/pages/schedule/schedule",
   },
-  { text: "课程评价", icon: "/static/images/review-icon.png", url: "" },
-  { text: "更多功能", icon: "/static/images/more-icon.png", url: "" }, // 预留给未来功能
+  {
+    text: "课程评价",
+    description: "即将推出",
+    icon: "star",
+    url: "",
+  },
+  {
+    text: "更多功能",
+    description: "敬请期待",
+    icon: "gear",
+    url: "",
+  },
 ]);
 
 // --- 页面生命周期函数 ---
-// onLoad 会在页面首次加载时执行一次
 onLoad(() => {
-  // 检查登录状态
+  checkLoginStatus();
+});
+
+// 检查登录状态
+const checkLoginStatus = () => {
   const token = uni.getStorageSync("token");
 
   if (!token) {
-    // 如果没有Token，直接踢回登录页
     uni.showToast({ title: "请先登录", icon: "none" });
-    uni.reLaunch({ url: "/pages/index/index" }); // 登录页是 index
+    uni.reLaunch({ url: "/pages/index/index" });
   } else {
     try {
-      // 解析Token获取学号
       const payload = decode(token);
-      // 更新 studentId 的值
       studentId.value = payload.sub;
     } catch (error) {
       console.error("Token解析失败", error);
@@ -77,33 +124,40 @@ onLoad(() => {
       uni.reLaunch({ url: "/pages/index/index" });
     }
   }
-});
+};
 
 // --- 事件处理函数 ---
-// 处理宫格点击事件
-const handleNavigate = (e) => {
-  // ⬇️⬇️⬇️ 在这里加上第一句日志 ⬇️⬇️⬇️
-  console.log("handleNavigate 函数被触发了！收到的事件对象是:", e);
-
-  const index = e.detail.index;
+// 处理功能项点击事件
+const handleNavigate = (index) => {
   const targetPage = features.value[index];
 
   if (targetPage.url) {
+    console.log("导航到:", targetPage.url);
     uni.navigateTo({ url: targetPage.url });
   } else {
     uni.showToast({ title: "功能正在开发中...", icon: "none" });
   }
 };
 
-// 处理退出登录点击事件
+// 刷新数据
+const handleRefresh = () => {
+  uni.showToast({ title: "数据已刷新", icon: "success" });
+  checkLoginStatus();
+};
+
+// 处理退出登录
 const handleLogout = () => {
   uni.showModal({
-    title: "提示",
+    title: "确认退出",
     content: "确定要退出登录吗？",
+    confirmColor: "#9b0400",
     success: (res) => {
       if (res.confirm) {
         uni.removeStorageSync("token");
-        uni.reLaunch({ url: "/pages/index/index" });
+        uni.showToast({ title: "已退出登录", icon: "success" });
+        setTimeout(() => {
+          uni.reLaunch({ url: "/pages/index/index" });
+        }, 1000);
       }
     },
   });
@@ -111,82 +165,200 @@ const handleLogout = () => {
 </script>
 
 <style lang="scss" scoped>
-.container {
-  padding: 40rpx;
+@import "../../styles/common.scss";
+
+// 用户信息卡片
+.profile-card {
+  margin-bottom: 40rpx;
 }
 
-.profile-header {
+.profile-content {
   display: flex;
   align-items: center;
-  margin-bottom: 60rpx;
+  gap: 30rpx;
+}
+
+.avatar-section {
+  position: relative;
+}
+
+.avatar-wrapper {
+  position: relative;
+  display: inline-block;
 }
 
 .avatar {
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  margin-right: 30rpx;
-  border: 4rpx solid #eee;
+  border: 4rpx solid rgba(155, 4, 0, 0.1);
+  box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.15);
+}
+
+.status-indicator {
+  position: absolute;
+  bottom: 8rpx;
+  right: 8rpx;
+  width: 24rpx;
+  height: 24rpx;
+  background: #52c41a;
+  border-radius: 50%;
+  border: 3rpx solid #ffffff;
 }
 
 .user-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 8rpx;
 }
 
 .welcome-text {
-  font-size: 32rpx;
-  color: #666;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .user-id {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: #333;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1rpx;
 }
 
-.grid-title {
-  font-size: 34rpx;
-  font-weight: bold;
-  margin-bottom: 30rpx;
-  padding-left: 10rpx;
+.user-role {
+  font-size: 24rpx;
+  color: var(--text-light);
+  background: rgba(155, 4, 0, 0.1);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  display: inline-block;
+  width: fit-content;
 }
 
-// Grid样式
-.grid-item-box {
+// 功能模块
+.features-card {
+  margin-bottom: 40rpx;
+}
+
+.features-grid {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 220rpx;
-  width: 100%;
-  background-color: #f7f8fa;
-  border-radius: 20rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  gap: 20rpx;
+}
 
-  // 通过 uni-grid-item 的属性来判断是否未开放
-  .uni-grid-item[data-url=""] & {
-    opacity: 0.5;
+.feature-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  background: #f8fafc;
+  border-radius: var(--radius-small);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2rpx solid transparent;
+
+  &:active {
+    transform: scale(0.98);
+    background: #f1f5f9;
+  }
+
+  &:not(.disabled):hover {
+    background: #ffffff;
+    border-color: rgba(155, 4, 0, 0.1);
+    box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.1);
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 
-.grid-icon {
+.feature-icon {
+  margin-right: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 80rpx;
   height: 80rpx;
-  margin-bottom: 20rpx;
+  background: rgba(155, 4, 0, 0.05);
+  border-radius: 50%;
 }
 
-.grid-text {
+.feature-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.feature-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.feature-description {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.feature-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+}
+
+// 快捷操作
+.quick-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 24rpx;
+  border-radius: var(--radius-small);
   font-size: 28rpx;
-  color: #333;
+  font-weight: 600;
+  border: none;
+  transition: all 0.3s ease;
+
+  &::after {
+    border: none;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  text {
+    font-weight: inherit;
+  }
+}
+
+.refresh-btn {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  color: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
+
+  &:active {
+    box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.4);
+  }
 }
 
 .logout-btn {
-  margin-top: 80rpx;
-  background-color: #f5f5f5;
-  color: #e64340;
-  &::after {
-    border: none;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  color: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.3);
+
+  &:active {
+    box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.4);
   }
 }
 </style>
