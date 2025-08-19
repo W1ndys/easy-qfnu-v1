@@ -10,6 +10,7 @@ load_dotenv()
 
 from app.api.v1 import auth as auth_router
 from app.api.v1 import grades as grades_router
+from app.api.v1 import average_scores as average_scores_router
 from app.db.database import init_db
 
 # 创建FastAPI应用实例
@@ -38,6 +39,7 @@ def read_root():
 # tags=["认证"] 用于在API文档中进行分组，非常方便
 app.include_router(auth_router.router, prefix="/api/v1", tags=["认证"])
 app.include_router(grades_router.router, prefix="/api/v1", tags=["成绩"])
+app.include_router(average_scores_router.router, prefix="/api/v1", tags=["平均分查询"])
 
 if __name__ == "__main__":
     # 这里的 "app.main:app" 指向的是 app文件夹下的main.py文件中的app实例
