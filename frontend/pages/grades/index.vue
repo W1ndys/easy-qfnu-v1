@@ -68,7 +68,7 @@ const fetchGrades = async () => {
 
   try {
     const res = await uni.request({
-      url: "http://127.0.0.1:8000/api/v1/grades",
+      url: `${getApp().globalData.apiBaseURL}/api/v1/grades`,
       method: "GET",
       // 【核心】在请求头中带上Token，用于身份认证
       header: {

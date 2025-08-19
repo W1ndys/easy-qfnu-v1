@@ -161,7 +161,7 @@ const handleLogin = async () => {
   try {
     // 3. 使用 uni.request 发起网络请求
     const res = await uni.request({
-      url: "http://127.0.0.1:8000/api/v1/login", // 确保后端在运行
+      url: `${getApp().globalData.apiBaseURL}/api/v1/login`, // 统一读取全局域名
       method: "POST",
       data: {
         student_id: formData.value.studentId,

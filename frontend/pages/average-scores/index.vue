@@ -394,8 +394,8 @@ export default {
     },
 
     async queryAverageScores(params) {
-      // 假设您有一个全局的API基础URL配置
-      const baseURL = getApp().globalData.apiBaseURL || "http://127.0.0.1:8000";
+      // 统一从 App.globalData 读取 API 基础域名
+      const baseURL = getApp().globalData.apiBaseURL;
       const token = uni.getStorageSync("token");
 
       if (!token) {
