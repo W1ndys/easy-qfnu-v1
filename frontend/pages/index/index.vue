@@ -31,6 +31,7 @@
 <script setup>
 import { ref } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
+import { isTokenValid } from "../../utils/jwt-decode.js";
 
 // 1. 使用 ref 创建"响应式"数据
 // 这等同于原生小程序里的 this.data
@@ -51,11 +52,31 @@ const checkLoginStatus = () => {
   const token = uni.getStorageSync("token");
 
   if (token) {
-    console.log("检测到缓存的token，准备跳转到dashboard");
-    // 如果有token，直接跳转到dashboard页面
-    uni.reLaunch({
-      url: "/pages/dashboard/dashboard",
-    });
+    console.log("检测到缓存的token，开始验证有效性");
+
+    try {
+      if (isTokenValid(token)) {
+        console.log("Token验证通过，准备跳转到dashboard");
+        uni.reLaunch({
+          url: "/pages/dashboard/dashboard",
+        });
+      } else {
+        console.log("Token无效，清除并停留在登录页");
+        uni.removeStorageSync("token");
+        uni.showToast({
+          title: "登录已过期，请重新登录",
+          icon: "none",
+        });
+      }
+    } catch (error) {
+      console.error("Token验证过程中出错:", error);
+      // 如果验证过程有问题，为安全起见清除token
+      uni.removeStorageSync("token");
+      uni.showToast({
+        title: "登录状态异常，请重新登录",
+        icon: "none",
+      });
+    }
   }
 };
 
@@ -72,7 +93,7 @@ const handleLogin = async () => {
   try {
     // 3. 使用 uni.request 发起网络请求
     const res = await uni.request({
-      url: "http://127.0.0.1:8000/api/v1/login", // 确保后端在运行
+      url: "https://api.easy-qfnu.top/api/v1/login", // 确保后端在运行
       method: "POST",
       data: {
         student_id: formData.value.studentId,

@@ -58,7 +58,7 @@ const fetchSchedule = async () => {
   try {
     // 这里的URL和接口需要根据实际后端API调整
     const res = await uni.request({
-      url: "http://127.0.0.1:8000/api/v1/schedule",
+      url: "https://api.easy-qfnu.top/api/v1/schedule",
       method: "GET",
       header: {
         Authorization: "Bearer " + token,

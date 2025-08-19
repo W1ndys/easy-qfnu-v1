@@ -128,7 +128,7 @@ const fetchGrades = async () => {
 
   try {
     const res = await uni.request({
-      url: "http://127.0.0.1:8000/api/v1/grades",
+      url: "https://api.easy-qfnu.top/api/v1/grades",
       method: "GET",
       // 【核心】在请求头中带上Token，用于身份认证
       header: {
@@ -149,6 +149,14 @@ const fetchGrades = async () => {
       yearlyGpa.value = res.data.yearly_gpa;
       effectiveGpa.value = res.data.effective_gpa;
       totalCourses.value = res.data.total_courses;
+    } else if (res.statusCode === 401) {
+      // token无效或过期
+      console.log("Token无效，清除缓存并跳转到登录页");
+      uni.removeStorageSync("token");
+      uni.showToast({ title: "登录已过期，请重新登录", icon: "none" });
+      setTimeout(() => {
+        uni.reLaunch({ url: "/pages/index/index" });
+      }, 1500);
     } else {
       const errorMessage = res.data.detail || "获取成绩失败";
       uni.showToast({ title: errorMessage, icon: "none" });
