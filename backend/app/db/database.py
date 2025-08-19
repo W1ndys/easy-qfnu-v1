@@ -1,13 +1,19 @@
-# database.py (最终修正版)
+# database.py (Docker适配版)
 
 import pickle
 import datetime
-import requests  # <--- 确保导入了 requests
+import requests
+import os
 from sqlalchemy import create_engine, Column, String, BLOB, TIMESTAMP
-from sqlalchemy.orm import sessionmaker, declarative_base  # 使用推荐的导入方式
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-# ... 数据库设置部分不变 ...
-DATABASE_URL = "sqlite:///./sessions.db"
+# 数据库配置 - 支持Docker环境
+DATABASE_PATH = os.getenv("DATABASE_PATH", "./data/sessions.db")
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+
+# 确保数据目录存在
+os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
