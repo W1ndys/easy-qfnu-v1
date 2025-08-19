@@ -1,43 +1,71 @@
 <template>
-  <view class="container">
-    <view v-if="isLoading" class="loading-container">
-      <uni-load-more
-        status="loading"
-        :show-text="true"
-        content-text="正在加载课表..."></uni-load-more>
-    </view>
+  <PageLayout>
+    <!-- 加载状态 -->
+    <LoadingScreen v-if="isLoading" text="正在加载课表..." />
 
+    <!-- 内容区域 -->
     <view v-else>
-      <view v-if="schedule.length === 0" class="empty-container">
-        <uni-icons type="info-filled" size="60" color="#999"></uni-icons>
-        <text class="empty-text">没有查询到任何课表信息</text>
-      </view>
+      <!-- 空状态 -->
+      <EmptyState
+        v-if="schedule.length === 0"
+        icon-type="calendar"
+        title="没有查询到任何课表信息"
+        description="请检查当前学期是否有课程安排"
+        :show-retry="true"
+        @retry="fetchSchedule" />
 
-      <uni-card
-        v-for="(day, idx) in schedule"
-        :key="day.weekday"
-        :title="day.weekday"
-        margin="12px 0">
-        <uni-list>
-          <uni-list-item
-            v-for="course in day.courses"
-            :key="course.courseCode"
-            :title="course.courseName"
-            :note="`时间: ${course.time} | 地点: ${course.location}`"
-            :right-text="course.teacher"></uni-list-item>
-        </uni-list>
-      </uni-card>
+      <!-- 有数据时显示 -->
+      <view v-else>
+        <!-- 课表概览卡片 -->
+        <ModernCard title="课表概览" highlight class="overview-card">
+          <view class="overview-stats">
+            <view class="stat-item">
+              <view class="stat-value">{{ totalDays }}</view>
+              <view class="stat-label">有课天数</view>
+            </view>
+            <view class="stat-item">
+              <view class="stat-value">{{ totalCourses }}</view>
+              <view class="stat-label">总课程数</view>
+            </view>
+            <view class="stat-item">
+              <view class="stat-value">{{ currentWeek }}</view>
+              <view class="stat-label">当前周次</view>
+            </view>
+          </view>
+        </ModernCard>
+
+        <!-- 课表列表 -->
+        <ScheduleList :schedule="schedule" />
+      </view>
     </view>
-  </view>
+  </PageLayout>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
+import PageLayout from "../../components/PageLayout/PageLayout.vue";
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
+import EmptyState from "../../components/EmptyState/EmptyState.vue";
+import ModernCard from "../../components/ModernCard/ModernCard.vue";
+import ScheduleList from "../../components/ScheduleList/ScheduleList.vue";
 
 // --- 页面数据 ---
 const isLoading = ref(true); // 页面初始为加载状态
 const schedule = ref([]); // 用于存放课表数据
+
+// 计算属性
+const totalDays = computed(() => schedule.value.length);
+const totalCourses = computed(() =>
+  schedule.value.reduce((total, day) => total + day.courses.length, 0)
+);
+const currentWeek = computed(() => {
+  // 这里可以根据实际情况计算当前周次
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const weekNumber = Math.ceil((now - startOfYear) / (7 * 24 * 60 * 60 * 1000));
+  return weekNumber;
+});
 
 // --- 页面生命周期 ---
 onLoad(() => {
@@ -121,39 +149,37 @@ const groupScheduleByWeekday = (courses) => {
 </script>
 
 <style lang="scss" scoped>
-.container {
-  padding: 20rpx;
-  background-color: #f7f8fa;
-  min-height: 100vh;
+@import "../../styles/common.scss";
+
+.overview-card {
+  margin-bottom: 40rpx;
 }
 
-.loading-container {
-  padding-top: 200rpx;
-}
-
-.empty-container {
+.overview-stats {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 200rpx;
-  color: #999;
-}
-.empty-text {
-  margin-top: 20rpx;
-  font-size: 28rpx;
+  justify-content: space-between;
+  gap: 20rpx;
 }
 
-// 深度修改 uni-list-item 的样式
-:deep(.uni-list-item__content-title) {
-  font-size: 30rpx !important;
-  color: #333 !important;
+.stat-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx;
+  background: linear-gradient(135deg, rgba(155, 4, 0, 0.05) 0%, rgba(155, 4, 0, 0.1) 100%);
+  border-radius: var(--radius-small);
+  border: 1rpx solid rgba(155, 4, 0, 0.1);
 }
-:deep(.uni-list-item__content-note) {
-  font-size: 24rpx !important;
-  color: #999 !important;
+
+.stat-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #9b0400;
+  margin-bottom: 8rpx;
 }
-:deep(.uni-list-item__extra-text) {
-  font-size: 28rpx !important;
-  color: #07c160 !important;
+
+.stat-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 </style>

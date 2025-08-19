@@ -1,29 +1,55 @@
 <template>
   <view class="container">
-    <image class="logo" src="/static/logo.png" mode="aspectFit"></image>
+    <!-- 背景装饰 -->
+    <view class="background-decoration">
+      <view class="circle circle-1"></view>
+      <view class="circle circle-2"></view>
+      <view class="circle circle-3"></view>
+    </view>
 
-    <uni-forms class="login-form" :modelValue="formData">
-      <uni-forms-item>
-        <uni-easyinput
-          prefixIcon="person"
-          v-model="formData.studentId"
-          placeholder="请输入学号" />
-      </uni-forms-item>
-      <uni-forms-item>
-        <uni-easyinput
-          prefixIcon="locked"
-          type="password"
-          v-model="formData.password"
-          placeholder="请输入教务系统密码" />
-      </uni-forms-item>
-    </uni-forms>
+    <!-- 主内容区域 -->
+    <view class="content-wrapper">
+      <!-- Logo区域 -->
+      <view class="logo-section">
+        <image class="logo" src="/static/logo.png" mode="aspectFit"></image>
+        <view class="app-title">Easy-QFNU</view>
+        <view class="app-subtitle">让你的QFNU更简单</view>
+      </view>
 
-    <button class="login-btn" @click="handleLogin" :loading="isLoading">
-      登 录
-    </button>
+      <!-- 登录表单 -->
+      <view class="login-card">
+        <view class="form-header">
+          <text class="form-title">欢迎回来</text>
+          <text class="form-subtitle">请登录您的教务系统账号</text>
+        </view>
 
-    <view class="footer-text">
-      <text>本程序为第三方应用，非学校官方出品</text>
+        <uni-forms class="login-form" :modelValue="formData">
+          <uni-forms-item class="form-item">
+            <uni-easyinput
+              prefixIcon="person"
+              v-model="formData.studentId"
+              placeholder="学号"
+              class="custom-input" />
+          </uni-forms-item>
+          <uni-forms-item class="form-item">
+            <uni-easyinput
+              prefixIcon="locked"
+              type="password"
+              v-model="formData.password"
+              placeholder="密码"
+              class="custom-input" />
+          </uni-forms-item>
+        </uni-forms>
+
+        <button class="login-btn" @click="handleLogin" :loading="isLoading">
+          <text v-if="!isLoading">登录</text>
+          <text v-else>登录中...</text>
+        </button>
+
+        <view class="footer-text">
+          <text>本程序为第三方应用，非学校官方出品</text>
+        </view>
+      </view>
     </view>
   </view>
 </template>
@@ -131,53 +157,238 @@ const handleLogin = async () => {
 
 <style lang="scss" scoped>
 .container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  overflow: hidden;
+}
+
+// 背景装饰圆圈
+.background-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(155, 4, 0, 0.08);
+
+  &.circle-1 {
+    width: 200rpx;
+    height: 200rpx;
+    top: 10%;
+    right: -50rpx;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  &.circle-2 {
+    width: 150rpx;
+    height: 150rpx;
+    bottom: 20%;
+    left: -30rpx;
+    animation: float 8s ease-in-out infinite reverse;
+  }
+
+  &.circle-3 {
+    width: 100rpx;
+    height: 100rpx;
+    top: 30%;
+    left: 20%;
+    animation: float 4s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20rpx) rotate(180deg);
+  }
+}
+
+.content-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  padding: 0 40rpx;
+  padding: 0 60rpx;
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+// Logo区域样式
+.logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80rpx;
 }
 
 .logo {
-  width: 180rpx;
-  height: 180rpx;
-  margin-bottom: 80rpx;
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 30rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.15);
+}
+
+.app-title {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 16rpx;
+  letter-spacing: 2rpx;
+}
+
+.app-subtitle {
+  font-size: 28rpx;
+  color: #7f8c8d;
+  font-weight: 400;
+}
+
+// 登录卡片
+.login-card {
+  width: 100%;
+  max-width: 680rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 32rpx;
+  padding: 60rpx 50rpx 40rpx;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(20rpx);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+
+.form-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 16rpx;
+}
+
+.form-subtitle {
+  display: block;
+  font-size: 26rpx;
+  color: #7f8c8d;
+  font-weight: 400;
 }
 
 .login-form {
   width: 100%;
-  margin-bottom: 60rpx;
+  margin-bottom: 50rpx;
+}
+
+.form-item {
+  margin-bottom: 30rpx;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 // uni-ui组件的深度样式修改
 :deep(.uni-easyinput__content) {
-  height: 100rpx;
-  border-radius: 50rpx !important;
-  background-color: #f7f7f7 !important;
-  border: none !important;
+  height: 96rpx !important;
+  border-radius: 16rpx !important;
+  background-color: #f8fafc !important;
+  border: 2rpx solid #e2e8f0 !important;
+  transition: all 0.3s ease !important;
+
+  &:focus-within {
+    border-color: #9b0400 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 6rpx rgba(155, 4, 0, 0.1) !important;
+  }
+}
+
+:deep(.uni-easyinput__content-input) {
+  font-size: 30rpx !important;
+  color: #2d3748 !important;
+
+  &::placeholder {
+    color: #a0aec0 !important;
+  }
+}
+
+:deep(.uni-easyinput__content-icon) {
+  color: #9b0400 !important;
 }
 
 .login-btn {
   width: 100%;
-  height: 100rpx;
-  line-height: 100rpx;
-  border-radius: 50rpx;
-  background-color: #07c160;
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, #9b0400 0%, #c41e3a 100%);
   color: #ffffff;
-  font-size: 34rpx;
-  font-weight: bold;
-  // uni-app的按钮样式微调
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 40rpx;
+  transition: all 0.3s ease;
+  box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.3);
+
+  &:active {
+    transform: translateY(2rpx);
+    box-shadow: 0 4rpx 12rpx rgba(155, 4, 0, 0.4);
+  }
+
   &::after {
     border: none;
+  }
+
+  &[loading] {
+    background: linear-gradient(135deg, #9b0400 0%, #c41e3a 100%);
+    opacity: 0.8;
   }
 }
 
 .footer-text {
-  position: absolute;
-  bottom: 40rpx;
-  font-size: 24rpx;
-  color: #aaa;
+  text-align: center;
+  font-size: 22rpx;
+  color: #a0aec0;
+  font-weight: 400;
+
+  text {
+    opacity: 0.8;
+  }
+}
+
+// 响应式适配
+@media (max-height: 600px) {
+  .content-wrapper {
+    padding: 40rpx 60rpx;
+  }
+
+  .logo-section {
+    margin-bottom: 40rpx;
+  }
+
+  .logo {
+    width: 100rpx;
+    height: 100rpx;
+  }
+
+  .app-title {
+    font-size: 40rpx;
+  }
+
+  .login-card {
+    padding: 40rpx 40rpx 30rpx;
+  }
 }
 </style>
