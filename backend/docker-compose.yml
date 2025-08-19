@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: easyqfnujw-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-key-change-in-production}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    volumes:
+      # 持久化数据库文件
+      - ./data:/app/data
+      # 开发模式下挂载代码（可选）
+      - ./app:/app/app:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # 可选：添加nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: easyqfnujw-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    profiles:
+      - with-nginx
+```
+
+```
