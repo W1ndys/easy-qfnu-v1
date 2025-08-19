@@ -1,71 +1,316 @@
 # app/core/security.py
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
-from datetime import datetime, timedelta
-from typing import Optional
+import os
+import secrets
+import hashlib
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Set
+import ipaddress
 
 reusable_oauth2 = HTTPBearer()
 
 # --- 安全相关的核心配置 ---
-# ⚠️ 在生产环境中，这个密钥应该更复杂，并且从环境变量中读取
-SECRET_KEY = "1111"
+# 从环境变量读取配置，如果没有则生成安全的默认值
+_secret_key = os.getenv("JWT_SECRET_KEY")
+if not _secret_key:
+    # 生成一个强密钥（生产环境中应该设置环境变量）
+    _secret_key = secrets.token_urlsafe(64)
+    print(
+        "⚠️  警告：正在使用自动生成的JWT密钥。在生产环境中请设置JWT_SECRET_KEY环境变量！"
+    )
+
+# 确保SECRET_KEY是字符串类型
+SECRET_KEY: str = _secret_key
+
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # Token有效期：7天
+ACCESS_TOKEN_EXPIRE_MINUTES = int(
+    os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "120")
+)  # 默认2小时
+REFRESH_TOKEN_EXPIRE_DAYS = int(
+    os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7")
+)  # 刷新Token 7天
+
+# Token黑名单（在生产环境中应该使用Redis等持久化存储）
+BLACKLISTED_TOKENS: Set[str] = set()
+
+# 安全配置
+MAX_LOGIN_ATTEMPTS = int(os.getenv("MAX_LOGIN_ATTEMPTS", "5"))
+ENABLE_IP_WHITELIST = os.getenv("ENABLE_IP_WHITELIST", "false").lower() == "true"
+ALLOWED_IPS = (
+    os.getenv("ALLOWED_IPS", "").split(",") if os.getenv("ALLOWED_IPS") else []
+)
 
 
-# --- [新增] 创建Token的函数 ---
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+# --- Token管理函数 ---
+def generate_token_id() -> str:
+    """生成唯一的Token ID用于追踪和撤销"""
+    return secrets.token_urlsafe(16)
+
+
+def create_access_token(
+    data: dict,
+    expires_delta: Optional[timedelta] = None,
+    client_ip: Optional[str] = None,
+) -> str:
     """
-    创建一个新的JWT Token。
+    创建一个新的JWT Access Token。
 
     Args:
         data: 需要编码到token中的数据字典 (e.g., {"sub": "user_id"})
         expires_delta: 可选的过期时间增量
+        client_ip: 客户端IP地址（用于IP绑定）
 
     Returns:
         编码后的JWT Token字符串
     """
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        # 如果没有提供过期时间，就使用默认的分钟数
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    now = datetime.now(timezone.utc)
 
-    to_encode.update({"exp": expire})
+    if expires_delta:
+        expire = now + expires_delta
+    else:
+        expire = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    # 添加标准JWT声明和自定义安全字段
+    to_encode.update(
+        {
+            "exp": expire,  # 过期时间
+            "iat": now,  # 签发时间
+            "nbf": now,  # 生效时间
+            "jti": generate_token_id(),  # JWT ID，用于追踪和撤销
+            "type": "access",  # Token类型
+            "ip_hash": (
+                hashlib.sha256(client_ip.encode()).hexdigest() if client_ip else None
+            ),  # IP哈希
+        }
+    )
+
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
-# --- [已有] 解码Token的函数 ---
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(reusable_oauth2),
-) -> str:
+def create_refresh_token(data: dict, client_ip: Optional[str] = None) -> str:
     """
-    一个依赖函数 (安检员)。
-    验证JWT Token，并返回学号 (student_id)。
+    创建一个新的JWT Refresh Token。
+
+    Args:
+        data: 需要编码到token中的数据字典
+        client_ip: 客户端IP地址
+
+    Returns:
+        编码后的JWT Refresh Token字符串
     """
-    token = credentials.credentials
+    to_encode = data.copy()
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": now,
+            "nbf": now,
+            "jti": generate_token_id(),
+            "type": "refresh",
+            "ip_hash": (
+                hashlib.sha256(client_ip.encode()).hexdigest() if client_ip else None
+            ),
+        }
+    )
+
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+# --- Token验证和管理函数 ---
+def blacklist_token(token: str) -> None:
+    """将Token添加到黑名单"""
+    BLACKLISTED_TOKENS.add(token)
+
+
+def is_token_blacklisted(token: str) -> bool:
+    """检查Token是否在黑名单中"""
+    return token in BLACKLISTED_TOKENS
+
+
+def validate_ip_address(client_ip: str, token_ip_hash: Optional[str]) -> bool:
+    """验证客户端IP是否匹配Token中的IP哈希"""
+    if not token_ip_hash:
+        return True  # 如果Token中没有IP哈希，则跳过验证
+
+    current_ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()
+    return current_ip_hash == token_ip_hash
+
+
+def check_ip_whitelist(client_ip: str) -> bool:
+    """检查IP是否在白名单中"""
+    if not ENABLE_IP_WHITELIST or not ALLOWED_IPS:
+        return True
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        client_addr = ipaddress.ip_address(client_ip)
+        for allowed_ip in ALLOWED_IPS:
+            allowed_ip = allowed_ip.strip()
+            if not allowed_ip:
+                continue
 
-        student_id: str = payload["sub"]
-        return student_id
+            # 支持单个IP和CIDR网段
+            if "/" in allowed_ip:
+                if client_addr in ipaddress.ip_network(allowed_ip, strict=False):
+                    return True
+            else:
+                if client_addr == ipaddress.ip_address(allowed_ip):
+                    return True
+        return False
+    except (ipaddress.AddressValueError, ValueError):
+        return False
 
-    except KeyError:
+
+def decode_and_validate_token(
+    token: str, client_ip: Optional[str] = None, token_type: str = "access"
+) -> dict:
+    """
+    解码并验证JWT Token的完整性和安全性。
+
+    Args:
+        token: JWT Token字符串
+        client_ip: 客户端IP地址
+        token_type: Token类型 ("access" 或 "refresh")
+
+    Returns:
+        解码后的payload字典
+
+    Raises:
+        HTTPException: 当Token无效时
+    """
+    # 检查Token是否在黑名单中
+    if is_token_blacklisted(token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证凭证：Token中缺少用户信息",
+            detail="Token已被撤销，请重新登录",
         )
+
+    try:
+        # 解码JWT Token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        # 验证Token类型
+        if payload.get("type") != token_type:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"无效的Token类型，期望：{token_type}",
+            )
+
+        # 验证必要字段
+        if "sub" not in payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token中缺少用户信息",
+            )
+
+        # IP地址验证
+        if client_ip:
+            # 检查IP白名单
+            if not check_ip_whitelist(client_ip):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="访问被拒绝：IP地址不在允许列表中",
+                )
+
+            # 验证IP绑定
+            token_ip_hash = payload.get("ip_hash")
+            if not validate_ip_address(client_ip, token_ip_hash):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token与当前IP地址不匹配",
+                )
+
+        return payload
+
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="登录已过期，请重新登录",
+            detail="Token已过期，请重新登录",
         )
     except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的认证凭证",
         )
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(reusable_oauth2),
+) -> str:
+    """
+    基础的用户认证依赖函数。
+    验证JWT Token并返回学号 (student_id)。
+
+    注意：此版本不包含IP验证，如需IP验证请使用 get_current_user_with_ip
+    """
+    token = credentials.credentials
+    payload = decode_and_validate_token(token, None, "access")
+    return payload["sub"]
+
+
+def get_current_user_with_ip(
+    credentials: HTTPAuthorizationCredentials = Depends(reusable_oauth2),
+    request: Request = Depends(),
+) -> str:
+    """
+    增强的用户认证依赖函数，包含IP验证。
+    验证JWT Token并返回学号 (student_id)。
+    """
+    token = credentials.credentials
+    client_ip = None
+
+    # 获取客户端IP地址
+    if request and request.client:
+        # 优先使用代理头中的真实IP
+        client_ip = (
+            request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+            or request.headers.get("X-Real-IP")
+            or getattr(request.client, "host", None)
+        )
+
+    payload = decode_and_validate_token(token, client_ip, "access")
+    return payload["sub"]
+
+
+def refresh_access_token(
+    refresh_token: str, client_ip: Optional[str] = None
+) -> tuple[str, str]:
+    """
+    使用Refresh Token刷新Access Token。
+
+    Args:
+        refresh_token: Refresh Token字符串
+        client_ip: 客户端IP地址
+
+    Returns:
+        新的(access_token, refresh_token)元组
+    """
+    # 验证Refresh Token
+    payload = decode_and_validate_token(refresh_token, client_ip, "refresh")
+
+    # 撤销旧的Refresh Token
+    blacklist_token(refresh_token)
+
+    # 创建新的Token对
+    user_data = {"sub": payload["sub"]}
+    new_access_token = create_access_token(user_data, client_ip=client_ip)
+    new_refresh_token = create_refresh_token(user_data, client_ip=client_ip)
+
+    return new_access_token, new_refresh_token
+
+
+def logout_user(token: str) -> None:
+    """
+    用户登出，将Token加入黑名单。
+
+    Args:
+        token: 要撤销的Token
+    """
+    blacklist_token(token)

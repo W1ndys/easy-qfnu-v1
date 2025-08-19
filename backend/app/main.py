@@ -1,7 +1,13 @@
 # app/main.py
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+# 加载环境变量 - 必须在导入其他模块之前
+load_dotenv()
+
 from app.api.v1 import auth as auth_router
 from app.api.v1 import grades as grades_router
 from app.db.database import init_db
