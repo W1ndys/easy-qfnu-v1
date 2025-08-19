@@ -1,8 +1,7 @@
-version: '3.8'
-
 services:
   backend:
     build: .
+    image: easyqfnujw-backend
     container_name: easyqfnujw-backend
     ports:
       - "8000:8000"
