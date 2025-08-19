@@ -84,9 +84,9 @@ const features = ref([
   },
   {
     text: "课表查询",
-    description: "查看课程安排",
+    description: "即将推出",
     icon: "calendar",
-    url: "/pages/schedule/schedule",
+    url: "",
   },
   {
     text: "课程评价",
