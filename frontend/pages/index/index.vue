@@ -17,7 +17,7 @@
       </view>
 
       <!-- 登录表单 -->
-      <view class="login-card">
+      <view class="login-card page-rounded-container">
         <view class="form-header">
           <text class="form-title">欢迎回来</text>
           <text class="form-subtitle">请登录您的教务系统账号</text>
@@ -305,9 +305,9 @@ const handleLogin = async () => {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 32rpx;
   padding: 60rpx 50rpx 40rpx;
-  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   backdrop-filter: blur(20rpx);
-  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  border: none;
 }
 
 .form-header {
@@ -432,6 +432,14 @@ const handleLogin = async () => {
   text {
     opacity: 0.8;
   }
+}
+
+// 统一外层圆角白卡容器
+.page-rounded-container {
+  background: #ffffff;
+  border-radius: 40rpx;
+  box-shadow: 0 20rpx 60rpx var(--shadow-light);
+  border: 1rpx solid var(--border-light);
 }
 
 // 响应式适配

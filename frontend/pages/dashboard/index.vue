@@ -1,62 +1,64 @@
 <template>
   <PageLayout>
-    <!-- 用户信息卡片 -->
-    <ModernCard class="profile-card" highlight>
-      <view class="profile-content">
-        <view class="avatar-section">
-          <view class="avatar-wrapper">
-            <image
-              class="avatar"
-              src="/static/logo.png"
-              mode="aspectFit"></image>
-            <view class="status-indicator"></view>
+    <view class="page-rounded-container">
+      <!-- 用户信息卡片 -->
+      <ModernCard class="profile-card" highlight>
+        <view class="profile-content">
+          <view class="avatar-section">
+            <view class="avatar-wrapper">
+              <image
+                class="avatar"
+                src="/static/logo.png"
+                mode="aspectFit"></image>
+              <view class="status-indicator"></view>
+            </view>
+          </view>
+          <view class="user-info">
+            <text class="welcome-text">欢迎回来</text>
+            <text class="user-id">{{ studentId }}</text>
+            <text class="user-role">曲园er~</text>
           </view>
         </view>
-        <view class="user-info">
-          <text class="welcome-text">欢迎回来</text>
-          <text class="user-id">{{ studentId }}</text>
-          <text class="user-role">曲园er~</text>
-        </view>
-      </view>
-    </ModernCard>
+      </ModernCard>
 
-    <!-- 2×2 导航网格 -->
-    <ModernCard class="grid-card">
-      <view class="grid-title">核心功能</view>
-      <view class="grid-2x2">
-        <view
-          v-for="(item, index) in features"
-          :key="index"
-          class="grid-cell"
-          :class="{ disabled: !item.url }"
-          @click="handleNavigate(index)">
-          <view class="cell-icon">
-            <uni-icons
-              :type="item.icon"
-              size="30"
-              :color="item.url ? '#7F4515' : '#C0C6CF'" />
+      <!-- 2×2 导航网格 -->
+      <ModernCard class="grid-card">
+        <view class="grid-title">核心功能</view>
+        <view class="grid-2x2">
+          <view
+            v-for="(item, index) in features"
+            :key="index"
+            class="grid-cell"
+            :class="{ disabled: !item.url }"
+            @click="handleNavigate(index)">
+            <view class="cell-icon">
+              <uni-icons
+                :type="item.icon"
+                size="30"
+                :color="item.url ? '#7F4515' : '#C0C6CF'" />
+            </view>
+            <text class="cell-title">{{ item.text }}</text>
+            <text v-if="item.description" class="cell-desc">{{
+              item.description
+            }}</text>
           </view>
-          <text class="cell-title">{{ item.text }}</text>
-          <text v-if="item.description" class="cell-desc">{{
-            item.description
-          }}</text>
         </view>
-      </view>
-    </ModernCard>
+      </ModernCard>
 
-    <!-- 快捷操作 -->
-    <ModernCard title="快捷操作">
-      <view class="quick-actions">
-        <button class="action-btn refresh-btn" @click="handleRefresh">
-          <uni-icons type="refresh" size="20" color="#ffffff"></uni-icons>
-          <text>刷新数据</text>
-        </button>
-        <button class="action-btn logout-btn" @click="handleLogout">
-          <uni-icons type="closeempty" size="20" color="#ffffff"></uni-icons>
-          <text>退出登录</text>
-        </button>
-      </view>
-    </ModernCard>
+      <!-- 快捷操作 -->
+      <ModernCard title="快捷操作">
+        <view class="quick-actions">
+          <button class="action-btn refresh-btn" @click="handleRefresh">
+            <uni-icons type="refresh" size="20" color="#ffffff"></uni-icons>
+            <text>刷新数据</text>
+          </button>
+          <button class="action-btn logout-btn" @click="handleLogout">
+            <uni-icons type="closeempty" size="20" color="#ffffff"></uni-icons>
+            <text>退出登录</text>
+          </button>
+        </view>
+      </ModernCard>
+    </view>
   </PageLayout>
 </template>
 
@@ -167,6 +169,15 @@ const handleLogout = () => {
 
 <style lang="scss" scoped>
 @import "../../styles/common.scss";
+
+// 页外层统一圆角白卡容器
+.page-rounded-container {
+  background: #ffffff;
+  border-radius: 40rpx;
+  padding: 30rpx;
+  box-shadow: 0 20rpx 60rpx var(--shadow-light);
+  border: 1rpx solid var(--border-light);
+}
 
 // 用户信息卡片
 .profile-card {
