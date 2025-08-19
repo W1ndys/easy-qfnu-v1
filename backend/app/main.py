@@ -29,7 +29,7 @@ def read_root():
 
 # 使用 include_router 将各个API模块挂载到主应用上
 # prefix="/api/v1" 表示这个模块下所有接口的URL都会以/api/v1开头
-# tags=["Authentication"] 用于在API文档中进行分组，非常方便
+# tags=["认证"] 用于在API文档中进行分组，非常方便
 app.include_router(auth_router.router, prefix="/api/v1", tags=["认证"])
 app.include_router(grades_router.router, prefix="/api/v1", tags=["成绩"])
 

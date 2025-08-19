@@ -33,7 +33,7 @@ router = APIRouter()
 - 学号或密码错误时返回401状态码
 - 教务系统访问异常时返回503状态码
 """,
-    tags=["Authentication"],
+    tags=["认证"],
     responses={
         200: {
             "description": "登录成功，返回JWT Token",

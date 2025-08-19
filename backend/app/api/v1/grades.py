@@ -68,7 +68,7 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
 - 数据直接从教务系统实时获取，确保信息准确性
 - 如教务系统更新成绩，下次调用即可获取最新数据
 """,
-    tags=["Grades & GPA"],
+    tags=["成绩"],
     responses={
         200: {
             "description": "成功获取成绩和GPA分析",
@@ -224,7 +224,7 @@ async def get_user_grades_with_gpa(
 - 排除的课程不参与GPA计算
 - 开启去重修模式时，同一门课程只取最高成绩记录
 """,
-    tags=["Grades & GPA"],
+    tags=["成绩"],
     responses={
         200: {
             "description": "成功计算自定义GPA",
@@ -331,7 +331,7 @@ async def calculate_custom_gpa(
 - 只返回有课程记录的学期
 - 如果用户是新生，可能只有当前学期数据
 """,
-    tags=["Grades & GPA"],
+    tags=["成绩"],
     responses={
         200: {
             "description": "成功获取学期列表",
