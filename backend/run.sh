@@ -15,10 +15,10 @@ fi
 # 激活虚拟环境
 source ../.venv/bin/activate
 
+
 echo "正在启动 FastAPI 服务器（Uvicorn）..."
 
 # 使用 uvicorn 启动，并开启热重载
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-
+python3 -m  app.main
 # 保持终端打开
 read -p "按任意键退出..."

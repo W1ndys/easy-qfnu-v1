@@ -15,6 +15,6 @@ CALL ..\.venv\Scripts\activate
 ECHO 正在启动 FastAPI 服务器（Uvicorn）...
 
 REM 使用 uvicorn 启动，并开启热重载
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+python -m app.main
 
 pause
