@@ -1,12 +1,20 @@
 @echo off
-ECHO Activating virtual environment...
+chcp 65001 >nul
 
-REM 激活uv创建的虚拟环境
-CALL .\.venv\Scripts\activate
+ECHO 正在激活虚拟环境...
 
-ECHO Starting FastAPI server with Uvicorn...
+REM 检查上一层目录的虚拟环境目录是否存在
+IF NOT EXIST "..\.venv\Scripts\activate" (
+    ECHO [错误] 未找到虚拟环境，请先运行 python -m venv .venv 创建虚拟环境。
+    pause
+    exit /b 1
+)
 
-REM 直接使用uvicorn启动，并开启热重载
+CALL ..\.venv\Scripts\activate
+
+ECHO 正在启动 FastAPI 服务器（Uvicorn）...
+
+REM 使用 uvicorn 启动，并开启热重载
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
 pause
