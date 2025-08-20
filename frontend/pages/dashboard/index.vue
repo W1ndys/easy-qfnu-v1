@@ -21,6 +21,23 @@
         </view>
       </ModernCard>
 
+      <!-- 测试阶段提示 -->
+      <ModernCard class="test-notice-card">
+        <view class="test-notice">
+          <view class="notice-header">
+            <uni-icons type="info" size="16" color="#ff9500"></uni-icons>
+            <text class="notice-title">测试阶段</text>
+          </view>
+          <view class="notice-content">
+            <text class="notice-text">该程序正在测试阶段，功能可能不稳定</text>
+            <view class="qq-group">
+              <text class="qq-label">加入QQ群获取最新消息：</text>
+              <text class="qq-number" @click="copyQQGroup">1053432087</text>
+            </view>
+          </view>
+        </view>
+      </ModernCard>
+
       <!-- 2×2 导航网格 -->
       <ModernCard class="grid-card">
         <view class="grid-title">核心功能</view>
@@ -193,6 +210,26 @@ const handleLogout = () => {
     },
   });
 };
+
+// 复制QQ群号
+const copyQQGroup = () => {
+  uni.setClipboardData({
+    data: "1053432087",
+    success: () => {
+      uni.showToast({
+        title: "QQ群号已复制",
+        icon: "success",
+      });
+    },
+    fail: (err) => {
+      console.error("复制失败:", err);
+      uni.showToast({
+        title: "复制失败",
+        icon: "none",
+      });
+    },
+  });
+};
 </script>
 
 <style lang="scss" scoped>
@@ -274,6 +311,66 @@ const handleLogout = () => {
   border-radius: 20rpx;
   display: inline-block;
   width: fit-content;
+}
+
+// 测试阶段提示卡片
+.test-notice-card {
+  margin-bottom: 40rpx;
+  background: #fffbe6;
+  border: 1rpx solid #ffe58f;
+  border-radius: var(--radius-medium);
+  padding: 28rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 15rpx;
+}
+
+.test-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.notice-header {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.notice-title {
+  font-size: 28rpx;
+  color: #faad14;
+  font-weight: 600;
+}
+
+.notice-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.notice-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.qq-group {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.qq-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.qq-number {
+  font-size: 24rpx;
+  color: #1890ff;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 // 2×2 导航网格样式

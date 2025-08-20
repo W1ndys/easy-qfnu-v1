@@ -58,6 +58,21 @@
           <text v-else>登录中...</text>
         </button>
 
+        <!-- 测试阶段提示 -->
+        <view class="test-notice">
+          <view class="notice-header">
+            <uni-icons type="info" size="16" color="#ff9500"></uni-icons>
+            <text class="notice-title">测试阶段</text>
+          </view>
+          <view class="notice-content">
+            <text class="notice-text">该程序正在测试阶段，功能可能不稳定</text>
+            <view class="qq-group">
+              <text class="qq-label">加入QQ群获取最新消息：</text>
+              <text class="qq-number" @click="copyQQGroup">1053432087</text>
+            </view>
+          </view>
+        </view>
+
         <view class="footer-text">
           <text>本程序为第三方应用，非学校官方出品</text>
         </view>
@@ -103,6 +118,16 @@ const openAgreement = () => {
       },
     });
   }
+};
+
+// 复制QQ群号
+const copyQQGroup = () => {
+  uni.setClipboardData({
+    data: "1053432087",
+    success() {
+      uni.showToast({ title: "QQ群号已复制到剪贴板", icon: "success" });
+    },
+  });
 };
 
 // 页面加载时检查缓存的token
@@ -421,6 +446,67 @@ const handleLogin = async () => {
     background: linear-gradient(135deg, #7f4515 0%, #8c5527 100%);
     opacity: 0.8;
   }
+}
+
+.test-notice {
+  width: 100%;
+  background: #fffbe6;
+  border-radius: 16rpx;
+  padding: 20rpx 30rpx;
+  margin-bottom: 30rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 1rpx solid #ffe58f;
+}
+
+.notice-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
+.notice-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #faad14;
+  margin-left: 10rpx;
+}
+
+.notice-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.notice-text {
+  font-size: 24rpx;
+  color: #faad14;
+  margin-bottom: 10rpx;
+  line-height: 1.4;
+}
+
+.qq-group {
+  display: flex;
+  align-items: center;
+  background: #fffbe6;
+  border-radius: 8rpx;
+  padding: 8rpx 12rpx;
+  border: 1rpx solid #ffe58f;
+}
+
+.qq-label {
+  font-size: 24rpx;
+  color: #faad14;
+  margin-right: 10rpx;
+}
+
+.qq-number {
+  font-size: 24rpx;
+  color: #faad14;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .footer-text {
