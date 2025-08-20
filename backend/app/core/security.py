@@ -244,7 +244,12 @@ def decode_and_validate_token(
     try:
         # 解码JWT Token
         logger.debug("正在解码JWT Token...")
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"require": ["exp", "iat", "nbf", "jti", "type", "sub"]},
+        )
 
         # 验证Token类型
         if payload.get("type") != token_type:
