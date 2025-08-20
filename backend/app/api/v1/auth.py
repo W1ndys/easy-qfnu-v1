@@ -3,19 +3,11 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.schemas.user import UserLogin, Token, RefreshTokenRequest, TokenResponse
 from app.schemas.gpa import ErrorResponse
-from app.services.scraper import login_to_university
-from app.db.database import save_session
+from app.services.auth_service import auth_service
 from loguru import logger
 
 # 导入安全相关函数
-from app.core.security import (
-    create_access_token,
-    create_refresh_token,
-    refresh_access_token,
-    logout_user,
-    get_current_user,
-    get_current_user_with_ip,
-)
+from app.core.security import get_current_user
 
 router = APIRouter()
 security = HTTPBearer()
@@ -133,35 +125,12 @@ async def login_for_access_token(form_data: UserLogin, request: Request):
     logger.info(f"用户登录请求，学号: {form_data.student_id}, 客户端IP: {client_ip}")
 
     try:
-        logger.debug("开始教务系统登录验证...")
-        session = login_to_university(
-            student_id=form_data.student_id, password=form_data.password
+        # 使用认证服务进行用户认证
+        access_token, refresh_token = auth_service.authenticate_user(
+            student_id=form_data.student_id,
+            password=form_data.password,
+            client_ip=client_ip,
         )
-
-        if session is None:
-            logger.warning(f"教务系统登录失败，学号: {form_data.student_id}")
-            raise HTTPException(status_code=401, detail="学号或密码错误，登录失败")
-
-        logger.info(f"教务系统登录成功，学号: {form_data.student_id}")
-
-        try:
-            # 登录成功后，将 session 的 cookies 保存到数据库
-            logger.debug("保存登录会话到数据库...")
-            save_session(student_id=form_data.student_id, session_obj=session)
-            logger.debug("会话保存成功")
-        except Exception as e:
-            logger.error(f"保存会话到数据库失败: {e}")
-            # 即使保存失败，也不影响登录流程
-        finally:
-            session.close()
-            logger.debug("教务系统session已关闭")
-
-        # 创建Token对
-        logger.debug("开始创建JWT Token...")
-        user_data = {"sub": form_data.student_id}
-        access_token = create_access_token(user_data, client_ip=client_ip)
-        refresh_token = create_refresh_token(user_data, client_ip=client_ip)
-        logger.info(f"JWT Token创建成功，学号: {form_data.student_id}")
 
         return {
             "access_token": access_token,
@@ -170,12 +139,14 @@ async def login_for_access_token(form_data: UserLogin, request: Request):
             "expires_in": 120 * 60,  # 2小时，以秒为单位
         }
 
-    except HTTPException:
-        # 重新抛出HTTP异常
-        raise
     except Exception as e:
-        logger.error(f"登录过程中发生未知错误: {e}")
-        raise HTTPException(status_code=500, detail=f"登录失败: {str(e)}")
+        error_msg = str(e)
+        if "学号或密码错误" in error_msg:
+            logger.warning(f"教务系统登录失败，学号: {form_data.student_id}")
+            raise HTTPException(status_code=401, detail="学号或密码错误，登录失败")
+        else:
+            logger.error(f"登录过程中发生未知错误: {e}")
+            raise HTTPException(status_code=500, detail=f"登录失败: {str(e)}")
 
 
 @router.post(
@@ -236,8 +207,8 @@ async def refresh_token(token_data: RefreshTokenRequest, request: Request):
     logger.info(f"Token刷新请求，客户端IP: {client_ip}")
 
     try:
-        logger.debug("开始刷新Token...")
-        new_access_token, new_refresh_token = refresh_access_token(
+        # 使用认证服务刷新Token
+        new_access_token, new_refresh_token = auth_service.refresh_user_token(
             token_data.refresh_token, client_ip=client_ip
         )
 
@@ -248,12 +219,15 @@ async def refresh_token(token_data: RefreshTokenRequest, request: Request):
             "token_type": "bearer",
             "expires_in": 120 * 60,  # 2小时，以秒为单位
         }
-    except HTTPException:
-        # 直接重新抛出HTTPException
-        raise
     except Exception as e:
-        logger.error(f"Token刷新过程中发生未知错误: {e}")
-        raise HTTPException(status_code=500, detail=f"Token刷新失败: {str(e)}")
+        error_msg = str(e)
+        if "invalid" in error_msg.lower() or "过期" in error_msg:
+            raise HTTPException(status_code=401, detail="Refresh Token无效或已过期")
+        elif "ip" in error_msg.lower():
+            raise HTTPException(status_code=403, detail="IP地址验证失败")
+        else:
+            logger.error(f"Token刷新过程中发生未知错误: {e}")
+            raise HTTPException(status_code=500, detail=f"Token刷新失败: {str(e)}")
 
 
 @router.post(
@@ -311,8 +285,8 @@ async def logout(
     logger.info(f"用户登出请求，学号: {current_user}")
 
     try:
-        logger.debug("开始撤销Token...")
-        logout_user(token)
+        # 使用认证服务处理登出
+        auth_service.logout_user(token)
         logger.info(f"用户 {current_user} 登出成功")
         return {"message": "登出成功"}
     except Exception as e:

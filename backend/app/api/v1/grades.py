@@ -12,24 +12,10 @@ from app.services.scraper import (
     get_available_semesters,
     calculate_gpa_advanced,
 )
-from app.db.database import get_session
-from app.core.security import get_current_user
+from app.services.base_service import get_user_session, BaseEducationService
 from loguru import logger
 
 router = APIRouter()
-
-
-# 这是一个可复用的依赖项，用于获取有效的session
-def get_user_session(student_id: str = Depends(get_current_user)):
-    """依赖项：获取当前用户的教务系统session"""
-    logger.debug(f"获取用户 {student_id} 的教务系统session...")
-    session = get_session(student_id=student_id)
-    if session is None:
-        logger.warning(f"用户 {student_id} 的session不存在或已失效")
-        raise HTTPException(status_code=401, detail="Session不存在或已失效，请重新登录")
-
-    logger.debug(f"用户 {student_id} 的session获取成功")
-    return session
 
 
 def handle_scraper_error(result: dict, operation_name: str = "操作"):
@@ -213,8 +199,7 @@ async def get_user_grades_with_gpa(
         logger.error(f"获取用户成绩过程中发生未知错误: {e}")
         raise HTTPException(status_code=500, detail=f"获取成绩失败: {str(e)}")
     finally:
-        session.close()
-        logger.debug("教务系统session已关闭")
+        BaseEducationService.close_session(session)
 
 
 @router.post(
@@ -338,8 +323,7 @@ async def calculate_custom_gpa(
         logger.error(f"自定义GPA计算过程中发生未知错误: {e}")
         raise HTTPException(status_code=500, detail=f"GPA计算失败: {str(e)}")
     finally:
-        session.close()
-        logger.debug("教务系统session已关闭")
+        BaseEducationService.close_session(session)
 
 
 @router.get(
@@ -450,5 +434,4 @@ async def get_semesters(session=Depends(get_user_session)):
         logger.error(f"获取学期列表过程中发生未知错误: {e}")
         raise HTTPException(status_code=500, detail=f"获取学期列表失败: {str(e)}")
     finally:
-        session.close()
-        logger.debug("教务系统session已关闭")
+        BaseEducationService.close_session(session)
