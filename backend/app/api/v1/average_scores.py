@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
 from app.core.security import get_current_user
+from loguru import logger
 import os
 
 router = APIRouter()
@@ -44,31 +45,49 @@ class AverageScore(Base):
 
 def get_db_engine():
     """获取数据库引擎"""
+    logger.debug("开始获取数据库引擎...")
+
     # 使用 Path 对象进行路径操作，确保跨平台兼容性
     current_dir = Path(__file__).resolve().parent.parent.parent.parent
     db_path = current_dir / "data" / "average_scores.db"
 
+    logger.debug(f"数据库路径: {db_path}")
+
     if not db_path.exists():
+        logger.error(f"数据库文件不存在: {db_path}")
         raise HTTPException(status_code=404, detail="数据库文件不存在")
 
     # 使用 as_posix() 或直接使用 Path 对象都可以
     engine = create_engine(f"sqlite:///{db_path.as_posix()}")
+    logger.debug("数据库引擎创建成功")
     return engine
 
 
 def get_db_session():
     """获取数据库会话"""
-    engine = get_db_engine()
-    SessionLocal = sessionmaker(bind=engine)
-    return SessionLocal()
+    logger.debug("开始获取数据库会话...")
+    try:
+        engine = get_db_engine()
+        SessionLocal = sessionmaker(bind=engine)
+        session = SessionLocal()
+        logger.debug("数据库会话创建成功")
+        return session
+    except Exception as e:
+        logger.error(f"创建数据库会话失败: {e}")
+        raise
 
 
 def get_average_scores(
     course_identifier: str, teacher: Optional[str] = None
 ) -> Dict[str, Any]:
     """查询平均分数据"""
+    logger.info(
+        f"开始查询平均分数据，课程标识: {course_identifier}, 教师: {teacher or '全部'}"
+    )
+
     try:
         session = get_db_session()
+        logger.debug("数据库会话获取成功，开始构建查询...")
 
         # 构建基础查询
         query = session.query(AverageScore)
@@ -80,38 +99,44 @@ def get_average_scores(
 
         # 应用课程查询条件
         query = query.filter(course_conditions)
+        logger.debug(f"应用课程查询条件: {course_identifier}")
 
         # 如果指定了教师，添加教师查询条件
         if teacher and teacher.strip():
             teacher_condition = AverageScore.teacher.like(f"%{teacher.strip()}%")
             query = query.filter(teacher_condition)
+            logger.debug(f"应用教师查询条件: {teacher.strip()}")
 
         # 使用text()函数进行智能排序，让最新的学期越靠前
         # 学期格式：年份-年份-数字，如"2023-2024-1"
+        logger.debug("应用智能排序规则...")
         query = query.order_by(
             AverageScore.teacher,
             text("CAST(SUBSTR(semester, 1, 4) AS INTEGER) DESC"),  # 第一个年份降序
             text("CAST(SUBSTR(semester, 6, 4) AS INTEGER) DESC"),  # 第二个年份降序
             text("CAST(SUBSTR(semester, 11) AS INTEGER) DESC"),  # 学期数字降序
         )
+
+        logger.debug("执行数据库查询...")
         results = query.all()
+        logger.info(f"查询完成，返回 {len(results)} 条记录")
 
         session.close()
+        logger.debug("数据库会话已关闭")
 
         if not results:
             # 提供更详细的错误信息
             if teacher and teacher.strip():
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"未找到课程名称或代码包含'{course_identifier}'且教师姓名包含'{teacher.strip()}'的数据",
-                )
+                error_msg = f"未找到课程名称或代码包含'{course_identifier}'且教师姓名包含'{teacher.strip()}'的数据"
+                logger.warning(error_msg)
+                raise HTTPException(status_code=404, detail=error_msg)
             else:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"未找到课程名称或代码包含'{course_identifier}'的数据",
-                )
+                error_msg = f"未找到课程名称或代码包含'{course_identifier}'的数据"
+                logger.warning(error_msg)
+                raise HTTPException(status_code=404, detail=error_msg)
 
         # 构建层级结构：课程->老师->学期->基准人数和平均分
+        logger.debug("开始构建数据结构...")
         structured_data = {}
 
         for record in results:
@@ -134,12 +159,14 @@ def get_average_scores(
                 "update_time": record.update_time,
             }
 
+        logger.info(f"数据结构构建完成，包含 {len(structured_data)} 个课程")
         return structured_data
 
     except HTTPException:
         # 重新抛出HTTP异常
         raise
     except Exception as e:
+        logger.error(f"数据库查询过程中发生错误: {e}")
         raise HTTPException(status_code=500, detail=f"数据库查询错误: {str(e)}")
 
 
@@ -171,13 +198,20 @@ async def query_average_scores(
 
     返回格式：课程->老师->学期->基准人数和平均分
     """
+    logger.info(
+        f"收到平均分查询请求，用户: {current_user}, 课程: {course}, 教师: {teacher or '全部'}"
+    )
+
     try:
+        logger.debug("开始查询平均分数据...")
         data = get_average_scores(course, teacher)
 
         if not data:
+            logger.warning("查询结果为空")
             return AverageScoreResponse(code=404, message="未找到相关数据", data={})
 
         # 转换数据格式以符合响应模型
+        logger.debug("开始转换数据格式...")
         formatted_data = {}
         for course_name, teachers in data.items():
             formatted_data[course_name] = {}
@@ -190,9 +224,12 @@ async def query_average_scores(
                         update_time=sem_data["update_time"],
                     )
 
+        logger.info(f"平均分查询成功，返回 {len(formatted_data)} 个课程的数据")
         return AverageScoreResponse(code=200, message="查询成功", data=formatted_data)
 
     except HTTPException as e:
+        logger.warning(f"平均分查询失败，HTTP状态码: {e.status_code}, 详情: {e.detail}")
         return AverageScoreResponse(code=e.status_code, message=e.detail, data={})
     except Exception as e:
+        logger.error(f"平均分查询过程中发生未知错误: {e}")
         return AverageScoreResponse(code=500, message=f"未知错误: {str(e)}", data={})

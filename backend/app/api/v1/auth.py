@@ -5,6 +5,7 @@ from app.schemas.user import UserLogin, Token, RefreshTokenRequest, TokenRespons
 from app.schemas.gpa import ErrorResponse
 from app.services.scraper import login_to_university
 from app.db.database import save_session
+from loguru import logger
 
 # 导入安全相关函数
 from app.core.security import (
@@ -25,16 +26,21 @@ def get_client_ip(request: Request) -> str:
     # 优先使用代理头中的真实IP
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
+        client_ip = forwarded_for.split(",")[0].strip()
+        logger.debug(f"从X-Forwarded-For获取客户端IP: {client_ip}")
+        return client_ip
 
     real_ip = request.headers.get("X-Real-IP")
     if real_ip:
+        logger.debug(f"从X-Real-IP获取客户端IP: {real_ip}")
         return real_ip
 
     # 最后使用直连IP
-    return (
+    client_ip = (
         getattr(request.client, "host", "127.0.0.1") if request.client else "127.0.0.1"
     )
+    logger.debug(f"使用直连IP: {client_ip}")
+    return client_ip
 
 
 @router.post(
@@ -123,33 +129,53 @@ async def login_for_access_token(form_data: UserLogin, request: Request):
     Raises:
         HTTPException: 登录失败时抛出相应的HTTP异常
     """
-    session = login_to_university(
-        student_id=form_data.student_id, password=form_data.password
-    )
-
-    if session is None:
-        raise HTTPException(status_code=401, detail="学号或密码错误，登录失败")
+    client_ip = get_client_ip(request)
+    logger.info(f"用户登录请求，学号: {form_data.student_id}, 客户端IP: {client_ip}")
 
     try:
-        # 登录成功后，将 session 的 cookies 保存到数据库
-        save_session(student_id=form_data.student_id, session_obj=session)
-    finally:
-        session.close()
+        logger.debug("开始教务系统登录验证...")
+        session = login_to_university(
+            student_id=form_data.student_id, password=form_data.password
+        )
 
-    # 获取客户端IP地址
-    client_ip = get_client_ip(request)
+        if session is None:
+            logger.warning(f"教务系统登录失败，学号: {form_data.student_id}")
+            raise HTTPException(status_code=401, detail="学号或密码错误，登录失败")
 
-    # 创建Token对
-    user_data = {"sub": form_data.student_id}
-    access_token = create_access_token(user_data, client_ip=client_ip)
-    refresh_token = create_refresh_token(user_data, client_ip=client_ip)
+        logger.info(f"教务系统登录成功，学号: {form_data.student_id}")
 
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer",
-        "expires_in": 120 * 60,  # 2小时，以秒为单位
-    }
+        try:
+            # 登录成功后，将 session 的 cookies 保存到数据库
+            logger.debug("保存登录会话到数据库...")
+            save_session(student_id=form_data.student_id, session_obj=session)
+            logger.debug("会话保存成功")
+        except Exception as e:
+            logger.error(f"保存会话到数据库失败: {e}")
+            # 即使保存失败，也不影响登录流程
+        finally:
+            session.close()
+            logger.debug("教务系统session已关闭")
+
+        # 创建Token对
+        logger.debug("开始创建JWT Token...")
+        user_data = {"sub": form_data.student_id}
+        access_token = create_access_token(user_data, client_ip=client_ip)
+        refresh_token = create_refresh_token(user_data, client_ip=client_ip)
+        logger.info(f"JWT Token创建成功，学号: {form_data.student_id}")
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": 120 * 60,  # 2小时，以秒为单位
+        }
+
+    except HTTPException:
+        # 重新抛出HTTP异常
+        raise
+    except Exception as e:
+        logger.error(f"登录过程中发生未知错误: {e}")
+        raise HTTPException(status_code=500, detail=f"登录失败: {str(e)}")
 
 
 @router.post(
@@ -207,12 +233,15 @@ async def refresh_token(token_data: RefreshTokenRequest, request: Request):
         HTTPException: Token无效或刷新失败时抛出HTTP异常
     """
     client_ip = get_client_ip(request)
+    logger.info(f"Token刷新请求，客户端IP: {client_ip}")
 
     try:
+        logger.debug("开始刷新Token...")
         new_access_token, new_refresh_token = refresh_access_token(
             token_data.refresh_token, client_ip=client_ip
         )
 
+        logger.info("Token刷新成功")
         return {
             "access_token": new_access_token,
             "refresh_token": new_refresh_token,
@@ -223,6 +252,7 @@ async def refresh_token(token_data: RefreshTokenRequest, request: Request):
         # 直接重新抛出HTTPException
         raise
     except Exception as e:
+        logger.error(f"Token刷新过程中发生未知错误: {e}")
         raise HTTPException(status_code=500, detail=f"Token刷新失败: {str(e)}")
 
 
@@ -278,11 +308,15 @@ async def logout(
         HTTPException: Token无效时抛出HTTP异常
     """
     token = credentials.credentials
+    logger.info(f"用户登出请求，学号: {current_user}")
 
     try:
+        logger.debug("开始撤销Token...")
         logout_user(token)
+        logger.info(f"用户 {current_user} 登出成功")
         return {"message": "登出成功"}
     except Exception as e:
+        logger.error(f"用户 {current_user} 登出失败: {e}")
         raise HTTPException(status_code=500, detail=f"登出失败: {str(e)}")
 
 
@@ -330,4 +364,5 @@ async def get_current_user_info(current_user: str = Depends(get_current_user)):
     Returns:
         dict: 用户基本信息
     """
+    logger.debug(f"获取用户信息请求，学号: {current_user}")
     return {"student_id": current_user, "is_authenticated": True}

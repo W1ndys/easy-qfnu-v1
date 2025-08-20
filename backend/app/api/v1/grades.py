@@ -14,6 +14,7 @@ from app.services.scraper import (
 )
 from app.db.database import get_session
 from app.core.security import get_current_user
+from loguru import logger
 
 router = APIRouter()
 
@@ -21,18 +22,24 @@ router = APIRouter()
 # 这是一个可复用的依赖项，用于获取有效的session
 def get_user_session(student_id: str = Depends(get_current_user)):
     """依赖项：获取当前用户的教务系统session"""
+    logger.debug(f"获取用户 {student_id} 的教务系统session...")
     session = get_session(student_id=student_id)
     if session is None:
+        logger.warning(f"用户 {student_id} 的session不存在或已失效")
         raise HTTPException(status_code=401, detail="Session不存在或已失效，请重新登录")
+
+    logger.debug(f"用户 {student_id} 的session获取成功")
     return session
 
 
 def handle_scraper_error(result: dict, operation_name: str = "操作"):
     """统一处理爬虫函数返回的错误"""
     if not result.get("success", False):
+        error_msg = f"{operation_name}失败: {result.get('message', '教务系统错误')}"
+        logger.error(error_msg)
         raise HTTPException(
             status_code=503,  # Service Unavailable
-            detail=f"{operation_name}失败: {result.get('message', '教务系统错误')}",
+            detail=error_msg,
         )
 
 
@@ -193,11 +200,21 @@ async def get_user_grades_with_gpa(
     }
     """
     try:
+        logger.info("开始获取用户成绩和GPA分析...")
         grades_result = get_grades(session=session, semester="")
         handle_scraper_error(grades_result, "获取成绩")
+
+        logger.info(f"成绩获取成功，共 {grades_result.get('total_courses', 0)} 门课程")
         return grades_result
+    except HTTPException:
+        # 重新抛出HTTP异常
+        raise
+    except Exception as e:
+        logger.error(f"获取用户成绩过程中发生未知错误: {e}")
+        raise HTTPException(status_code=500, detail=f"获取成绩失败: {str(e)}")
     finally:
         session.close()
+        logger.debug("教务系统session已关闭")
 
 
 @router.post(
@@ -290,18 +307,39 @@ async def calculate_custom_gpa(
         HTTPException: 当获取成绩失败或计算出错时抛出异常
     """
     try:
+        logger.info(
+            f"开始自定义GPA计算，排除课程: {request.exclude_indices}, 去重修: {request.remove_retakes}"
+        )
+
+        logger.debug("获取用户成绩数据用于GPA计算...")
         grades_result = get_grades(session=session, semester="")
         handle_scraper_error(grades_result, "获取成绩用于计算")
 
         grades_data = grades_result.get("data", [])
+        logger.debug(f"获取到 {len(grades_data)} 条成绩记录")
+
+        logger.debug("开始执行自定义GPA计算...")
         gpa_result = calculate_gpa_advanced(
             grades_data=grades_data,
             exclude_indices=request.exclude_indices,
             remove_retakes=request.remove_retakes,
         )
+
+        if gpa_result.get("success"):
+            logger.info("自定义GPA计算完成")
+        else:
+            logger.warning(f"自定义GPA计算失败: {gpa_result.get('message')}")
+
         return gpa_result
+    except HTTPException:
+        # 重新抛出HTTP异常
+        raise
+    except Exception as e:
+        logger.error(f"自定义GPA计算过程中发生未知错误: {e}")
+        raise HTTPException(status_code=500, detail=f"GPA计算失败: {str(e)}")
     finally:
         session.close()
+        logger.debug("教务系统session已关闭")
 
 
 @router.get(
@@ -397,8 +435,20 @@ async def get_semesters(session=Depends(get_user_session)):
         HTTPException: 当获取学期列表失败时抛出异常
     """
     try:
+        logger.info("开始获取用户可用学期列表...")
         semesters_result = get_available_semesters(session=session)
         handle_scraper_error(semesters_result, "获取学期列表")
+
+        logger.info(
+            f"学期列表获取成功，共 {len(semesters_result.get('data', []))} 个学期"
+        )
         return semesters_result
+    except HTTPException:
+        # 重新抛出HTTP异常
+        raise
+    except Exception as e:
+        logger.error(f"获取学期列表过程中发生未知错误: {e}")
+        raise HTTPException(status_code=500, detail=f"获取学期列表失败: {str(e)}")
     finally:
         session.close()
+        logger.debug("教务系统session已关闭")

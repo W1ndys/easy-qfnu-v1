@@ -9,6 +9,7 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Set
 import ipaddress
+from loguru import logger
 
 reusable_oauth2 = HTTPBearer()
 
@@ -18,7 +19,7 @@ _secret_key = os.getenv("JWT_SECRET_KEY")
 if not _secret_key:
     # 生成一个强密钥（生产环境中应该设置环境变量）
     _secret_key = secrets.token_urlsafe(64)
-    print(
+    logger.warning(
         "⚠️  警告：正在使用自动生成的JWT密钥。在生产环境中请设置JWT_SECRET_KEY环境变量！"
     )
 
@@ -33,6 +34,10 @@ REFRESH_TOKEN_EXPIRE_DAYS = int(
     os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7")
 )  # 刷新Token 7天
 
+logger.info(
+    f"安全配置加载完成: 算法={ALGORITHM}, Access Token过期时间={ACCESS_TOKEN_EXPIRE_MINUTES}分钟, Refresh Token过期时间={REFRESH_TOKEN_EXPIRE_DAYS}天"
+)
+
 # Token黑名单（在生产环境中应该使用Redis等持久化存储）
 BLACKLISTED_TOKENS: Set[str] = set()
 
@@ -43,11 +48,17 @@ ALLOWED_IPS = (
     os.getenv("ALLOWED_IPS", "").split(",") if os.getenv("ALLOWED_IPS") else []
 )
 
+logger.info(
+    f"安全策略配置: 最大登录尝试次数={MAX_LOGIN_ATTEMPTS}, IP白名单={ENABLE_IP_WHITELIST}, 允许的IP数量={len(ALLOWED_IPS)}"
+)
+
 
 # --- Token管理函数 ---
 def generate_token_id() -> str:
     """生成唯一的Token ID用于追踪和撤销"""
-    return secrets.token_urlsafe(16)
+    token_id = secrets.token_urlsafe(16)
+    logger.debug(f"生成新的Token ID: {token_id}")
+    return token_id
 
 
 def create_access_token(
@@ -66,6 +77,10 @@ def create_access_token(
     Returns:
         编码后的JWT Token字符串
     """
+    logger.debug(
+        f"开始创建Access Token，用户: {data.get('sub', 'unknown')}, IP: {client_ip}"
+    )
+
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
 
@@ -89,6 +104,9 @@ def create_access_token(
     )
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    logger.info(
+        f"Access Token创建成功，用户: {data.get('sub', 'unknown')}, 过期时间: {expire.isoformat()}"
+    )
     return encoded_jwt
 
 
@@ -103,6 +121,10 @@ def create_refresh_token(data: dict, client_ip: Optional[str] = None) -> str:
     Returns:
         编码后的JWT Refresh Token字符串
     """
+    logger.debug(
+        f"开始创建Refresh Token，用户: {data.get('sub', 'unknown')}, IP: {client_ip}"
+    )
+
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
     expire = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
@@ -121,32 +143,51 @@ def create_refresh_token(data: dict, client_ip: Optional[str] = None) -> str:
     )
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    logger.info(
+        f"Refresh Token创建成功，用户: {data.get('sub', 'unknown')}, 过期时间: {expire.isoformat()}"
+    )
     return encoded_jwt
 
 
 # --- Token验证和管理函数 ---
 def blacklist_token(token: str) -> None:
     """将Token添加到黑名单"""
+    logger.info(f"将Token加入黑名单: {token[:20]}...")
     BLACKLISTED_TOKENS.add(token)
+    logger.debug(f"当前黑名单Token数量: {len(BLACKLISTED_TOKENS)}")
 
 
 def is_token_blacklisted(token: str) -> bool:
     """检查Token是否在黑名单中"""
-    return token in BLACKLISTED_TOKENS
+    is_blacklisted = token in BLACKLISTED_TOKENS
+    if is_blacklisted:
+        logger.warning(f"检测到黑名单Token: {token[:20]}...")
+    return is_blacklisted
 
 
 def validate_ip_address(client_ip: str, token_ip_hash: Optional[str]) -> bool:
     """验证客户端IP是否匹配Token中的IP哈希"""
     if not token_ip_hash:
+        logger.debug("Token中没有IP哈希，跳过IP验证")
         return True  # 如果Token中没有IP哈希，则跳过验证
 
     current_ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()
-    return current_ip_hash == token_ip_hash
+    is_valid = current_ip_hash == token_ip_hash
+
+    if is_valid:
+        logger.debug(f"IP地址验证通过: {client_ip}")
+    else:
+        logger.warning(
+            f"IP地址验证失败: 当前IP={client_ip}, Token中IP哈希={token_ip_hash[:16]}..."
+        )
+
+    return is_valid
 
 
 def check_ip_whitelist(client_ip: str) -> bool:
     """检查IP是否在白名单中"""
     if not ENABLE_IP_WHITELIST or not ALLOWED_IPS:
+        logger.debug("IP白名单未启用，跳过检查")
         return True
 
     try:
@@ -159,12 +200,17 @@ def check_ip_whitelist(client_ip: str) -> bool:
             # 支持单个IP和CIDR网段
             if "/" in allowed_ip:
                 if client_addr in ipaddress.ip_network(allowed_ip, strict=False):
+                    logger.debug(f"IP {client_ip} 在白名单网段 {allowed_ip} 中")
                     return True
             else:
                 if client_addr == ipaddress.ip_address(allowed_ip):
+                    logger.debug(f"IP {client_ip} 在白名单中")
                     return True
+
+        logger.warning(f"IP {client_ip} 不在白名单中")
         return False
-    except (ipaddress.AddressValueError, ValueError):
+    except (ipaddress.AddressValueError, ValueError) as e:
+        logger.error(f"IP地址验证出错: {e}")
         return False
 
 
@@ -185,8 +231,11 @@ def decode_and_validate_token(
     Raises:
         HTTPException: 当Token无效时
     """
+    logger.debug(f"开始验证Token，类型: {token_type}, IP: {client_ip}")
+
     # 检查Token是否在黑名单中
     if is_token_blacklisted(token):
+        logger.warning("Token在黑名单中，验证失败")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token已被撤销，请重新登录",
@@ -194,10 +243,14 @@ def decode_and_validate_token(
 
     try:
         # 解码JWT Token
+        logger.debug("正在解码JWT Token...")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
         # 验证Token类型
         if payload.get("type") != token_type:
+            logger.warning(
+                f"Token类型不匹配，期望: {token_type}, 实际: {payload.get('type')}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"无效的Token类型，期望：{token_type}",
@@ -205,6 +258,7 @@ def decode_and_validate_token(
 
         # 验证必要字段
         if "sub" not in payload:
+            logger.error("Token中缺少用户信息字段")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token中缺少用户信息",
@@ -214,6 +268,7 @@ def decode_and_validate_token(
         if client_ip:
             # 检查IP白名单
             if not check_ip_whitelist(client_ip):
+                logger.warning(f"IP {client_ip} 不在白名单中")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="访问被拒绝：IP地址不在允许列表中",
@@ -222,19 +277,23 @@ def decode_and_validate_token(
             # 验证IP绑定
             token_ip_hash = payload.get("ip_hash")
             if not validate_ip_address(client_ip, token_ip_hash):
+                logger.warning(f"IP地址绑定验证失败: {client_ip}")
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Token与当前IP地址不匹配",
                 )
 
+        logger.info(f"Token验证成功，用户: {payload.get('sub')}, 类型: {token_type}")
         return payload
 
     except jwt.ExpiredSignatureError:
+        logger.warning("Token已过期")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token已过期，请重新登录",
         )
-    except jwt.InvalidTokenError:
+    except jwt.InvalidTokenError as e:
+        logger.error(f"Token无效: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的认证凭证",
@@ -250,6 +309,7 @@ def get_current_user(
 
     注意：此版本不包含IP验证，如需IP验证请使用 get_current_user_with_ip
     """
+    logger.debug("使用基础用户认证（无IP验证）")
     token = credentials.credentials
     payload = decode_and_validate_token(token, None, "access")
     return payload["sub"]
@@ -263,6 +323,7 @@ def get_current_user_with_ip(
     增强的用户认证依赖函数，包含IP验证。
     验证JWT Token并返回学号 (student_id)。
     """
+    logger.debug("使用增强用户认证（包含IP验证）")
     token = credentials.credentials
     client_ip = None
 
@@ -274,6 +335,7 @@ def get_current_user_with_ip(
             or request.headers.get("X-Real-IP")
             or getattr(request.client, "host", None)
         )
+        logger.debug(f"检测到客户端IP: {client_ip}")
 
     payload = decode_and_validate_token(token, client_ip, "access")
     return payload["sub"]
@@ -292,10 +354,13 @@ def refresh_access_token(
     Returns:
         新的(access_token, refresh_token)元组
     """
+    logger.info(f"开始刷新Access Token，IP: {client_ip}")
+
     # 验证Refresh Token
     payload = decode_and_validate_token(refresh_token, client_ip, "refresh")
 
     # 撤销旧的Refresh Token
+    logger.debug("撤销旧的Refresh Token")
     blacklist_token(refresh_token)
 
     # 创建新的Token对
@@ -303,6 +368,7 @@ def refresh_access_token(
     new_access_token = create_access_token(user_data, client_ip=client_ip)
     new_refresh_token = create_refresh_token(user_data, client_ip=client_ip)
 
+    logger.info(f"Token刷新成功，用户: {payload['sub']}")
     return new_access_token, new_refresh_token
 
 
@@ -313,4 +379,5 @@ def logout_user(token: str) -> None:
     Args:
         token: 要撤销的Token
     """
+    logger.info(f"用户登出，撤销Token: {token[:20]}...")
     blacklist_token(token)
