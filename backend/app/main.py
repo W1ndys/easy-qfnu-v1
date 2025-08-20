@@ -46,6 +46,7 @@ logger.info("环境变量加载完成")
 from app.api.v1 import auth as auth_router
 from app.api.v1 import grades as grades_router
 from app.api.v1 import average_scores as average_scores_router
+from app.api.v1 import course_plan as course_plan_router
 from app.db.database import init_db
 
 logger.info("正在创建FastAPI应用实例...")
@@ -125,6 +126,9 @@ logger.info("成绩路由注册完成")
 
 app.include_router(average_scores_router.router, prefix="/api/v1", tags=["平均分查询"])
 logger.info("平均分查询路由注册完成")
+
+app.include_router(course_plan_router.router, prefix="/api/v1", tags=["培养方案"])
+logger.info("培养方案路由注册完成")
 
 logger.info("所有API路由注册完成")
 
