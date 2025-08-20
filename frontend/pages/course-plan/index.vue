@@ -208,23 +208,56 @@ const fetchCoursePlan = async () => {
     if (res.statusCode === 200) {
       // 兼容两种返回：带 success 的结构或直接返回数据
       payload = res.data?.success ? res.data.data : res.data;
+      console.log("培养计划数据获取成功", payload);
+    } else if (res.statusCode === 401) {
+      console.error("身份验证失败，请重新登录");
+      uni.showToast({ title: "身份验证失败，请重新登录", icon: "none" });
+      setTimeout(() => {
+      uni.reLaunch({ url: "/pages/index/index" });
+      }, 1500);
+      return;
+    } else if (res.statusCode === 404) {
+      console.error("未找到培养计划数据");
+      uni.showToast({ title: "未找到培养计划数据", icon: "none" });
+      return;
+    } else {
+      // 获取详细的错误信息
+      const errorDetail = res.data?.detail || res.data?.message || '未知错误';
+      console.error(`请求错误：${res.statusCode}`, res.data, errorDetail);
+      throw new Error(`请求错误：${res.statusCode} - ${errorDetail}`);
     }
 
     if (!payload) {
       throw new Error("无有效数据");
     }
 
-    modules.value = Array.isArray(payload.modules) ? payload.modules : [];
+    if (!Array.isArray(payload.modules)) {
+      console.warn("返回的培养计划格式异常", payload);
+      uni.showToast({ title: "培养计划格式异常", icon: "none" });
+      modules.value = [];
+      return;
+    }
+
+    modules.value = payload.modules;
+    console.log(`成功加载了${modules.value.length}个培养计划模块`);
 
     // 初始化折叠状态：全部折叠
     expanded.value = modules.value.map(() => false);
-  } catch (err) {
+    
+    if (modules.value.length === 0) {
+      uni.showToast({ title: "暂无培养计划数据", icon: "none" });
+    }
+    } catch (err) {
     console.error("获取培养计划失败", err);
-    uni.showToast({ title: "获取培养计划失败", icon: "none" });
-  } finally {
+    uni.showToast({ 
+      title: err.message || "获取培养计划失败，请稍后重试", 
+      icon: "none", 
+      duration: 2000 
+    });
+    } finally {
     isLoading.value = false;
-  }
-};
+    }
+  };
 
 const toggleModule = (index) => {
   expanded.value[index] = !expanded.value[index];

@@ -39,7 +39,7 @@ def extract_course_plan_from_html(html_content: str) -> dict:
 
     table = soup.find("table", {"id": "dataList"})
     if not table:
-        return {"error": "未找到课程表格"}
+        return {"error": "未找到课程表格，可能是教务session过期，请重新登录"}
 
     modules = []
     current_module = None
@@ -286,16 +286,18 @@ async def get_course_plan(session=Depends(get_user_session)):
         resp: requests.Response = session.get(url, headers=headers, timeout=10)
         if resp.status_code != 200:
             logger.error(f"培养方案页面获取失败，状态码: {resp.status_code}")
+            # 503 代表 session 过期，需要重新登录
             raise HTTPException(
-                status_code=503, detail=f"获取培养方案失败: 状态码 {resp.status_code}"
+                status_code=503, detail="会话已过期，请重新登录教务系统"
             )
 
         logger.debug("培养方案页面获取成功，开始解析...")
         data_dict = extract_course_plan_from_html(resp.text)
         if "error" in data_dict:
             logger.warning(f"解析失败: {data_dict['error']}")
+            # 503 代表 session 过期，需要重新登录
             raise HTTPException(
-                status_code=503, detail=f"解析失败: {data_dict['error']}"
+                status_code=503, detail="会话已过期，请重新登录教务系统"
             )
 
         total_modules = len(data_dict.get("modules", []))
@@ -309,11 +311,15 @@ async def get_course_plan(session=Depends(get_user_session)):
             "message": f"成功解析{total_modules}个模块，共{total_courses}门课程",
             "data": data_dict,
         }
-    except HTTPException:
-        raise
+    except HTTPException as he:
+        # 直接抛出，详细信息已在上面处理
+        raise he
     except Exception as e:
         logger.error(f"获取或解析培养方案时发生错误: {e}")
-        raise HTTPException(status_code=500, detail=f"获取培养方案失败: {str(e)}")
+        # 500 代表服务器内部错误
+        raise HTTPException(
+            status_code=500, detail="服务器内部错误，获取培养方案失败，请稍后重试"
+        )
     finally:
         try:
             session.close()
