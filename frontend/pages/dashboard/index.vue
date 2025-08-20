@@ -87,15 +87,16 @@ const features = ref([
     url: "/pages/average-scores/index",
   },
   {
+    text: "选课推荐",
+    description: "智能推荐选课方案",
+    icon: "lightning",
+    url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/",
+    external: true, // 标记为外部链接
+  },
+  {
     text: "课表查询",
     description: "即将推出",
     icon: "calendar",
-    url: "",
-  },
-  {
-    text: "课程评价",
-    description: "即将推出",
-    icon: "star",
     url: "",
   },
   {
