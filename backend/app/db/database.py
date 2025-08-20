@@ -4,7 +4,7 @@ import pickle
 import datetime
 import requests
 import os
-from sqlalchemy import create_engine, Column, String, BLOB, TIMESTAMP
+from sqlalchemy import create_engine, Column, String, Integer, BLOB, TIMESTAMP
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # 数据库配置 - 支持Docker环境
@@ -21,9 +21,11 @@ Base = declarative_base()
 
 class SessionStore(Base):
     __tablename__ = "sessions"
-    student_id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(String, unique=True, index=True, nullable=False)
     session_data = Column(BLOB, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
+    updated_at = Column(TIMESTAMP, nullable=True)
 
 
 def init_db():
@@ -47,15 +49,15 @@ def save_session(student_id: str, session_obj: requests.Session):
         now = datetime.datetime.now()
         if db_session:
             print(f"正在更新学号 {student_id} 的 session cookies...")
-            # 直接赋值会导致类型不兼容，需使用 setattr
             setattr(db_session, "session_data", pickled_cookies)
-            setattr(db_session, "created_at", now)
+            setattr(db_session, "updated_at", now)
         else:
             print(f"正在为学号 {student_id} 创建新的 session cookies 记录...")
             db_session = SessionStore(
                 student_id=student_id,
                 session_data=pickled_cookies,
                 created_at=now,
+                updated_at=now,
             )
             db.add(db_session)
 
@@ -80,10 +82,10 @@ def get_session(student_id: str):
 
             # 取出实际的二进制数据
             session_data_bytes = db_session_record.session_data
-            if hasattr(session_data_bytes, "decode") and not isinstance(
-                session_data_bytes, bytes
-            ):
-                # 某些数据库驱动可能返回 memoryview 或其他类型
+            # 兼容 memoryview、bytes 及其他类型
+            if isinstance(session_data_bytes, memoryview):
+                session_data_bytes = session_data_bytes.tobytes()
+            elif not isinstance(session_data_bytes, bytes):
                 session_data_bytes = bytes(session_data_bytes)
 
             # 将反序列化后的 cookies 加载到新 session 中
