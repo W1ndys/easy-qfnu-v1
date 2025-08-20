@@ -106,7 +106,7 @@ const features = ref([
   {
     text: "选课推荐",
     description: "智能推荐选课方案",
-    icon: "lightning",
+    icon: "star",
     url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/",
     external: true, // 标记为外部链接
   },
@@ -114,6 +114,12 @@ const features = ref([
     text: "课表查询",
     description: "即将推出",
     icon: "calendar",
+    url: "",
+  },
+  {
+    text: "培养计划",
+    description: "即将推出",
+    icon: "list",
     url: "",
   },
   {
