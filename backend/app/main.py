@@ -57,7 +57,17 @@ logger.info("FastAPI应用实例创建成功")
 logger.info("正在配置CORS中间件...")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://api.easy-qfnu.top"],  # 在生产环境中应该指定具体的域名
+    allow_origins=[
+        "http://localhost",
+        "http://127.0.0.1",
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://easy-qfnu.top",
+        "http://easy-qfnu.top",
+        "https://*.easy-qfnu.top",
+        "http://*.easy-qfnu.top",
+    ],
+    allow_origin_regex=r"^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$|^https?:\/\/([a-zA-Z0-9-]+\.)*easy-qfnu\.top(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
