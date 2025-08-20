@@ -111,6 +111,12 @@ const features = ref([
     external: true, // 标记为外部链接
   },
   {
+    text: "培养计划",
+    description: "查看模块完成进度",
+    icon: "list",
+    url: "/pages/course-plan/index",
+  },
+  {
     text: "课表查询",
     description: "即将推出",
     icon: "calendar",
@@ -126,12 +132,6 @@ const features = ref([
     text: "排名查询",
     description: "即将推出",
     icon: "medal",
-    url: "",
-  },
-  {
-    text: "培养计划",
-    description: "即将推出",
-    icon: "list",
     url: "",
   },
   {
