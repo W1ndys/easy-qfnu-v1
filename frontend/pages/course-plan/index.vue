@@ -29,7 +29,7 @@
                     <text class="module-title">{{ m.module_name }}</text>
                     <view
                       class="status-chip"
-                      :class="isIncomplete(m) ? 'chip-danger' : 'chip-success'">
+                      :class="isIncomplete(m) ? 'chip-module-incomplete' : 'chip-module-complete'">
                       <text>{{ isIncomplete(m) ? "未修满" : "已修满" }}</text>
                     </view>
                   </view>
@@ -72,44 +72,47 @@
                   </view>
                 </view>
               </view>
-
-              <!-- 课程详情，展开时显示 -->
-              <view v-show="expanded[getOriginalIndex(m)]" class="course-details">
+                <!-- 课程详情，展开时显示 -->
+                <view v-show="expanded[getOriginalIndex(m)]" class="course-details">
+                <view class="course-sort-hint">
+                  <text class="sort-hint-text">
+                  <uni-icons type="info" size="16" color="#666" />
+                  未修课程已置顶显示
+                  </text>
+                </view>
                 <view class="course-list">
                   <view
-                    v-for="c in m.courses || []"
-                    :key="(c.course_code || '') + (c.course_name || '')"
-                    class="course-item"
-                    :class="{ completed: c.completion_status === '已修' }">
-                    <view class="course-main">
-                      <text class="course-name">{{ c.course_name }}</text>
-                      <view class="chips">
-                        <text
-                          class="chip"
-                          :class="
-                            c.completion_status === '已修'
-                              ? 'chip-success'
-                              : 'chip-muted'
-                          "
-                          >{{ c.completion_status || "未修" }}</text
-                        >
-                        <text v-if="c.course_nature" class="chip chip-neutral">{{
-                          c.course_nature
-                        }}</text>
-                        <text v-if="c.course_attribute" class="chip chip-neutral">{{
-                          c.course_attribute
-                        }}</text>
-                      </view>
+                  v-for="c in m.courses || []"
+                  :key="(c.course_code || '') + (c.course_name || '')"
+                  class="course-item"
+                  :class="{ completed: isCourseCompleted(c) }">
+                  <view class="course-main">
+                    <view class="course-title-section">
+                    <text class="course-name">{{ c.course_name }}</text>
                     </view>
-                    <view class="course-meta">
-                      <text class="meta">学分 {{ c.credits }}</text>
-                      <text class="meta" v-if="c.semester"
-                        >学期 {{ c.semester }}</text
-                      >
-                      <text class="meta" v-if="c.hours?.total"
-                        >学时 {{ c.hours.total }}</text
-                      >
+                    <view class="chips">
+                    <text
+                      class="chip completion-chip"
+                      :class="isCourseCompleted(c) ? 'chip-completed' : 'chip-incomplete'"
+                      >{{ c.completion_status || "未修" }}</text
+                    >
+                    <text v-if="c.course_nature" class="chip chip-neutral">{{
+                      c.course_nature
+                    }}</text>
+                    <text v-if="c.course_attribute" class="chip chip-neutral">{{
+                      c.course_attribute
+                    }}</text>
                     </view>
+                  </view>
+                  <view class="course-meta">
+                    <text class="meta">学分 {{ c.credits }}</text>
+                    <text class="meta" v-if="c.semester"
+                    >学期 {{ c.semester }}</text
+                    >
+                    <text class="meta" v-if="c.hours?.total"
+                    >学时 {{ c.hours.total }}</text
+                    >
+                  </view>
                   </view>
                 </view>
 
@@ -157,7 +160,21 @@ const sortedModules = computed(() => {
     
     // 同样状态下保持原顺序
     return 0;
-  });
+  }).map(module => ({
+    ...module,
+    // 为每个模块的课程进行排序：未修的排在前面
+    courses: [...(module.courses || [])].sort((a, b) => {
+      const aCompleted = isCourseCompleted(a);
+      const bCompleted = isCourseCompleted(b);
+      
+      // 未修的排在前面
+      if (!aCompleted && bCompleted) return -1;
+      if (aCompleted && !bCompleted) return 1;
+      
+      // 同样状态下保持原顺序
+      return 0;
+    })
+  }));
 });
 
 onLoad(() => {
@@ -218,6 +235,12 @@ const getOriginalIndex = (module) => {
   return modules.value.findIndex(m => m.module_name === module.module_name);
 };
 
+// 判断课程是否已完成
+const isCourseCompleted = (course) => {
+  if (!course.completion_status) return false;
+  return course.completion_status.includes('已修');
+};
+
 const isIncomplete = (module) => {
   const need = Number(module?.required_credits) || 0;
   const done = Number(module?.completed_credits) || 0;
@@ -244,18 +267,27 @@ const formatNumber = (n) => {
 
 .page-rounded-container {
   background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 40rpx;
-  padding: 40rpx 30rpx;
+  border-radius: 20rpx;
+  padding: 20rpx 16rpx;
   box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.08);
   border: 1rpx solid #e8e8e8;
-  margin: 20rpx;
+  margin: 8rpx;
+}
+
+/* 在小屏设备上进一步减少边距 */
+@media (max-width: 750rpx) {
+  .page-rounded-container {
+    margin: 6rpx;
+    padding: 16rpx 12rpx;
+    border-radius: 16rpx;
+  }
 }
 
 /* 模块列表容器 */
 .modules-list {
   display: flex;
   flex-direction: column;
-  gap: 32rpx;
+  gap: 24rpx;
 }
 
 /* 单个模块卡片 */
@@ -281,7 +313,7 @@ const formatNumber = (n) => {
 
 /* 模块头部 */
 .module-header {
-  padding: 32rpx 28rpx;
+  padding: 20rpx 18rpx;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -447,27 +479,64 @@ const formatNumber = (n) => {
 }
 
 .chip-success {
-  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
-  color: #389e0d;
-  border: 1rpx solid #b7eb8f;
+  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+  color: #0958d9;
+  border: 1rpx solid #91d5ff;
 }
 
 .chip-danger {
-  background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%);
+  background: linear-gradient(135deg, #fff1f0 0%, #ffccc7 100%);
   color: #cf1322;
   border: 1rpx solid #ffa39e;
 }
 
 .chip-muted {
-  background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
-  color: #8c8c8c;
-  border: 1rpx solid #d9d9d9;
+  background: linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%);
+  color: #d46b08;
+  border: 1rpx solid #ffd591;
 }
 
 .chip-neutral {
-  background: linear-gradient(135deg, #f9f9f9 0%, #f0f0f0 100%);
-  color: #666;
-  border: 1rpx solid #e0e0e0;
+  background: linear-gradient(135deg, #f0f0f0 0%, #d9d9d9 100%);
+  color: #595959;
+  border: 1rpx solid #bfbfbf;
+}
+
+/* 课程完成状态专用样式 */
+.completion-chip {
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+}
+
+.chip-completed {
+  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+  color: #389e0d;
+  border: 1rpx solid #95de64;
+  box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.2);
+}
+
+.chip-incomplete {
+  background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%);
+  color: #cf1322;
+  border: 1rpx solid #ff7875;
+  box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.2);
+}
+
+/* 模块状态专用样式 */
+.chip-module-complete {
+  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+  color: #389e0d;
+  border: 1rpx solid #95de64;
+  box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.2);
+  font-weight: 600;
+}
+
+.chip-module-incomplete {
+  background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%);
+  color: #cf1322;
+  border: 1rpx solid #ff7875;
+  box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.2);
+  font-weight: 600;
 }
 
 /* 课程详情区域 */
@@ -476,22 +545,37 @@ const formatNumber = (n) => {
   background: linear-gradient(180deg, #fafbfc 0%, #f5f6fa 100%);
 }
 
+/* 课程排序提示 */
+.course-sort-hint {
+  padding: 12rpx 16rpx 6rpx;
+  text-align: center;
+}
+
+.sort-hint-text {
+  font-size: 20rpx;
+  color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+}
+
 .course-list {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
-  padding: 32rpx 28rpx;
+  gap: 12rpx;
+  padding: 16rpx;
 }
 
 .course-item {
   border: 1rpx solid #e8e8e8;
-  border-radius: 16rpx;
-  padding: 24rpx;
+  border-radius: 12rpx;
+  padding: 12rpx 16rpx;
   background: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  gap: 10rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
 }
 
@@ -501,88 +585,143 @@ const formatNumber = (n) => {
 }
 
 .course-item.completed {
-  border-color: #b7eb8f;
+  border-color: #87d068;
   background: linear-gradient(135deg, #f6ffed 0%, #ffffff 100%);
-  box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.1);
+  box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.12);
+  position: relative;
+}
+
+.course-item.completed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6rpx;
+  height: 100%;
+  background: linear-gradient(180deg, #52c41a 0%, #73d13d 100%);
+  border-radius: 12rpx 0 0 12rpx;
+}
+
+/* 新增：未修课程的样式 */
+.course-item:not(.completed) {
+  border-color: #ffb3ba;
+  background: linear-gradient(135deg, #fff2f0 0%, #ffffff 100%);
+  box-shadow: 0 2rpx 8rpx rgba(255, 77, 79, 0.08);
+  position: relative;
+}
+
+.course-item:not(.completed)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6rpx;
+  height: 100%;
+  background: linear-gradient(180deg, #ff4d4f 0%, #ff7875 100%);
+  border-radius: 12rpx 0 0 12rpx;
 }
 
 .course-main {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 20rpx;
+  gap: 16rpx;
+}
+
+.course-title-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
 }
 
 .course-name {
-  flex: 1;
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-primary);
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.4;
   word-break: break-word;
+}
+
+/* 未修课程指示器 */
+.incomplete-indicator {
+  flex-shrink: 0;
+}
+
+.indicator-text {
+  font-size: 16rpx;
+  color: #cf1322;
+  background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%);
+  padding: 2rpx 8rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #ff7875;
+  font-weight: 600;
+  box-shadow: 0 2rpx 6rpx rgba(255, 77, 79, 0.15);
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
+  gap: 8rpx;
   justify-content: flex-end;
   max-width: 45%;
 }
 
 .chip {
-  padding: 8rpx 12rpx;
-  border-radius: 16rpx;
-  font-size: 20rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 12rpx;
+  font-size: 18rpx;
   font-weight: 500;
 }
 
 .course-meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120rpx, 1fr));
-  gap: 16rpx 24rpx;
-  padding: 16rpx 0 0;
-  border-top: 1rpx solid #f0f0f0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6rpx 12rpx;
+  padding: 6rpx 0 0;
+  border-top: 1rpx solid #f5f5f5;
 }
 
 .meta {
-  font-size: 24rpx;
+  font-size: 20rpx;
   color: var(--text-secondary);
-  line-height: 1.4;
-  padding: 8rpx 12rpx;
+  line-height: 1.3;
+  padding: 3rpx 6rpx;
   background: #f8f9fa;
-  border-radius: 12rpx;
-  text-align: center;
+  border-radius: 6rpx;
+  white-space: nowrap;
 }
 
 .module-subtotal {
-  margin: 24rpx 28rpx;
-  padding: 24rpx;
-  border-top: 2rpx solid #e8e8e8;
+  margin: 12rpx 16rpx;
+  padding: 12rpx;
+  border-top: 1rpx solid #e8e8e8;
   background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%);
-  border-radius: 16rpx;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120rpx, 1fr));
-  gap: 16rpx;
-  font-size: 24rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  border-radius: 12rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  font-size: 22rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 }
 
 .subtotal-title {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 26rpx;
-  grid-column: 1 / -1;
+  font-size: 24rpx;
+  width: 100%;
   text-align: center;
-  margin-bottom: 8rpx;
+  margin-bottom: 4rpx;
 }
 
 .subtotal-credits,
 .subtotal-hours {
   color: var(--text-secondary);
-  text-align: center;
-  padding: 8rpx;
+  padding: 6rpx 10rpx;
   background: rgba(127, 69, 21, 0.05);
-  border-radius: 12rpx;
+  border-radius: 8rpx;
+  flex: 1;
+  text-align: center;
+  min-width: 80rpx;
 }
 </style>
