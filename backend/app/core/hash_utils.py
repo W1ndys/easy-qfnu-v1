@@ -25,7 +25,7 @@ def hash_student_id(student_id: str) -> str:
     combined = f"{student_id}{HASH_SALT}"
     hash_value = hashlib.sha256(combined.encode("utf-8")).hexdigest()
 
-    logger.debug(f"学号哈希处理完成: {student_id[:4]}**** -> {hash_value[:8]}****")
+    logger.debug(f"学号哈希处理完成: {student_id} -> {hash_value}")
     return hash_value
 
 
@@ -48,9 +48,9 @@ def verify_student_id(student_id: str, hash_value: str) -> bool:
         is_match = calculated_hash == hash_value
 
         if is_match:
-            logger.debug(f"学号验证成功: {student_id[:4]}****")
+            logger.debug(f"学号验证成功: {student_id}")
         else:
-            logger.warning(f"学号验证失败: {student_id[:4]}****")
+            logger.warning(f"学号验证失败: {student_id}")
 
         return is_match
     except Exception as e:

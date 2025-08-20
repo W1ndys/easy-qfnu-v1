@@ -46,7 +46,7 @@ def save_session(student_id: str, session_obj: requests.Session):
     try:
         # 将明文学号转换为hash值
         student_id_hash = hash_student_id(student_id)
-        logger.debug(f"保存session - 学号hash: {student_id_hash[:8]}****")
+        logger.debug(f"保存session - 原始学号: {student_id}, hash: {student_id_hash}")
 
         # 只序列化 cookiejar，更稳定、更适合持久化
         pickled_cookies = pickle.dumps(session_obj.cookies)
@@ -60,13 +60,13 @@ def save_session(student_id: str, session_obj: requests.Session):
         now = datetime.datetime.now()
         if db_session:
             logger.info(
-                f"正在更新学号hash {student_id_hash[:8]}**** 的 session cookies..."
+                f"正在更新session cookies - 学号: {student_id}, hash: {student_id_hash}"
             )
             setattr(db_session, "session_data", pickled_cookies)
             setattr(db_session, "updated_at", now)
         else:
             logger.info(
-                f"正在为学号hash {student_id_hash[:8]}**** 创建新的 session cookies 记录..."
+                f"正在创建新session cookies记录 - 学号: {student_id}, hash: {student_id_hash}"
             )
             db_session = SessionStore(
                 student_id_hash=student_id_hash,
@@ -77,7 +77,7 @@ def save_session(student_id: str, session_obj: requests.Session):
             db.add(db_session)
 
         db.commit()
-        logger.info("Session cookies 保存成功。")
+        logger.info(f"Session cookies保存成功 - 学号: {student_id}")
     except Exception as e:
         logger.error(f"保存session失败: {e}")
         db.rollback()
@@ -92,7 +92,7 @@ def get_session(student_id: str) -> Optional[requests.Session]:
     try:
         # 将明文学号转换为hash值进行查询
         student_id_hash = hash_student_id(student_id)
-        logger.debug(f"查询session - 学号hash: {student_id_hash[:8]}****")
+        logger.debug(f"查询session - 原始学号: {student_id}, hash: {student_id_hash}")
 
         db_session_record = (
             db.query(SessionStore)
@@ -101,7 +101,7 @@ def get_session(student_id: str) -> Optional[requests.Session]:
         )
         if db_session_record:
             logger.info(
-                f"成功从数据库找到学号hash {student_id_hash[:8]}**** 的 session cookies。"
+                f"成功找到session cookies - 学号: {student_id}, hash: {student_id_hash}"
             )
 
             # 创建一个新的、干净的 Session 对象
@@ -125,14 +125,14 @@ def get_session(student_id: str) -> Optional[requests.Session]:
                 loaded_cookies = pickle.loads(session_data_bytes)
                 new_session.cookies.update(loaded_cookies)
 
-                logger.info("Session 对象重建成功。")
+                logger.info(f"Session对象重建成功 - 学号: {student_id}")
                 return new_session
             else:
-                logger.warning("Session数据为空")
+                logger.warning(f"Session数据为空 - 学号: {student_id}")
                 return None
         else:
             logger.info(
-                f"数据库中未找到学号hash {student_id_hash[:8]}**** 的 session。"
+                f"数据库中未找到session - 学号: {student_id}, hash: {student_id_hash}"
             )
             return None
     except Exception as e:
@@ -146,7 +146,7 @@ def get_session_by_hash(student_id_hash: str) -> Optional[requests.Session]:
     """通过学号hash值从数据库读取 cookies 并重建一个 session 对象"""
     db = SessionLocal()
     try:
-        logger.debug(f"通过hash查询session - 学号hash: {student_id_hash[:8]}****")
+        logger.debug(f"通过hash查询session - 学号hash: {student_id_hash}")
 
         db_session_record = (
             db.query(SessionStore)
@@ -155,7 +155,7 @@ def get_session_by_hash(student_id_hash: str) -> Optional[requests.Session]:
         )
         if db_session_record:
             logger.info(
-                f"成功从数据库找到学号hash {student_id_hash[:8]}**** 的 session cookies。"
+                f"成功从数据库找到学号hash {student_id_hash} 的 session cookies。"
             )
 
             # 创建一个新的、干净的 Session 对象
@@ -185,9 +185,7 @@ def get_session_by_hash(student_id_hash: str) -> Optional[requests.Session]:
                 logger.warning("Session数据为空")
                 return None
         else:
-            logger.info(
-                f"数据库中未找到学号hash {student_id_hash[:8]}**** 的 session。"
-            )
+            logger.info(f"数据库中未找到学号hash {student_id_hash} 的 session。")
             return None
     except Exception as e:
         logger.error(f"通过hash获取session失败: {e}")

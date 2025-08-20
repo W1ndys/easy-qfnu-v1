@@ -26,17 +26,17 @@ class BaseEducationService:
         Raises:
             HTTPException: 当session不存在或已失效时抛出401异常
         """
-        logger.debug(f"获取用户 {student_id_hash[:8]}**** 的教务系统session...")
+        logger.debug(f"获取用户 {student_id_hash} 的教务系统session...")
 
         # 使用hash值查询session
         session = get_session_by_hash(student_id_hash=student_id_hash)
         if session is None:
-            logger.warning(f"用户 {student_id_hash[:8]}**** 的session不存在或已失效")
+            logger.warning(f"用户 {student_id_hash} 的session不存在或已失效")
             raise HTTPException(
                 status_code=401, detail="Session不存在或已失效，请重新登录"
             )
 
-        logger.debug(f"用户 {student_id_hash[:8]}**** 的session获取成功")
+        logger.debug(f"用户 {student_id_hash} 的session获取成功")
         return session
 
     @staticmethod

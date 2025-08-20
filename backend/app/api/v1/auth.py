@@ -284,15 +284,15 @@ async def logout(
         HTTPException: Token无效时抛出HTTP异常
     """
     token = credentials.credentials
-    logger.info(f"用户登出请求，用户hash: {current_user_hash[:8]}****")
+    logger.info(f"用户登出请求，用户hash: {current_user_hash}")
 
     try:
         # 使用认证服务处理登出
         auth_service.logout_user(token)
-        logger.info(f"用户 {current_user_hash[:8]}**** 登出成功")
+        logger.info(f"用户 {current_user_hash} 登出成功")
         return {"message": "登出成功"}
     except Exception as e:
-        logger.error(f"用户 {current_user_hash[:8]}**** 登出失败: {e}")
+        logger.error(f"用户 {current_user_hash} 登出失败: {e}")
         raise HTTPException(status_code=500, detail=f"登出失败: {str(e)}")
 
 
@@ -344,7 +344,7 @@ async def get_current_user_info(current_user_hash: str = Depends(get_current_use
     Returns:
         dict: 用户基本信息
     """
-    logger.debug(f"获取用户信息请求，用户hash: {current_user_hash[:8]}****")
+    logger.debug(f"获取用户信息请求，用户hash: {current_user_hash}")
     return {
         "user_id": get_student_id_for_display(current_user_hash),
         "is_authenticated": True,

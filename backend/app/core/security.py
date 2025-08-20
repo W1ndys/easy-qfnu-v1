@@ -89,9 +89,9 @@ def create_access_token(
             # 如果不是hash值，则进行hash处理
             student_id_hash = hash_student_id(to_encode["sub"])
             to_encode["sub"] = student_id_hash
-            logger.debug(f"Token创建 - 学号已转换为hash: {student_id_hash[:8]}****")
+            logger.debug(f"Token创建 - 学号已转换为hash: {student_id_hash}")
         else:
-            logger.debug(f"Token创建 - 使用已有hash: {to_encode['sub'][:8]}****")
+            logger.debug(f"Token创建 - 使用已有hash: {to_encode['sub']}")
 
     now = datetime.now(timezone.utc)
 
@@ -116,7 +116,7 @@ def create_access_token(
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     logger.info(
-        f"Access Token创建成功，用户hash: {to_encode['sub'][:8]}****, 过期时间: {expire.isoformat()}"
+        f"Access Token创建成功，用户hash: {to_encode['sub']}, 过期时间: {expire.isoformat()}"
     )
     return encoded_jwt
 
@@ -143,13 +143,9 @@ def create_refresh_token(data: dict, client_ip: Optional[str] = None) -> str:
             # 如果不是hash值，则进行hash处理
             student_id_hash = hash_student_id(to_encode["sub"])
             to_encode["sub"] = student_id_hash
-            logger.debug(
-                f"Refresh Token创建 - 学号已转换为hash: {student_id_hash[:8]}****"
-            )
+            logger.debug(f"Refresh Token创建 - 学号已转换为hash: {student_id_hash}")
         else:
-            logger.debug(
-                f"Refresh Token创建 - 使用已有hash: {to_encode['sub'][:8]}****"
-            )
+            logger.debug(f"Refresh Token创建 - 使用已有hash: {to_encode['sub']}")
 
     now = datetime.now(timezone.utc)
     expire = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
@@ -169,7 +165,7 @@ def create_refresh_token(data: dict, client_ip: Optional[str] = None) -> str:
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     logger.info(
-        f"Refresh Token创建成功，用户hash: {to_encode['sub'][:8]}****, 过期时间: {expire.isoformat()}"
+        f"Refresh Token创建成功，用户hash: {to_encode['sub']}, 过期时间: {expire.isoformat()}"
     )
     return encoded_jwt
 
@@ -314,7 +310,7 @@ def decode_and_validate_token(
                 )
 
         logger.info(
-            f"Token验证成功，用户hash: {payload.get('sub', 'unknown')[:8]}****, 类型: {token_type}"
+            f"Token验证成功，用户hash: {payload.get('sub', 'unknown')}, 类型: {token_type}"
         )
         return payload
 
