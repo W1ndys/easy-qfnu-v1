@@ -244,7 +244,11 @@ def get_grades(session: requests.Session, semester: str = ""):
         table = soup.find("table", {"id": "dataList"})
         if not table:
             logger.warning("未找到成绩表格")
-            return {"success": False, "message": "未找到成绩表格", "data": []}
+            return {
+                "success": False,
+                "message": "未找到成绩表格，可能是登录过期，请手动退出登录重新登录",
+                "data": [],
+            }
 
         logger.debug("找到成绩表格，开始解析数据")
         # 我们定义一个中文到英文的映射关系
