@@ -487,7 +487,7 @@ export default {
 .page-rounded-container {
   background: #ffffff;
   border-radius: 40rpx;
-  padding: 30rpx 30rpx 40rpx;
+  padding: 20rpx 20rpx 30rpx;
   box-shadow: 0 20rpx 60rpx var(--shadow-light);
   border: 1rpx solid var(--border-light);
 }
@@ -545,7 +545,7 @@ export default {
 
 // 页面头部
 .page-header {
-  padding: 60rpx 40rpx 40rpx;
+  padding: 40rpx 30rpx 30rpx;
   position: relative;
   z-index: 1;
 }
@@ -572,7 +572,7 @@ export default {
 
 // 内容区域
 .content-wrapper {
-  padding: 0 40rpx 40rpx;
+  padding: 0 30rpx 30rpx;
   position: relative;
   z-index: 1;
 }
@@ -595,7 +595,7 @@ export default {
 
 // 搜索卡片
 .search-card {
-  padding: 50rpx;
+  padding: 40rpx;
 }
 
 .card-header {
@@ -771,12 +771,8 @@ export default {
 }
 
 // 结果区域
-.results-section {
-  margin-top: 20rpx;
-}
-
 .results-header {
-  padding: 40rpx;
+  padding: 30rpx;
   text-align: center;
 }
 
@@ -982,7 +978,7 @@ export default {
 .empty-state,
 .initial-state,
 .loading-state {
-  padding: 100rpx 50rpx;
+  padding: 80rpx 40rpx;
 }
 
 .empty-content,
@@ -1039,11 +1035,11 @@ export default {
 // 响应式适配
 @media (max-width: 600rpx) {
   .content-wrapper {
-    padding: 0 20rpx 40rpx;
+    padding: 0 15rpx 30rpx;
   }
 
   .search-card {
-    padding: 30rpx;
+    padding: 25rpx;
   }
 
   .button-group {

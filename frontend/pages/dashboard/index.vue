@@ -175,27 +175,51 @@ const handleNavigate = (index) => {
 
     // 检查是否为外部链接
     if (targetPage.external) {
-      // 处理外部链接
-      // #ifdef APP-PLUS
-      plus.runtime.openURL(targetPage.url);
-      // #endif
+      // 处理外部链接 - 统一使用弹窗显示
+      uni.showModal({
+        title: "外部链接",
+        content: `即将跳转到外部网站：\n${targetPage.url}\n\n是否继续？`,
+        confirmText: "前往",
+        cancelText: "复制链接",
+        confirmColor: "#7F4515",
+        success: (res) => {
+          if (res.confirm) {
+            // 用户选择前往
+            // #ifdef APP-PLUS
+            plus.runtime.openURL(targetPage.url);
+            // #endif
 
-      // #ifdef H5
-      window.open(targetPage.url, "_blank");
-      // #endif
+            // #ifdef H5
+            window.open(targetPage.url, "_blank");
+            // #endif
 
-      // #ifdef MP
-      // 小程序环境下复制链接到剪贴板
-      uni.setClipboardData({
-        data: targetPage.url,
-        success: () => {
-          uni.showToast({
-            title: "链接已复制到剪贴板",
-            icon: "success",
-          });
+            // #ifdef MP
+            // 小程序环境下无法直接打开外部链接，提示复制
+            uni.setClipboardData({
+              data: targetPage.url,
+              success: () => {
+                uni.showToast({
+                  title: "链接已复制，请在浏览器中打开",
+                  icon: "success",
+                  duration: 3000
+                });
+              },
+            });
+            // #endif
+          } else if (res.cancel) {
+            // 用户选择复制链接
+            uni.setClipboardData({
+              data: targetPage.url,
+              success: () => {
+                uni.showToast({
+                  title: "链接已复制到剪贴板",
+                  icon: "success",
+                });
+              },
+            });
+          }
         },
       });
-      // #endif
     } else {
       // 内部页面导航
       uni.navigateTo({ url: targetPage.url });
@@ -235,7 +259,7 @@ const copyQQGroup = () => {
     data: "1053432087",
     success: () => {
       uni.showToast({
-        title: "QQ群号已复制",
+        title: "QQ群号已复制到剪贴板，请自行搜索加群",
         icon: "success",
       });
     },

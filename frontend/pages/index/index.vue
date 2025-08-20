@@ -41,6 +41,17 @@
           </uni-forms-item>
         </uni-forms>
 
+        <!-- 记住密码选项 -->
+        <view class="remember-section">
+          <checkbox-group @change="onRememberChange">
+            <label class="remember-label">
+              <checkbox value="remember" :checked="rememberPassword" />
+              <text class="remember-text">记住账号密码</text>
+            </label>
+          </checkbox-group>
+          <text class="clear-cache" @click="clearCachedCredentials" v-if="hasCachedCredentials">清除缓存</text>
+        </view>
+
         <view class="agreement">
           <checkbox-group @change="onAgreeChange">
             <label class="agree-label">
@@ -95,10 +106,14 @@ const formData = ref({
 });
 const isLoading = ref(false);
 
+// 记住密码相关
+const rememberPassword = ref(false);
+const hasCachedCredentials = ref(false);
+
 // 同意协议
 const agreed = ref(false);
 const AGREEMENT_URL =
-  "https://cq4hqujcxu3.feishu.cn/docx/XvdmdJ5eIo3hxMxPJA9cODcYnhb";
+  "https://cq4hqujcxu3.feishu.cn/docx/EYE6d5ufAoQt5Axx7MFc4XMrnAf";
 const onAgreeChange = (e) => {
   try {
     agreed.value =
@@ -107,17 +122,76 @@ const onAgreeChange = (e) => {
     agreed.value = false;
   }
 };
-const openAgreement = () => {
-  if (typeof window !== "undefined" && window.open) {
-    window.open(AGREEMENT_URL, "_blank");
-  } else {
-    uni.setClipboardData({
-      data: AGREEMENT_URL,
-      success() {
-        uni.showToast({ title: "链接已复制，请在浏览器中打开", icon: "none" });
-      },
-    });
+
+// 记住密码选项变化
+const onRememberChange = (e) => {
+  try {
+    rememberPassword.value =
+      Array.isArray(e.detail.value) && e.detail.value.includes("remember");
+  } catch (err) {
+    rememberPassword.value = false;
   }
+};
+const openAgreement = () => {
+  uni.showModal({
+    title: "用户协议",
+    content: `即将跳转到用户协议页面：\n${AGREEMENT_URL}\n\n是否继续？`,
+    confirmText: "前往",
+    cancelText: "复制链接",
+    confirmColor: "#7F4515",
+    success: (res) => {
+      if (res.confirm) {
+        // 用户选择前往
+        // #ifdef H5
+        if (typeof window !== "undefined" && window.open) {
+          window.open(AGREEMENT_URL, "_blank");
+        } else {
+          // 备用方案：复制链接
+          uni.setClipboardData({
+            data: AGREEMENT_URL,
+            success() {
+              uni.showToast({ 
+                title: "链接已复制，请在浏览器中打开", 
+                icon: "success",
+                duration: 3000
+              });
+            },
+          });
+        }
+        // #endif
+
+        // #ifdef APP-PLUS
+        plus.runtime.openURL(AGREEMENT_URL);
+        // #endif
+
+        // #ifdef MP
+        // 小程序环境下无法直接打开外部链接，提示复制
+        uni.setClipboardData({
+          data: AGREEMENT_URL,
+          success() {
+            uni.showToast({ 
+              title: "链接已复制，请在浏览器中打开", 
+              icon: "success",
+              duration: 3000
+            });
+          },
+        });
+        // #endif
+      } else if (res.cancel) {
+        // 用户选择复制链接
+        uni.setClipboardData({
+          data: AGREEMENT_URL,
+          success() {
+            uni.showToast({ 
+              title: "协议链接已复制到剪贴板", 
+              icon: "success",
+              duration: 2000
+            });
+          },
+        });
+      }
+    },
+  });
 };
 
 // 复制QQ群号
@@ -125,7 +199,7 @@ const copyQQGroup = () => {
   uni.setClipboardData({
     data: "1053432087",
     success() {
-      uni.showToast({ title: "QQ群号已复制到剪贴板", icon: "success" });
+      uni.showToast({ title: "QQ群号已复制到剪贴板，请自行搜索加群", icon: "success" });
     },
   });
 };
@@ -133,6 +207,7 @@ const copyQQGroup = () => {
 // 页面加载时检查缓存的token
 onLoad(() => {
   checkLoginStatus();
+  loadCachedCredentials();
 });
 
 // 检查登录状态函数
@@ -168,6 +243,74 @@ const checkLoginStatus = () => {
   }
 };
 
+// 加载缓存的账号密码
+const loadCachedCredentials = () => {
+  try {
+    const cachedCredentials = uni.getStorageSync("cached_credentials");
+    if (cachedCredentials) {
+      const { studentId, password, remember } = JSON.parse(cachedCredentials);
+      formData.value.studentId = studentId || "";
+      formData.value.password = password || "";
+      rememberPassword.value = remember || false;
+      hasCachedCredentials.value = !!(studentId || password);
+      
+      console.log("已加载缓存的账号信息", { 
+        studentId: studentId ? "***" + studentId.slice(-4) : "",
+        hasPassword: !!password,
+        remember 
+      });
+    }
+  } catch (error) {
+    console.error("加载缓存账号密码失败:", error);
+  }
+};
+
+// 保存账号密码到缓存
+const saveCachedCredentials = () => {
+  try {
+    if (rememberPassword.value) {
+      const credentials = {
+        studentId: formData.value.studentId,
+        password: formData.value.password,
+        remember: true,
+        saveTime: new Date().getTime()
+      };
+      uni.setStorageSync("cached_credentials", JSON.stringify(credentials));
+      console.log("账号密码已保存到缓存");
+    } else {
+      // 如果不记住密码，清除缓存
+      uni.removeStorageSync("cached_credentials");
+      console.log("已清除账号密码缓存");
+    }
+  } catch (error) {
+    console.error("保存账号密码到缓存失败:", error);
+  }
+};
+
+// 清除缓存的账号密码
+const clearCachedCredentials = () => {
+  uni.showModal({
+    title: "确认清除",
+    content: "确定要清除缓存的账号密码吗？",
+    success: (res) => {
+      if (res.confirm) {
+        try {
+          uni.removeStorageSync("cached_credentials");
+          formData.value.studentId = "";
+          formData.value.password = "";
+          rememberPassword.value = false;
+          hasCachedCredentials.value = false;
+          uni.showToast({ title: "缓存已清除", icon: "success" });
+          console.log("用户手动清除了账号密码缓存");
+        } catch (error) {
+          console.error("清除缓存失败:", error);
+          uni.showToast({ title: "清除缓存失败", icon: "none" });
+        }
+      }
+    }
+  });
+};
+
 // 2. 定义登录函数 (使用 async/await 语法，更现代)
 const handleLogin = async () => {
   // 简单的输入校验
@@ -197,6 +340,10 @@ const handleLogin = async () => {
     // uni.request 返回的是一个数组 [error, response]
     if (res.statusCode === 200 && res.data.access_token) {
       console.log("登录成功, Token:", res.data.access_token);
+      
+      // 保存账号密码到缓存（在登录成功后）
+      saveCachedCredentials();
+      
       uni.showToast({ title: "登录成功", icon: "success" });
       uni.setStorageSync("token", res.data.access_token);
 
@@ -358,6 +505,41 @@ const handleLogin = async () => {
 .login-form {
   width: 100%;
   margin-bottom: 50rpx;
+}
+
+.remember-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  font-size: 24rpx;
+}
+
+.remember-label {
+  display: flex;
+  align-items: center;
+}
+
+.remember-text {
+  margin-left: 12rpx;
+  color: #4a5568;
+  font-size: 24rpx;
+}
+
+.clear-cache {
+  color: #7f4515;
+  font-size: 22rpx;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 8rpx 12rpx;
+  border-radius: 8rpx;
+  background: rgba(127, 69, 21, 0.08);
+  transition: all 0.3s ease;
+}
+
+.clear-cache:active {
+  background: rgba(127, 69, 21, 0.15);
+  transform: scale(0.95);
 }
 
 .agreement {
