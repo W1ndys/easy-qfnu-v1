@@ -7,7 +7,9 @@ from app.services.auth_service import auth_service
 from loguru import logger
 
 # 导入安全相关函数
+# 导入安全相关函数
 from app.core.security import get_current_user
+from app.core.hash_utils import get_student_id_for_display
 
 router = APIRouter()
 security = HTTPBearer()
@@ -263,7 +265,7 @@ async def refresh_token(token_data: RefreshTokenRequest, request: Request):
     },
 )
 async def logout(
-    current_user: str = Depends(get_current_user),
+    current_user_hash: str = Depends(get_current_user),
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     """
@@ -273,7 +275,7 @@ async def logout(
 
     Args:
         credentials: HTTP Bearer认证凭据
-        current_user: 当前认证用户（通过依赖注入获取）
+        current_user_hash: 当前认证用户的hash（通过依赖注入获取）
 
     Returns:
         dict: 登出成功消息
@@ -282,15 +284,15 @@ async def logout(
         HTTPException: Token无效时抛出HTTP异常
     """
     token = credentials.credentials
-    logger.info(f"用户登出请求，学号: {current_user}")
+    logger.info(f"用户登出请求，用户hash: {current_user_hash[:8]}****")
 
     try:
         # 使用认证服务处理登出
         auth_service.logout_user(token)
-        logger.info(f"用户 {current_user} 登出成功")
+        logger.info(f"用户 {current_user_hash[:8]}**** 登出成功")
         return {"message": "登出成功"}
     except Exception as e:
-        logger.error(f"用户 {current_user} 登出失败: {e}")
+        logger.error(f"用户 {current_user_hash[:8]}**** 登出失败: {e}")
         raise HTTPException(status_code=500, detail=f"登出失败: {str(e)}")
 
 
@@ -316,7 +318,11 @@ async def logout(
             "description": "用户信息获取成功",
             "content": {
                 "application/json": {
-                    "example": {"student_id": "20210001", "is_authenticated": True}
+                    "example": {
+                        "user_id": "用户_a1b2c3d4",
+                        "is_authenticated": True,
+                        "note": "为保护隐私，此处不显示明文学号",
+                    }
                 }
             },
         },
@@ -326,17 +332,21 @@ async def logout(
         },
     },
 )
-async def get_current_user_info(current_user: str = Depends(get_current_user)):
+async def get_current_user_info(current_user_hash: str = Depends(get_current_user)):
     """
     获取当前用户信息
 
     返回当前认证用户的基本信息。
 
     Args:
-        current_user: 当前认证用户的学号
+        current_user_hash: 当前认证用户的学号hash
 
     Returns:
         dict: 用户基本信息
     """
-    logger.debug(f"获取用户信息请求，学号: {current_user}")
-    return {"student_id": current_user, "is_authenticated": True}
+    logger.debug(f"获取用户信息请求，用户hash: {current_user_hash[:8]}****")
+    return {
+        "user_id": get_student_id_for_display(current_user_hash),
+        "is_authenticated": True,
+        "note": "为保护隐私，此处不显示明文学号",
+    }

@@ -1,7 +1,7 @@
 # app/services/base_service.py
 import requests
 from fastapi import HTTPException, Depends
-from app.db.database import get_session
+from app.db.database import get_session, get_session_by_hash
 from app.core.security import get_current_user
 from loguru import logger
 from typing import Optional
@@ -12,13 +12,13 @@ class BaseEducationService:
 
     @staticmethod
     def get_user_session(
-        student_id: str = Depends(get_current_user),
+        student_id_hash: str = Depends(get_current_user),
     ) -> requests.Session:
         """
         依赖项：获取当前用户的教务系统session
 
         Args:
-            student_id: 学生ID
+            student_id_hash: 学生ID的hash值（从JWT Token中获取）
 
         Returns:
             requests.Session: 已登录的教务系统session
@@ -26,15 +26,17 @@ class BaseEducationService:
         Raises:
             HTTPException: 当session不存在或已失效时抛出401异常
         """
-        logger.debug(f"获取用户 {student_id} 的教务系统session...")
-        session = get_session(student_id=student_id)
+        logger.debug(f"获取用户 {student_id_hash[:8]}**** 的教务系统session...")
+
+        # 使用hash值查询session
+        session = get_session_by_hash(student_id_hash=student_id_hash)
         if session is None:
-            logger.warning(f"用户 {student_id} 的session不存在或已失效")
+            logger.warning(f"用户 {student_id_hash[:8]}**** 的session不存在或已失效")
             raise HTTPException(
                 status_code=401, detail="Session不存在或已失效，请重新登录"
             )
 
-        logger.debug(f"用户 {student_id} 的session获取成功")
+        logger.debug(f"用户 {student_id_hash[:8]}**** 的session获取成功")
         return session
 
     @staticmethod
@@ -90,6 +92,8 @@ class BaseEducationService:
 
 
 # 创建依赖项函数
-def get_user_session(student_id: str = Depends(get_current_user)) -> requests.Session:
+def get_user_session(
+    student_id_hash: str = Depends(get_current_user),
+) -> requests.Session:
     """全局依赖项：获取用户session"""
-    return BaseEducationService.get_user_session(student_id)
+    return BaseEducationService.get_user_session(student_id_hash)

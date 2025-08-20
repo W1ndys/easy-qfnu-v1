@@ -1,11 +1,14 @@
-# database.py (Docker适配版)
+# database.py (Docker适配版 + 安全hash改进)
 
 import pickle
 import datetime
 import requests
 import os
+from typing import Optional, Union
 from sqlalchemy import create_engine, Column, String, Integer, BLOB, TIMESTAMP
 from sqlalchemy.orm import sessionmaker, declarative_base
+from app.core.hash_utils import hash_student_id
+from loguru import logger
 
 # 数据库配置 - 支持Docker环境
 DATABASE_PATH = os.getenv("DATABASE_PATH", "./data/sessions.db")
@@ -22,7 +25,9 @@ Base = declarative_base()
 class SessionStore(Base):
     __tablename__ = "sessions"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    student_id = Column(String, unique=True, index=True, nullable=False)
+    student_id_hash = Column(
+        String, unique=True, index=True, nullable=False
+    )  # 存储学号hash值
     session_data = Column(BLOB, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=True)
@@ -36,25 +41,35 @@ def init_db():
 
 
 def save_session(student_id: str, session_obj: requests.Session):
-    """序列化并保存 session 的 cookies 到数据库"""
+    """序列化并保存 session 的 cookies 到数据库（使用学号hash）"""
     db = SessionLocal()
     try:
+        # 将明文学号转换为hash值
+        student_id_hash = hash_student_id(student_id)
+        logger.debug(f"保存session - 学号hash: {student_id_hash[:8]}****")
+
         # 只序列化 cookiejar，更稳定、更适合持久化
         pickled_cookies = pickle.dumps(session_obj.cookies)
 
         db_session = (
-            db.query(SessionStore).filter(SessionStore.student_id == student_id).first()
+            db.query(SessionStore)
+            .filter(SessionStore.student_id_hash == student_id_hash)
+            .first()
         )
 
         now = datetime.datetime.now()
         if db_session:
-            print(f"正在更新学号 {student_id} 的 session cookies...")
+            logger.info(
+                f"正在更新学号hash {student_id_hash[:8]}**** 的 session cookies..."
+            )
             setattr(db_session, "session_data", pickled_cookies)
             setattr(db_session, "updated_at", now)
         else:
-            print(f"正在为学号 {student_id} 创建新的 session cookies 记录...")
+            logger.info(
+                f"正在为学号hash {student_id_hash[:8]}**** 创建新的 session cookies 记录..."
+            )
             db_session = SessionStore(
-                student_id=student_id,
+                student_id_hash=student_id_hash,
                 session_data=pickled_cookies,
                 created_at=now,
                 updated_at=now,
@@ -62,41 +77,121 @@ def save_session(student_id: str, session_obj: requests.Session):
             db.add(db_session)
 
         db.commit()
-        print("Session cookies 保存成功。")
+        logger.info("Session cookies 保存成功。")
+    except Exception as e:
+        logger.error(f"保存session失败: {e}")
+        db.rollback()
+        raise
     finally:
         db.close()
 
 
-def get_session(student_id: str):
-    """从数据库读取 cookies 并重建一个 session 对象"""
+def get_session(student_id: str) -> Optional[requests.Session]:
+    """从数据库读取 cookies 并重建一个 session 对象（使用学号hash）"""
     db = SessionLocal()
     try:
+        # 将明文学号转换为hash值进行查询
+        student_id_hash = hash_student_id(student_id)
+        logger.debug(f"查询session - 学号hash: {student_id_hash[:8]}****")
+
         db_session_record = (
-            db.query(SessionStore).filter(SessionStore.student_id == student_id).first()
+            db.query(SessionStore)
+            .filter(SessionStore.student_id_hash == student_id_hash)
+            .first()
         )
         if db_session_record:
-            print(f"成功从数据库找到学号 {student_id} 的 session cookies。")
+            logger.info(
+                f"成功从数据库找到学号hash {student_id_hash[:8]}**** 的 session cookies。"
+            )
 
             # 创建一个新的、干净的 Session 对象
             new_session = requests.Session()
 
-            # 取出实际的二进制数据
-            session_data_bytes = db_session_record.session_data
-            # 兼容 memoryview、bytes 及其他类型
-            if isinstance(session_data_bytes, memoryview):
-                session_data_bytes = session_data_bytes.tobytes()
-            elif not isinstance(session_data_bytes, bytes):
-                session_data_bytes = bytes(session_data_bytes)
+            # 取出实际的二进制数据 - 明确类型转换
+            session_data_raw = db_session_record.session_data
 
-            # 将反序列化后的 cookies 加载到新 session 中
-            loaded_cookies = pickle.loads(session_data_bytes)
-            new_session.cookies.update(loaded_cookies)
+            # 确保数据是bytes类型
+            if session_data_raw is not None:
+                # 兼容 memoryview、bytes 及其他类型
+                if isinstance(session_data_raw, memoryview):
+                    session_data_bytes: bytes = session_data_raw.tobytes()
+                elif isinstance(session_data_raw, bytes):
+                    session_data_bytes = session_data_raw
+                else:
+                    # 类型忽略，因为我们知道这里是数据库返回的bytes数据
+                    session_data_bytes = bytes(session_data_raw)  # type: ignore
 
-            print("Session 对象重建成功。")
-            return new_session
+                # 将反序列化后的 cookies 加载到新 session 中
+                loaded_cookies = pickle.loads(session_data_bytes)
+                new_session.cookies.update(loaded_cookies)
+
+                logger.info("Session 对象重建成功。")
+                return new_session
+            else:
+                logger.warning("Session数据为空")
+                return None
         else:
-            print(f"数据库中未找到学号 {student_id} 的 session。")
+            logger.info(
+                f"数据库中未找到学号hash {student_id_hash[:8]}**** 的 session。"
+            )
             return None
+    except Exception as e:
+        logger.error(f"获取session失败: {e}")
+        return None
+    finally:
+        db.close()
+
+
+def get_session_by_hash(student_id_hash: str) -> Optional[requests.Session]:
+    """通过学号hash值从数据库读取 cookies 并重建一个 session 对象"""
+    db = SessionLocal()
+    try:
+        logger.debug(f"通过hash查询session - 学号hash: {student_id_hash[:8]}****")
+
+        db_session_record = (
+            db.query(SessionStore)
+            .filter(SessionStore.student_id_hash == student_id_hash)
+            .first()
+        )
+        if db_session_record:
+            logger.info(
+                f"成功从数据库找到学号hash {student_id_hash[:8]}**** 的 session cookies。"
+            )
+
+            # 创建一个新的、干净的 Session 对象
+            new_session = requests.Session()
+
+            # 取出实际的二进制数据 - 明确类型转换
+            session_data_raw = db_session_record.session_data
+
+            # 确保数据是bytes类型
+            if session_data_raw is not None:
+                # 兼容 memoryview、bytes 及其他类型
+                if isinstance(session_data_raw, memoryview):
+                    session_data_bytes: bytes = session_data_raw.tobytes()
+                elif isinstance(session_data_raw, bytes):
+                    session_data_bytes = session_data_raw
+                else:
+                    # 类型忽略，因为我们知道这里是数据库返回的bytes数据
+                    session_data_bytes = bytes(session_data_raw)  # type: ignore
+
+                # 将反序列化后的 cookies 加载到新 session 中
+                loaded_cookies = pickle.loads(session_data_bytes)
+                new_session.cookies.update(loaded_cookies)
+
+                logger.info("Session 对象重建成功。")
+                return new_session
+            else:
+                logger.warning("Session数据为空")
+                return None
+        else:
+            logger.info(
+                f"数据库中未找到学号hash {student_id_hash[:8]}**** 的 session。"
+            )
+            return None
+    except Exception as e:
+        logger.error(f"通过hash获取session失败: {e}")
+        return None
     finally:
         db.close()
 

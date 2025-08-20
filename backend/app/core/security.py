@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Set
 import ipaddress
 from loguru import logger
+from app.core.hash_utils import hash_student_id
 
 reusable_oauth2 = HTTPBearer()
 
@@ -77,11 +78,21 @@ def create_access_token(
     Returns:
         编码后的JWT Token字符串
     """
-    logger.debug(
-        f"开始创建Access Token，用户: {data.get('sub', 'unknown')}, IP: {client_ip}"
-    )
-
     to_encode = data.copy()
+
+    # 如果传入的是明文学号，需要先转换为hash
+    if "sub" in to_encode and isinstance(to_encode["sub"], str):
+        # 检查是否已经是hash值（64位十六进制字符串）
+        if len(to_encode["sub"]) != 64 or not all(
+            c in "0123456789abcdef" for c in to_encode["sub"].lower()
+        ):
+            # 如果不是hash值，则进行hash处理
+            student_id_hash = hash_student_id(to_encode["sub"])
+            to_encode["sub"] = student_id_hash
+            logger.debug(f"Token创建 - 学号已转换为hash: {student_id_hash[:8]}****")
+        else:
+            logger.debug(f"Token创建 - 使用已有hash: {to_encode['sub'][:8]}****")
+
     now = datetime.now(timezone.utc)
 
     if expires_delta:
@@ -105,7 +116,7 @@ def create_access_token(
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     logger.info(
-        f"Access Token创建成功，用户: {data.get('sub', 'unknown')}, 过期时间: {expire.isoformat()}"
+        f"Access Token创建成功，用户hash: {to_encode['sub'][:8]}****, 过期时间: {expire.isoformat()}"
     )
     return encoded_jwt
 
@@ -121,11 +132,25 @@ def create_refresh_token(data: dict, client_ip: Optional[str] = None) -> str:
     Returns:
         编码后的JWT Refresh Token字符串
     """
-    logger.debug(
-        f"开始创建Refresh Token，用户: {data.get('sub', 'unknown')}, IP: {client_ip}"
-    )
-
     to_encode = data.copy()
+
+    # 如果传入的是明文学号，需要先转换为hash
+    if "sub" in to_encode and isinstance(to_encode["sub"], str):
+        # 检查是否已经是hash值（64位十六进制字符串）
+        if len(to_encode["sub"]) != 64 or not all(
+            c in "0123456789abcdef" for c in to_encode["sub"].lower()
+        ):
+            # 如果不是hash值，则进行hash处理
+            student_id_hash = hash_student_id(to_encode["sub"])
+            to_encode["sub"] = student_id_hash
+            logger.debug(
+                f"Refresh Token创建 - 学号已转换为hash: {student_id_hash[:8]}****"
+            )
+        else:
+            logger.debug(
+                f"Refresh Token创建 - 使用已有hash: {to_encode['sub'][:8]}****"
+            )
+
     now = datetime.now(timezone.utc)
     expire = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
@@ -144,7 +169,7 @@ def create_refresh_token(data: dict, client_ip: Optional[str] = None) -> str:
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     logger.info(
-        f"Refresh Token创建成功，用户: {data.get('sub', 'unknown')}, 过期时间: {expire.isoformat()}"
+        f"Refresh Token创建成功，用户hash: {to_encode['sub'][:8]}****, 过期时间: {expire.isoformat()}"
     )
     return encoded_jwt
 
@@ -288,7 +313,9 @@ def decode_and_validate_token(
                     detail="Token与当前IP地址不匹配",
                 )
 
-        logger.info(f"Token验证成功，用户: {payload.get('sub')}, 类型: {token_type}")
+        logger.info(
+            f"Token验证成功，用户hash: {payload.get('sub', 'unknown')[:8]}****, 类型: {token_type}"
+        )
         return payload
 
     except jwt.ExpiredSignatureError:
@@ -310,14 +337,15 @@ def get_current_user(
 ) -> str:
     """
     基础的用户认证依赖函数。
-    验证JWT Token并返回学号 (student_id)。
+    验证JWT Token并返回学号hash值。
 
     注意：此版本不包含IP验证，如需IP验证请使用 get_current_user_with_ip
+    警告：返回的是学号的hash值，不是明文学号！需要明文学号请使用其他方法。
     """
     logger.debug("使用基础用户认证（无IP验证）")
     token = credentials.credentials
     payload = decode_and_validate_token(token, None, "access")
-    return payload["sub"]
+    return payload["sub"]  # 返回学号hash值
 
 
 def get_current_user_with_ip(
@@ -326,7 +354,9 @@ def get_current_user_with_ip(
 ) -> str:
     """
     增强的用户认证依赖函数，包含IP验证。
-    验证JWT Token并返回学号 (student_id)。
+    验证JWT Token并返回学号hash值。
+
+    警告：返回的是学号的hash值，不是明文学号！需要明文学号请使用其他方法。
     """
     logger.debug("使用增强用户认证（包含IP验证）")
     token = credentials.credentials
@@ -343,7 +373,7 @@ def get_current_user_with_ip(
         logger.debug(f"检测到客户端IP: {client_ip}")
 
     payload = decode_and_validate_token(token, client_ip, "access")
-    return payload["sub"]
+    return payload["sub"]  # 返回学号hash值
 
 
 def refresh_access_token(
