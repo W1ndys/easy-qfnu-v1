@@ -70,15 +70,21 @@ def get_average_scores(
     try:
         session = get_db_session()
 
-        # 构建查询 - 支持按课程名称或课程代码模糊查询
-        query = session.query(AverageScore).filter(
-            (AverageScore.course_name.like(f"%{course_identifier}%"))
-            | (AverageScore.course_code.like(f"%{course_identifier}%"))
-        )
+        # 构建基础查询
+        query = session.query(AverageScore)
 
-        if teacher:
-            # 教师姓名也支持模糊查询
-            query = query.filter(AverageScore.teacher.like(f"%{teacher}%"))
+        # 构建课程查询条件（课程名称或课程代码）
+        course_conditions = AverageScore.course_name.like(
+            f"%{course_identifier}%"
+        ) | AverageScore.course_code.like(f"%{course_identifier}%")
+
+        # 应用课程查询条件
+        query = query.filter(course_conditions)
+
+        # 如果指定了教师，添加教师查询条件
+        if teacher and teacher.strip():
+            teacher_condition = AverageScore.teacher.like(f"%{teacher.strip()}%")
+            query = query.filter(teacher_condition)
 
         query = query.order_by(AverageScore.teacher, AverageScore.semester)
         results = query.all()
@@ -86,7 +92,17 @@ def get_average_scores(
         session.close()
 
         if not results:
-            return {}
+            # 提供更详细的错误信息
+            if teacher and teacher.strip():
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"未找到课程名称或代码包含'{course_identifier}'且教师姓名包含'{teacher.strip()}'的数据",
+                )
+            else:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"未找到课程名称或代码包含'{course_identifier}'的数据",
+                )
 
         # 构建层级结构：课程->老师->学期->基准人数和平均分
         structured_data = {}
@@ -113,6 +129,9 @@ def get_average_scores(
 
         return structured_data
 
+    except HTTPException:
+        # 重新抛出HTTP异常
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"数据库查询错误: {str(e)}")
 
@@ -123,25 +142,25 @@ def get_average_scores(
 async def query_average_scores(
     course: str = Query(
         ...,
-        description="课程名称或课程代码（必填，支持模糊查询，至少4个字符）",
-        min_length=4,
+        description="课程名称或课程代码（必填，支持模糊查询，至少3个字符）",
+        min_length=3,
     ),
     teacher: Optional[str] = Query(
         None,
-        description="教师姓名（选填，支持模糊查询，至少4个字符，为空则查询所有老师）",
-        min_length=4,
+        description="教师姓名（选填，支持模糊查询，至少2个字符，为空则查询所有老师）",
+        min_length=2,
     ),
     current_user: str = Depends(get_current_user),
 ) -> AverageScoreResponse:
     """
     查询指定课程的平均分数据
 
-    - **course**: 课程名称或课程代码（必填，支持模糊查询，至少4个字符）
-    - **teacher**: 教师姓名（选填，支持模糊查询，至少4个字符，不填则查询该课程所有老师的数据）
+    - **course**: 课程名称或课程代码（必填，支持模糊查询，至少3个字符）
+    - **teacher**: 教师姓名（选填，支持模糊查询，至少2个字符，不填则查询该课程所有老师的数据）
 
     **权限要求：** 需要有效的JWT Token认证
     **模糊查询：** 所有查询参数都支持模糊匹配
-    **长度限制：** 搜索词至少需要4个字符，防止查询结果过多
+    **长度限制：** 课程名称至少需要3个字符，教师姓名至少需要2个字符，提高查询成功率
 
     返回格式：课程->老师->学期->基准人数和平均分
     """

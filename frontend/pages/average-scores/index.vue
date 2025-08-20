@@ -43,7 +43,7 @@
                   'input-focus': courseFocused,
                 }"
                 v-model="searchForm.course"
-                placeholder="请输入课程名称或课程代码（至少4个字符）"
+                placeholder="请输入课程名称或课程代码（至少3个字符）"
                 @confirm="handleSearch"
                 @input="validateCourse"
                 @focus="courseFocused = true"
@@ -271,8 +271,8 @@ export default {
       const length = this.searchForm.course.trim().length;
       if (length === 0) {
         return "请输入课程名称或代码";
-      } else if (length < 4) {
-        return `至少需要4个字符，当前${length}个字符`;
+      } else if (length < 3) {
+        return `至少需要3个字符，当前${length}个字符`;
       } else {
         return `已输入${length}个字符`;
       }
@@ -293,7 +293,7 @@ export default {
       const courseLength = this.searchForm.course.trim().length;
       const teacherLength = this.searchForm.teacher.trim().length;
 
-      return courseLength >= 4 && (teacherLength === 0 || teacherLength >= 2);
+      return courseLength >= 3 && (teacherLength === 0 || teacherLength >= 2);
     },
   },
 
@@ -306,7 +306,7 @@ export default {
   methods: {
     validateCourse() {
       const length = this.searchForm.course.trim().length;
-      this.courseError = length > 0 && length < 4;
+      this.courseError = length > 0 && length < 3;
     },
 
     validateTeacher() {
@@ -323,9 +323,9 @@ export default {
         return;
       }
 
-      if (this.searchForm.course.trim().length < 4) {
+      if (this.searchForm.course.trim().length < 3) {
         uni.showToast({
-          title: "课程名称至少需要4个字符",
+          title: "课程名称至少需要3个字符",
           icon: "none",
         });
         return;
@@ -372,10 +372,26 @@ export default {
       } catch (error) {
         console.error("查询平均分失败:", error);
         this.resultData = {};
-        this.emptyMessage = "网络错误，请重试";
+
+        // 显示更详细的错误信息
+        let errorMessage = "网络错误，请重试";
+        if (error.message) {
+          if (error.message.includes("HTTP 422")) {
+            errorMessage = "输入参数格式错误，请检查输入内容";
+          } else if (error.message.includes("HTTP 400")) {
+            errorMessage = "请求参数错误，请检查输入内容";
+          } else if (error.message.includes("HTTP 500")) {
+            errorMessage = "服务器内部错误，请稍后重试";
+          } else if (error.message.includes("HTTP")) {
+            errorMessage = `请求失败: ${error.message}`;
+          }
+        }
+
+        this.emptyMessage = errorMessage;
         uni.showToast({
-          title: "查询失败",
+          title: errorMessage,
           icon: "none",
+          duration: 3000,
         });
       } finally {
         this.loading = false;
@@ -426,6 +442,18 @@ export default {
               uni.reLaunch({ url: "/pages/index/index" });
               return;
             }
+
+            // 处理其他非200状态码
+            if (res.statusCode !== 200) {
+              console.error("API请求失败:", res);
+              reject(
+                new Error(
+                  `HTTP ${res.statusCode}: ${res.data?.message || "请求失败"}`
+                )
+              );
+              return;
+            }
+
             resolve(res.data);
           },
           fail: (err) => {
