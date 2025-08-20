@@ -137,7 +137,34 @@ const handleNavigate = (index) => {
 
   if (targetPage.url) {
     console.log("导航到:", targetPage.url);
-    uni.navigateTo({ url: targetPage.url });
+
+    // 检查是否为外部链接
+    if (targetPage.external) {
+      // 处理外部链接
+      // #ifdef APP-PLUS
+      plus.runtime.openURL(targetPage.url);
+      // #endif
+
+      // #ifdef H5
+      window.open(targetPage.url, "_blank");
+      // #endif
+
+      // #ifdef MP
+      // 小程序环境下复制链接到剪贴板
+      uni.setClipboardData({
+        data: targetPage.url,
+        success: () => {
+          uni.showToast({
+            title: "链接已复制到剪贴板",
+            icon: "success",
+          });
+        },
+      });
+      // #endif
+    } else {
+      // 内部页面导航
+      uni.navigateTo({ url: targetPage.url });
+    }
   } else {
     uni.showToast({ title: "功能正在开发中...", icon: "none" });
   }
