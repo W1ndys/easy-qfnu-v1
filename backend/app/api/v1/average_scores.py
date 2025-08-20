@@ -86,7 +86,14 @@ def get_average_scores(
             teacher_condition = AverageScore.teacher.like(f"%{teacher.strip()}%")
             query = query.filter(teacher_condition)
 
-        query = query.order_by(AverageScore.teacher, AverageScore.semester)
+        # 使用text()函数进行智能排序，让最新的学期越靠前
+        # 学期格式：年份-年份-数字，如"2023-2024-1"
+        query = query.order_by(
+            AverageScore.teacher,
+            text("CAST(SUBSTR(semester, 1, 4) AS INTEGER) DESC"),  # 第一个年份降序
+            text("CAST(SUBSTR(semester, 6, 4) AS INTEGER) DESC"),  # 第二个年份降序
+            text("CAST(SUBSTR(semester, 11) AS INTEGER) DESC"),  # 学期数字降序
+        )
         results = query.all()
 
         session.close()
