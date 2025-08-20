@@ -117,6 +117,18 @@ const features = ref([
     url: "",
   },
   {
+    text: "预选课查询",
+    description: "即将推出",
+    icon: "checkmarkempty",
+    url: "",
+  },
+  {
+    text: "排名查询",
+    description: "即将推出",
+    icon: "medal",
+    url: "",
+  },
+  {
     text: "培养计划",
     description: "即将推出",
     icon: "list",

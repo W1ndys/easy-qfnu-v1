@@ -452,12 +452,13 @@ const handleLogin = async () => {
   width: 100%;
   background: #fffbe6;
   border-radius: 16rpx;
-  padding: 20rpx 30rpx;
+  padding: 20rpx 24rpx;
   margin-bottom: 30rpx;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   border: 1rpx solid #ffe58f;
+  box-sizing: border-box;
 }
 
 .notice-header {
@@ -467,10 +468,10 @@ const handleLogin = async () => {
 }
 
 .notice-title {
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 600;
   color: #faad14;
-  margin-left: 10rpx;
+  margin-left: 8rpx;
 }
 
 .notice-content {
@@ -481,32 +482,38 @@ const handleLogin = async () => {
 }
 
 .notice-text {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #faad14;
   margin-bottom: 10rpx;
   line-height: 1.4;
+  word-wrap: break-word;
 }
 
 .qq-group {
   display: flex;
   align-items: center;
-  background: #fffbe6;
+  flex-wrap: wrap;
+  background: rgba(255, 251, 230, 0.8);
   border-radius: 8rpx;
   padding: 8rpx 12rpx;
   border: 1rpx solid #ffe58f;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .qq-label {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #faad14;
-  margin-right: 10rpx;
+  margin-right: 8rpx;
+  flex-shrink: 0;
 }
 
 .qq-number {
-  font-size: 24rpx;
-  color: #faad14;
+  font-size: 22rpx;
+  color: #1890ff;
   text-decoration: underline;
   cursor: pointer;
+  font-weight: 600;
 }
 
 .footer-text {
@@ -549,6 +556,46 @@ const handleLogin = async () => {
 
   .login-card {
     padding: 40rpx 40rpx 30rpx;
+  }
+  
+  .test-notice {
+    padding: 16rpx 20rpx;
+    margin-bottom: 20rpx;
+  }
+  
+  .notice-title {
+    font-size: 24rpx;
+  }
+  
+  .notice-text,
+  .qq-label,
+  .qq-number {
+    font-size: 20rpx;
+  }
+}
+
+// 小屏幕适配
+@media (max-width: 400px) {
+  .content-wrapper {
+    padding: 40rpx 40rpx 0;
+  }
+  
+  .login-card {
+    padding: 30rpx 30rpx 25rpx;
+  }
+  
+  .test-notice {
+    padding: 14rpx 18rpx;
+  }
+  
+  .qq-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4rpx;
+  }
+  
+  .qq-label {
+    margin-right: 0;
   }
 }
 </style>
