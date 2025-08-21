@@ -8,7 +8,7 @@
             <view class="avatar-wrapper">
               <image
                 class="avatar"
-                src="/static/logo.png"
+                src="https://picx.zhimg.com/80/v2-694acb11077d5c11ea852452803fb445_720w.png"
                 mode="aspectFit"></image>
               <view class="status-indicator"></view>
             </view>
