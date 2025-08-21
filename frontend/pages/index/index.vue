@@ -69,6 +69,12 @@
           <text v-else>登录中...</text>
         </button>
 
+        <!-- 账号激活提示 -->
+        <view class="activation-tip">
+          <text class="activation-text">新生需要先</text>
+          <text class="activation-link" @click="openActivationPage">激活账号</text>
+        </view>
+
         <!-- 测试阶段提示 -->
         <view class="test-notice">
           <view class="notice-header">
@@ -367,6 +373,71 @@ const handleLogin = async () => {
     isLoading.value = false;
   }
 };
+
+const ACTIVATION_URL = "http://ids.qfnu.edu.cn/retrieve-password/activationMobile/index.html";
+
+// 打开账号激活页面
+const openActivationPage = () => {
+  uni.showModal({
+    title: "账号激活",
+    content: `即将跳转到账号激活页面：\n${ACTIVATION_URL}\n\n是否继续？`,
+    confirmText: "前往",
+    cancelText: "复制链接",
+    confirmColor: "#7F4515",
+    success: (res) => {
+      if (res.confirm) {
+        // 用户选择前往
+        // #ifdef H5
+        if (typeof window !== "undefined" && window.open) {
+          window.open(ACTIVATION_URL, "_blank");
+        } else {
+          // 备用方案：复制链接
+          uni.setClipboardData({
+            data: ACTIVATION_URL,
+            success() {
+              uni.showToast({ 
+                title: "链接已复制，请在浏览器中打开", 
+                icon: "success",
+                duration: 3000
+              });
+            },
+          });
+        }
+        // #endif
+
+        // #ifdef APP-PLUS
+        plus.runtime.openURL(ACTIVATION_URL);
+        // #endif
+
+        // #ifdef MP
+        // 小程序环境下无法直接打开外部链接，提示复制
+        uni.setClipboardData({
+          data: ACTIVATION_URL,
+          success() {
+            uni.showToast({ 
+              title: "链接已复制，请在浏览器中打开", 
+              icon: "success",
+              duration: 3000
+            });
+          },
+        });
+        // #endif
+      } else if (res.cancel) {
+        // 用户选择复制链接
+        uni.setClipboardData({
+          data: ACTIVATION_URL,
+          success() {
+            uni.showToast({ 
+              title: "激活链接已复制到剪贴板", 
+              icon: "success",
+              duration: 2000
+            });
+          },
+        });
+      }
+    },
+  });
+};
 </script>
 
 <style lang="scss" scoped>
@@ -611,7 +682,7 @@ const handleLogin = async () => {
   color: #ffffff;
   font-size: 28rpx;
   font-weight: 600;
-  margin-bottom: 40rpx;
+  margin-bottom: 20rpx;
   transition: all 0.3s ease;
   box-shadow: 0 8rpx 24rpx rgba(127, 69, 21, 0.25);
 
@@ -628,6 +699,32 @@ const handleLogin = async () => {
     background: linear-gradient(135deg, #7f4515 0%, #8c5527 100%);
     opacity: 0.8;
   }
+}
+
+.activation-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30rpx;
+  font-size: 24rpx;
+}
+
+.activation-text {
+  color: #7f8c8d;
+  margin-right: 6rpx;
+}
+
+.activation-link {
+  color: #7f4515;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.activation-link:active {
+  color: #8c5527;
+  transform: scale(0.95);
 }
 
 .test-notice {
@@ -756,28 +853,5 @@ const handleLogin = async () => {
   }
 }
 
-// 小屏幕适配
-@media (max-width: 400px) {
-  .content-wrapper {
-    padding: 40rpx 40rpx 0;
-  }
-  
-  .login-card {
-    padding: 30rpx 30rpx 25rpx;
-  }
-  
-  .test-notice {
-    padding: 14rpx 18rpx;
-  }
-  
-  .qq-group {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4rpx;
-  }
-  
-  .qq-label {
-    margin-right: 0;
-  }
-}
+ 
 </style>
