@@ -467,7 +467,7 @@ const openActivationPage = () => {
   &.circle-1 {
     width: 200rpx;
     height: 200rpx;
-    top: 10%;
+    top: 5%;
     right: -50rpx;
     animation: float 6s ease-in-out infinite;
   }
@@ -475,7 +475,7 @@ const openActivationPage = () => {
   &.circle-2 {
     width: 150rpx;
     height: 150rpx;
-    bottom: 20%;
+    bottom: 25%;
     left: -30rpx;
     animation: float 8s ease-in-out infinite reverse;
   }
@@ -483,7 +483,7 @@ const openActivationPage = () => {
   &.circle-3 {
     width: 100rpx;
     height: 100rpx;
-    top: 30%;
+    top: 25%;
     left: 20%;
     animation: float 4s ease-in-out infinite;
   }
@@ -505,7 +505,7 @@ const openActivationPage = () => {
   align-items: center;
   justify-content: flex-start;
   height: 100vh;
-  padding: 120rpx 60rpx 0;
+  padding: 60rpx 60rpx 0;
   box-sizing: border-box;
   position: relative;
   z-index: 1;
@@ -516,7 +516,7 @@ const openActivationPage = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 80rpx;
+  margin-bottom: 50rpx;
 }
 
 .logo {
@@ -817,11 +817,11 @@ const openActivationPage = () => {
 // 响应式适配
 @media (max-height: 600px) {
   .content-wrapper {
-    padding: 40rpx 60rpx 0;
+    padding: 30rpx 60rpx 0;
   }
 
   .logo-section {
-    margin-bottom: 40rpx;
+    margin-bottom: 30rpx;
   }
 
   .logo {
@@ -852,6 +852,4 @@ const openActivationPage = () => {
     font-size: 20rpx;
   }
 }
-
- 
 </style>
