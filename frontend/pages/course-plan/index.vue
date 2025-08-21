@@ -77,7 +77,7 @@
                 <view class="course-sort-hint">
                   <text class="sort-hint-text">
                   <uni-icons type="info" size="16" color="#666" />
-                  未修课程已置顶显示
+                  {{ isIncomplete(m) ? '未修课程已置顶显示' : '已修课程已置顶显示' }}
                   </text>
                 </view>
                 <view class="course-list">
@@ -160,21 +160,31 @@ const sortedModules = computed(() => {
     
     // 同样状态下保持原顺序
     return 0;
-  }).map(module => ({
-    ...module,
-    // 为每个模块的课程进行排序：未修的排在前面
-    courses: [...(module.courses || [])].sort((a, b) => {
-      const aCompleted = isCourseCompleted(a);
-      const bCompleted = isCourseCompleted(b);
-      
-      // 未修的排在前面
-      if (!aCompleted && bCompleted) return -1;
-      if (aCompleted && !bCompleted) return 1;
-      
-      // 同样状态下保持原顺序
-      return 0;
-    })
-  }));
+  }).map(module => {
+    const moduleIncomplete = isIncomplete(module);
+    
+    return {
+      ...module,
+      // 根据模块完成状态进行不同的课程排序
+      courses: [...(module.courses || [])].sort((a, b) => {
+        const aCompleted = isCourseCompleted(a);
+        const bCompleted = isCourseCompleted(b);
+        
+        if (moduleIncomplete) {
+          // 未修满的模块：未修课程置顶
+          if (!aCompleted && bCompleted) return -1;
+          if (aCompleted && !bCompleted) return 1;
+        } else {
+          // 已修满的模块：已修课程置顶
+          if (aCompleted && !bCompleted) return -1;
+          if (!aCompleted && bCompleted) return 1;
+        }
+        
+        // 同样状态下保持原顺序
+        return 0;
+      })
+    };
+  });
 });
 
 onLoad(() => {
