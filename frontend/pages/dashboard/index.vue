@@ -87,6 +87,26 @@
           </button>
         </view>
       </ModernCard>
+
+      <!-- 赞赏支持 -->
+      <ModernCard title="支持开发" class="support-card">
+        <view class="support-content">
+          <view class="support-text">
+            <text class="support-title">助力项目发展</text>
+            <text class="support-desc">本服务完全免费试用，服务器每日支出约为3-5元，依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞赏~</text>
+          </view>
+          <view class="qr-code-container">
+            <image 
+              class="qr-code" 
+              src="https://picx.zhimg.com/80/v2-076422270c197b0031c609e47be2e36c_720w.png?source=d16d100b"
+              mode="aspectFit"
+              @error="handleImageError"
+              @load="handleImageLoad">
+            </image>
+            <text class="qr-code-label">微信赞赏</text>
+          </view>
+        </view>
+      </ModernCard>
     </view>
   </PageLayout>
 </template>
@@ -368,6 +388,19 @@ const handleExternalLink = (title, url) => {
       }
     },
   });
+};
+
+// 处理图片加载错误
+const handleImageError = () => {
+  uni.showToast({
+    title: "赞赏码加载失败",
+    icon: "none"
+  });
+};
+
+// 处理图片加载成功
+const handleImageLoad = () => {
+  console.log("赞赏码加载成功");
 };
 </script>
 
@@ -656,5 +689,58 @@ const handleExternalLink = (title, url) => {
   &:active {
     box-shadow: 0 4rpx 12rpx rgba(250, 140, 22, 0.4);
   }
+}
+
+// 赞赏支持卡片
+.support-card {
+  margin-top: 40rpx;
+}
+
+.support-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30rpx;
+}
+
+.support-text {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  text-align: center;
+}
+
+.support-title {
+  font-size: 32rpx;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.support-desc {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  text-align: center;
+}
+
+.qr-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.qr-code {
+  width: 300rpx;
+  height: 300rpx;
+  border-radius: var(--radius-medium);
+  border: 1rpx solid var(--border-light);
+  box-shadow: 0 8rpx 24rpx var(--shadow-light);
+}
+
+.qr-code-label {
+  font-size: 24rpx;
+  color: var(--text-light);
+  text-align: center;
 }
 </style>
