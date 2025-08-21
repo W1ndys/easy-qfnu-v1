@@ -47,5 +47,6 @@
 		"navigationBarTitleText": "Easy-QFNU",
 		"navigationBarBackgroundColor": "#f7f8fa",
 		"backgroundColor": "#f7f8fa"
-	}
+	},
+	"lazyCodeLoading": "requiredComponents"
 }
