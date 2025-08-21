@@ -173,6 +173,31 @@
         </ModernCard>
       </view>
     </view>
+
+    <!-- 培养方案提示弹窗 -->
+    <view v-if="showNoticeModal" class="modal-overlay" @click="closeModal">
+      <view class="modal-container" @click.stop>
+        <view class="modal-header">
+          <uni-icons type="info-filled" size="24" color="#1890ff" />
+          <text class="modal-title">培养方案说明</text>
+        </view>
+        
+        <view class="modal-content">
+          <text class="notice-text">
+            本页面由教务系统培养方案表格直接生成，大部分专业的应修是160或170或175，该培养方案总和大部分都不足够（22级是），少的那些分就是你应该选的公选课的分。如果不够，请及时与对应负责老师沟通。
+          </text>
+        </view>
+        
+        <view class="modal-actions">
+          <button class="action-btn secondary-btn" @click="handleNotAgain">
+            不再显示
+          </button>
+          <button class="action-btn primary-btn" @click="handleConfirm">
+            确定
+          </button>
+        </view>
+      </view>
+    </view>
   </PageLayout>
 </template>
 
@@ -187,6 +212,7 @@ import EmptyState from "../../components/EmptyState/EmptyState.vue";
 const isLoading = ref(true);
 const modules = ref([]);
 const expanded = ref([]); // 每个模块的折叠状态
+const showNoticeModal = ref(false);
 
 // 计算属性：按未修满状态排序的模块列表
 const sortedModules = computed(() => {
@@ -296,6 +322,9 @@ const fetchCoursePlan = async () => {
     
     if (modules.value.length === 0) {
       uni.showToast({ title: "暂无培养计划数据", icon: "none" });
+    } else {
+      // 数据加载成功后检查是否需要显示提示
+      checkShowNotice();
     }
     } catch (err) {
     console.error("获取培养计划失败", err);
@@ -308,6 +337,17 @@ const fetchCoursePlan = async () => {
     isLoading.value = false;
     }
   };
+
+// 检查是否需要显示培养方案说明
+const checkShowNotice = () => {
+  const notShowAgain = uni.getStorageSync('course_plan_notice_dismissed');
+  if (!notShowAgain) {
+    // 延迟500ms显示，确保页面渲染完成
+    setTimeout(() => {
+      showNoticeModal.value = true;
+    }, 500);
+  }
+};
 
 const toggleModule = (index) => {
   expanded.value[index] = !expanded.value[index];
@@ -366,6 +406,27 @@ const totalProgress = computed(() => {
 const isTotalIncomplete = computed(() => {
   return totalCompletedCredits.value < totalRequiredCredits.value;
 });
+
+// 处理确定按钮
+const handleConfirm = () => {
+  showNoticeModal.value = false;
+};
+
+// 处理不再显示按钮
+const handleNotAgain = () => {
+  uni.setStorageSync('course_plan_notice_dismissed', true);
+  showNoticeModal.value = false;
+  uni.showToast({ 
+    title: "已设置不再显示", 
+    icon: "success", 
+    duration: 1500 
+  });
+};
+
+// 点击遮罩关闭弹窗
+const closeModal = () => {
+  showNoticeModal.value = false;
+};
 </script>
 
 <style lang="scss" scoped>
@@ -898,5 +959,106 @@ const isTotalIncomplete = computed(() => {
   flex: 1;
   text-align: center;
   min-width: 80rpx;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 40rpx;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-container {
+  background: #ffffff;
+  border-radius: 24rpx;
+  max-width: 600rpx;
+  width: 100%;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100rpx);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 32rpx 32rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-content {
+  padding: 32rpx;
+}
+
+.notice-text {
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  text-align: justify;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx 32rpx 32rpx;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  padding: 16rpx 32rpx;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120rpx;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  color: #ffffff;
+  box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.3);
+}
+
+.primary-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(24, 144, 255, 0.4);
+}
+
+.secondary-btn {
+  background: #f5f5f5;
+  color: var(--text-secondary);
+  border: 1rpx solid #d9d9d9;
+}
+
+.secondary-btn:active {
+  background: #e8e8e8;
+  transform: translateY(2rpx);
 }
 </style>
