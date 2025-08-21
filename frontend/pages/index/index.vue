@@ -12,7 +12,7 @@
       <!-- Logo区域 -->
       <view class="logo-section">
         <image class="logo" src="https://picx.zhimg.com/80/v2-694acb11077d5c11ea852452803fb445_720w.png" mode="aspectFit"></image>
-        <view class="app-title">Easy-QFNU</view>
+        <view class="app-title">曲奇教务</view>
         <view class="app-subtitle">让你的QFNU更简单</view>
       </view>
 

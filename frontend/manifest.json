@@ -1,5 +1,5 @@
 {
-	"name": "Easy-QFNU",
+	"name": "曲奇教务",
 	"appid": "__UNI__B341EB2",
 	"description": "",
 	"versionName": "1.0.0",
@@ -73,7 +73,7 @@
 	},
 	"vueVersion": "3",
 	"h5": {
-		"title": "Easy-QFNU",
+		"title": "曲奇教务",
 		"router": {
 			"mode": "hash",
 			"base": ""
