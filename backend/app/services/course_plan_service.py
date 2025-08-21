@@ -95,16 +95,16 @@ class CoursePlanService:
         modules = []
         current_module = None
 
-        rows = table.find_all("tr")
+        rows = table.find_all("tr")  # type: ignore
         for row in rows:
-            cells = row.find_all(["td", "th"])
+            cells = row.find_all(["td", "th"])  # type: ignore
 
             if len(cells) > 0:
                 first_cell = cells[0]
                 first_cell_text = first_cell.get_text().strip()
 
                 if (
-                    first_cell.get("rowspan")
+                    first_cell.get("rowspan")  # type: ignore
                     and "(" in first_cell_text
                     and ("应修" in first_cell_text or "已修" in first_cell_text)
                 ):
@@ -154,7 +154,7 @@ class CoursePlanService:
 
             if len(cells) >= 12 and current_module is not None:
                 first_text = cells[0].get_text().strip() if len(cells) > 0 else ""
-                has_module_cell = cells[0].get("rowspan") is not None and (
+                has_module_cell = cells[0].get("rowspan") is not None and (  # type: ignore
                     "应修" in first_text or "已修" in first_text
                 )
 
