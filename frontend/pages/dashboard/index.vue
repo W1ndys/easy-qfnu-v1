@@ -73,6 +73,18 @@
             <uni-icons type="closeempty" size="20" color="#ffffff"></uni-icons>
             <text>退出登录</text>
           </button>
+          <button class="action-btn agreement-btn" @click="handleUserAgreement">
+            <uni-icons type="paperplane" size="20" color="#ffffff"></uni-icons>
+            <text>用户协议</text>
+          </button>
+          <button class="action-btn changelog-btn" @click="handleChangelog">
+            <uni-icons type="list" size="20" color="#ffffff"></uni-icons>
+            <text>更新日志</text>
+          </button>
+          <button class="action-btn contact-btn" @click="handleContact">
+            <uni-icons type="chatbubble" size="20" color="#ffffff"></uni-icons>
+            <text>联系作者</text>
+          </button>
         </view>
       </ModernCard>
     </view>
@@ -269,6 +281,91 @@ const copyQQGroup = () => {
         title: "复制失败",
         icon: "none",
       });
+    },
+  });
+};
+
+// 处理用户协议
+const handleUserAgreement = () => {
+  const url = "https://cq4hqujcxu3.feishu.cn/docx/EYE6d5ufAoQt5Axx7MFc4XMrnAf";
+  handleExternalLink("用户协议", url);
+};
+
+// 处理更新日志
+const handleChangelog = () => {
+  const url = "https://cq4hqujcxu3.feishu.cn/docx/BO2od7OI8omtmTxGkB0cn305nFl";
+  handleExternalLink("更新日志", url);
+};
+
+// 处理联系作者
+const handleContact = () => {
+  const qqNumber = "2769731875";
+  uni.showModal({
+    title: "联系作者",
+    content: `作者QQ号：${qqNumber}\n\n选择操作：`,
+    confirmText: "复制QQ号",
+    cancelText: "取消",
+    confirmColor: "#7F4515",
+    success: (res) => {
+      if (res.confirm) {
+        uni.setClipboardData({
+          data: qqNumber,
+          success: () => {
+            uni.showToast({
+              title: "QQ号已复制到剪贴板",
+              icon: "success",
+            });
+          },
+        });
+      }
+    },
+  });
+};
+
+// 统一处理外部链接
+const handleExternalLink = (title, url) => {
+  uni.showModal({
+    title: title,
+    content: `即将跳转到外部网站：\n${url}\n\n是否继续？`,
+    confirmText: "前往",
+    cancelText: "复制链接",
+    confirmColor: "#7F4515",
+    success: (res) => {
+      if (res.confirm) {
+        // 用户选择前往
+        // #ifdef APP-PLUS
+        plus.runtime.openURL(url);
+        // #endif
+
+        // #ifdef H5
+        window.open(url, "_blank");
+        // #endif
+
+        // #ifdef MP
+        // 小程序环境下无法直接打开外部链接，提示复制
+        uni.setClipboardData({
+          data: url,
+          success: () => {
+            uni.showToast({
+              title: "链接已复制，请在浏览器中打开",
+              icon: "success",
+              duration: 3000
+            });
+          },
+        });
+        // #endif
+      } else if (res.cancel) {
+        // 用户选择复制链接
+        uni.setClipboardData({
+          data: url,
+          success: () => {
+            uni.showToast({
+              title: "链接已复制到剪贴板",
+              icon: "success",
+            });
+          },
+        });
+      }
     },
   });
 };
@@ -479,11 +576,13 @@ const copyQQGroup = () => {
 // 快捷操作
 .quick-actions {
   display: flex;
-  gap: 20rpx;
+  flex-wrap: wrap;
+  gap: 16rpx;
 }
 
 .action-btn {
   flex: 1;
+  min-width: calc(50% - 8rpx);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -491,7 +590,7 @@ const copyQQGroup = () => {
   height: 72rpx;
   padding: 16rpx 24rpx;
   border-radius: 9999rpx;
-  font-size: 26rpx;
+  font-size: 24rpx;
   font-weight: 600;
   border: none;
   transition: all 0.3s ease;
@@ -526,6 +625,36 @@ const copyQQGroup = () => {
 
   &:active {
     box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.4);
+  }
+}
+
+.agreement-btn {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  color: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(24, 144, 255, 0.3);
+
+  &:active {
+    box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.4);
+  }
+}
+
+.changelog-btn {
+  background: linear-gradient(135deg, #722ed1 0%, #9254de 100%);
+  color: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(114, 46, 209, 0.3);
+
+  &:active {
+    box-shadow: 0 4rpx 12rpx rgba(114, 46, 209, 0.4);
+  }
+}
+
+.contact-btn {
+  background: linear-gradient(135deg, #fa8c16 0%, #ffa940 100%);
+  color: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(250, 140, 22, 0.3);
+
+  &:active {
+    box-shadow: 0 4rpx 12rpx rgba(250, 140, 22, 0.4);
   }
 }
 </style>
