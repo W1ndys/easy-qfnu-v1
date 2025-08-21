@@ -310,7 +310,9 @@ async def calculate_custom_gpa(
             remove_retakes=request.remove_retakes,
         )
 
-        if gpa_result.get("success"):
+        # 修复响应格式，将 total_gpa 重命名为 data
+        if gpa_result.get("success") and "total_gpa" in gpa_result:
+            gpa_result["data"] = gpa_result.pop("total_gpa")
             logger.info("自定义GPA计算完成")
         else:
             logger.warning(f"自定义GPA计算失败: {gpa_result.get('message')}")
