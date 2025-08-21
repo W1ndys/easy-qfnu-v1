@@ -25,10 +25,10 @@
                 </view>
               </view>
               
-              <view class="total-credits-info">
+                <view class="total-credits-info">
                 <text class="total-credits-text"
                   >{{ formatNumber(totalCompletedCredits) }}/{{
-                    formatNumber(totalRequiredCredits)
+                  formatNumber(totalRequiredCredits)
                   }} 学分</text
                 >
                 <text 
@@ -36,8 +36,11 @@
                   class="total-shortage-text"
                   >差 {{ formatNumber(totalRequiredCredits - totalCompletedCredits) }} 学分</text
                 >
-              </view>
-              
+                <text class="total-hint-text">
+                  (相对于系统内方案，实际差值要看总学分要求，大部分专业是少几分的)
+                </text>
+                </view>
+                
               <!-- 总进度条 -->
               <view class="total-progress-bar-container">
                 <view class="progress-bar total-progress-bar">
