@@ -12,6 +12,46 @@
         @retry="fetchCoursePlan" />
 
       <view v-else>
+        <!-- 总学分进度显示 -->
+        <ModernCard title="总学分进度" class="total-progress-card">
+          <view class="total-progress-container">
+            <view class="total-header">
+              <view class="total-title-section">
+                <text class="total-title">培养方案总进度</text>
+                <view
+                  class="status-chip"
+                  :class="isTotalIncomplete ? 'chip-module-incomplete' : 'chip-module-complete'">
+                  <text>{{ isTotalIncomplete ? "未修满" : "已修满" }}</text>
+                </view>
+              </view>
+              
+              <view class="total-credits-info">
+                <text class="total-credits-text"
+                  >{{ formatNumber(totalCompletedCredits) }}/{{
+                    formatNumber(totalRequiredCredits)
+                  }} 学分</text
+                >
+                <text 
+                  v-if="isTotalIncomplete" 
+                  class="total-shortage-text"
+                  >差 {{ formatNumber(totalRequiredCredits - totalCompletedCredits) }} 学分</text
+                >
+              </view>
+              
+              <!-- 总进度条 -->
+              <view class="total-progress-bar-container">
+                <view class="progress-bar total-progress-bar">
+                  <view
+                    class="progress-fill"
+                    :style="{ width: totalProgress + '%' }"
+                    :class="{ danger: isTotalIncomplete }"></view>
+                </view>
+                <text class="progress-text total-progress-text">{{ totalProgress }}%</text>
+              </view>
+            </view>
+          </view>
+        </ModernCard>
+
         <ModernCard title="培养计划模块">
           <view class="modules-list">
             <view
@@ -303,6 +343,29 @@ const formatNumber = (n) => {
   if (Number.isNaN(v)) return "0";
   return v % 1 === 0 ? String(v) : v.toFixed(1);
 };
+
+// 计算总学分相关数据
+const totalRequiredCredits = computed(() => {
+  return modules.value.reduce((sum, module) => {
+    return sum + (Number(module.required_credits) || 0);
+  }, 0);
+});
+
+const totalCompletedCredits = computed(() => {
+  return modules.value.reduce((sum, module) => {
+    return sum + (Number(module.completed_credits) || 0);
+  }, 0);
+});
+
+const totalProgress = computed(() => {
+  if (totalRequiredCredits.value <= 0) return 0;
+  const progress = Math.min(100, Math.max(0, Math.round((totalCompletedCredits.value / totalRequiredCredits.value) * 100)));
+  return progress;
+});
+
+const isTotalIncomplete = computed(() => {
+  return totalCompletedCredits.value < totalRequiredCredits.value;
+});
 </script>
 
 <style lang="scss" scoped>
@@ -499,6 +562,75 @@ const formatNumber = (n) => {
   color: var(--text-secondary);
   font-weight: 500;
   min-width: 60rpx;
+  text-align: right;
+}
+
+/* 总学分进度卡片 */
+.total-progress-card {
+  margin-bottom: 24rpx;
+}
+
+.total-progress-container {
+  padding: 8rpx 0;
+}
+
+.total-header {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.total-title-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.total-title {
+  font-size: 32rpx;
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.total-credits-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  align-items: center;
+}
+
+.total-credits-text {
+  font-size: 36rpx;
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: center;
+}
+
+.total-shortage-text {
+  font-size: 28rpx;
+  color: #e74c3c;
+  font-weight: 600;
+  text-align: center;
+}
+
+.total-progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.total-progress-bar {
+  height: 24rpx;
+  border-radius: 12rpx;
+  box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.12);
+}
+
+.total-progress-text {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  font-weight: 600;
+  min-width: 70rpx;
   text-align: right;
 }
 
