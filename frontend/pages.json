@@ -47,5 +47,6 @@
 		"navigationBarTitleText": "曲奇教务",
 		"navigationBarBackgroundColor": "#f7f8fa",
 		"backgroundColor": "#f7f8fa"
-	}  "lazyCodeLoading": "requiredComponents"
+	},
+	"lazyCodeLoading": "requiredComponents"
 }
