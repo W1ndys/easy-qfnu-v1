@@ -198,11 +198,8 @@
         </view>
         
         <view class="modal-actions">
-          <button class="action-btn secondary-btn" @click="handleNotAgain">
-            不再显示
-          </button>
           <button class="action-btn primary-btn" @click="handleConfirm">
-            确定
+            我已阅读
           </button>
         </view>
       </view>
@@ -377,13 +374,10 @@ const fetchCoursePlan = async () => {
 
 // 检查是否需要显示培养方案说明
 const checkShowNotice = () => {
-  const notShowAgain = uni.getStorageSync('course_plan_notice_dismissed');
-  if (!notShowAgain) {
-    // 延迟500ms显示，确保页面渲染完成
-    setTimeout(() => {
-      showNoticeModal.value = true;
-    }, 500);
-  }
+  // 每次都显示培养方案说明，因为这是必读内容
+  setTimeout(() => {
+    showNoticeModal.value = true;
+  }, 500);
 };
 
 const toggleModule = (index) => {
@@ -447,17 +441,6 @@ const isTotalIncomplete = computed(() => {
 // 处理确定按钮
 const handleConfirm = () => {
   showNoticeModal.value = false;
-};
-
-// 处理不再显示按钮
-const handleNotAgain = () => {
-  uni.setStorageSync('course_plan_notice_dismissed', true);
-  showNoticeModal.value = false;
-  uni.showToast({ 
-    title: "已设置不再显示", 
-    icon: "success", 
-    duration: 1500 
-  });
 };
 
 // 点击遮罩关闭弹窗
