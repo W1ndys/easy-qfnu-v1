@@ -15,7 +15,7 @@
         <view class="app-title">曲奇教务</view>
         <view class="app-subtitle">让你的QFNU更简单</view>
         
-        <!-- 新生搜题小入口 -->
+        <!-- 新生搜索小入口 -->
         <view class="freshman-entry" @click="goToFreshmanSearch">
           <uni-icons type="help" size="14" color="#7f4515"></uni-icons>
           <text class="entry-text">新生入学考试辅助</text>
@@ -122,7 +122,7 @@ const rememberPassword = ref(false);
 const hasCachedCredentials = ref(false);
 const agreed = ref(false);
 
-// 新增：跳转到新生搜题页面
+// 新增：跳转到新生搜索页面
 const goToFreshmanSearch = () => {
   uni.navigateTo({
     url: "/pages/freshman-questions-search/index"
@@ -550,7 +550,7 @@ const openActivationPage = () => {
   margin-bottom: 20rpx;
 }
 
-// 新增：新生搜题小入口样式
+// 新增：新生搜索小入口样式
 .freshman-entry {
   display: flex;
   align-items: center;
