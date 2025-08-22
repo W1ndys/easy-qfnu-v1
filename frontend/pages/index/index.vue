@@ -18,7 +18,7 @@
         <!-- 新生搜题小入口 -->
         <view class="freshman-entry" @click="goToFreshmanSearch">
           <uni-icons type="help" size="14" color="#7f4515"></uni-icons>
-          <text class="entry-text">新生入学考试搜题</text>
+          <text class="entry-text">新生入学考试辅助</text>
           <uni-icons type="arrowright" size="12" color="#7f4515"></uni-icons>
         </view>
       </view>

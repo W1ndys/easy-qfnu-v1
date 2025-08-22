@@ -10,8 +10,23 @@
         <!-- 页面头部 -->
         <view class="page-header">
             <view class="header-content">
-                <text class="page-title">新生入学考试搜题</text>
+                <text class="page-title">新生入学考试辅助</text>
                 <text class="page-subtitle">Freshman Examination Q&A</text>
+            </view>
+        </view>
+
+        <!-- 免责声明 -->
+        <view class="disclaimer-card modern-card">
+            <view class="disclaimer-header">
+                <view class="disclaimer-icon">
+                    <uni-icons type="info-filled" size="24" color="#ff6b35"></uni-icons>
+                </view>
+                <text class="disclaimer-title">重要声明</text>
+            </view>
+            <view class="disclaimer-content">
+                <text class="disclaimer-text">
+                    本题库由新生手册根据大模型生成，仅供参考。使用前请确保您已充分阅读并学习曲阜师范大学新生手册内容并遵守相关规定。使用本程序造成的一切后果与本程序无关，使用本程序即代表您同意上方声明内容。
+                </text>
             </view>
         </view>
 
@@ -39,8 +54,8 @@
                             <textarea class="modern-textarea" :class="{
                                 'input-error': questionError,
                                 'input-focus': questionFocused,
-                            }" v-model="searchForm.question" placeholder="请输入题目关键词或完整题目（至少5个字符）" maxlength="500" auto-height
-                                :show-count="true" @input="validateQuestion" @focus="questionFocused = true"
+                            }" v-model="searchForm.question" placeholder="请输入题目关键词或完整题目" auto-height
+                                @input="validateQuestion" @focus="questionFocused = true"
                                 @blur="questionFocused = false" />
                             <view class="input-line" :class="{ active: questionFocused }"></view>
                         </view>
@@ -218,8 +233,8 @@ export default {
             const length = this.searchForm.question.trim().length;
             if (length === 0) {
                 return "请输入题目内容或关键词";
-            } else if (length < 5) {
-                return `至少需要5个字符，当前${length}个字符`;
+            } else if (length < 2) {
+                return `至少需要2个字符，当前${length}个字符`;
             } else {
                 return `已输入${length}个字符`;
             }
@@ -227,7 +242,7 @@ export default {
 
         canSearch() {
             const questionLength = this.searchForm.question.trim().length;
-            return questionLength >= 5;
+            return questionLength >= 2;
         },
     },
 
@@ -240,7 +255,7 @@ export default {
     methods: {
         validateQuestion() {
             const length = this.searchForm.question.trim().length;
-            this.questionError = length > 0 && length < 5;
+            this.questionError = length > 0 && length < 2;
         },
 
         async handleSearch() {
@@ -252,9 +267,9 @@ export default {
                 return;
             }
 
-            if (this.searchForm.question.trim().length < 5) {
+            if (this.searchForm.question.trim().length < 2) {
                 uni.showToast({
-                    title: "题目内容至少需要5个字符",
+                    title: "题目内容至少需要2个字符",
                     icon: "none",
                 });
                 return;
@@ -463,6 +478,47 @@ export default {
     font-size: 24rpx;
     color: #7f8c8d;
     font-style: italic;
+}
+
+// 免责声明样式
+.disclaimer-card {
+    margin: 0 30rpx 20rpx;
+    padding: 30rpx;
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.05), rgba(255, 107, 53, 0.08));
+    border: 1rpx solid rgba(255, 107, 53, 0.2);
+    border-left: 6rpx solid #ff6b35;
+}
+
+.disclaimer-header {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    margin-bottom: 20rpx;
+}
+
+.disclaimer-icon {
+    width: 40rpx;
+    height: 40rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.disclaimer-title {
+    font-size: 28rpx;
+    font-weight: 700;
+    color: #ff6b35;
+}
+
+.disclaimer-content {
+    padding-left: 56rpx;
+}
+
+.disclaimer-text {
+    font-size: 24rpx;
+    color: #495057;
+    line-height: 1.6;
+    word-break: break-word;
 }
 
 // 内容区域
@@ -952,6 +1008,20 @@ export default {
 
 // 响应式适配
 @media (max-width: 600rpx) {
+    .disclaimer-card {
+        margin: 0 15rpx 20rpx;
+        padding: 24rpx;
+    }
+
+    .disclaimer-content {
+        padding-left: 0;
+        margin-top: 16rpx;
+    }
+
+    .disclaimer-text {
+        font-size: 22rpx;
+    }
+
     .content-wrapper {
         padding: 0 15rpx 30rpx;
     }

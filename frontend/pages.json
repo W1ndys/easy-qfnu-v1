@@ -38,7 +38,7 @@
 		{
 			"path": "pages/freshman_questions_search/index",
 			"style": {
-				"navigationBarTitleText": "新生入学考试搜题",
+				"navigationBarTitleText": "新生入学考试辅助",
 				"enablePullDownRefresh": true
 			}
 		}
