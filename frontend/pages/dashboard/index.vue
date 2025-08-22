@@ -21,18 +21,24 @@
         </view>
       </ModernCard>
 
-      <!-- 测试阶段提示 -->
-      <ModernCard class="test-notice-card">
-        <view class="test-notice">
-          <view class="notice-header">
-            <uni-icons type="info" size="16" color="#ff9500"></uni-icons>
-            <text class="notice-title">测试阶段</text>
+      <!-- 公告栏 -->
+      <ModernCard class="announcement-card">
+        <view class="announcement-section">
+          <view class="announcement-header">
+            <uni-icons type="sound" size="16" color="#1890ff"></uni-icons>
+            <text class="announcement-title">公告栏</text>
           </view>
-          <view class="notice-content">
-            <text class="notice-text">该程序正在测试阶段，功能可能不稳定</text>
-            <view class="qq-group">
-              <text class="qq-label">加入QQ群获取最新消息：</text>
-              <text class="qq-number" @click="copyQQGroup">1053432087</text>
+          <view class="announcement-content">
+            <view class="announcement-item">
+              <text class="announcement-text">该程序正在测试阶段，功能可能不稳定</text>
+              <view class="qq-group">
+                <text class="qq-label">加入QQ群获取最新消息：</text>
+                <text class="qq-number" @click="copyQQGroup">1053432087</text>
+              </view>
+            </view>
+            <view class="announcement-item">
+              <text class="announcement-text">如有对Easy-QFNU（曲奇教务）有建议意见或开发想法或其他相关内容的欢迎添加Easy-QFNU开发策划交流群：</text>
+              <text class="qq-number dev-qq" @click="copyDevQQGroup">1057327742</text>
             </view>
           </view>
         </view>
@@ -147,7 +153,7 @@ const features = ref([
     external: true, // 标记为外部链接
   },
   {
-    text: "培养计划",
+    text: "培养方案",
     description: "查看模块完成进度",
     icon: "list",
     url: "/pages/course-plan/index",
@@ -356,6 +362,26 @@ const copyQQGroup = () => {
   });
 };
 
+// 复制开发QQ群号
+const copyDevQQGroup = () => {
+  uni.setClipboardData({
+    data: "1057327742",
+    success: () => {
+      uni.showToast({
+        title: "开发交流群号已复制到剪贴板，请自行搜索加群",
+        icon: "success",
+      });
+    },
+    fail: (err) => {
+      console.error("复制失败:", err);
+      uni.showToast({
+        title: "复制失败",
+        icon: "none",
+      });
+    },
+  });
+};
+
 // 处理用户协议
 const handleUserAgreement = () => {
   const url = "https://cq4hqujcxu3.feishu.cn/docx/EYE6d5ufAoQt5Axx7MFc4XMrnAf";
@@ -536,45 +562,52 @@ const handleImageLoad = () => {
   width: fit-content;
 }
 
-// 测试阶段提示卡片
-.test-notice-card {
+// 公告栏卡片
+.announcement-card {
   margin-bottom: 40rpx;
-  background: #fffbe6;
-  border: 1rpx solid #ffe58f;
+  background: #f0f9ff;
+  border: 1rpx solid #bae7ff;
   border-radius: var(--radius-medium);
   padding: 28rpx;
+}
+
+.announcement-section {
   display: flex;
   flex-direction: column;
   gap: 15rpx;
 }
 
-.test-notice {
-  display: flex;
-  flex-direction: column;
-  gap: 10rpx;
-}
-
-.notice-header {
+.announcement-header {
   display: flex;
   align-items: center;
   gap: 8rpx;
 }
 
-.notice-title {
+.announcement-title {
   font-size: 28rpx;
-  color: #faad14;
+  color: #1890ff;
   font-weight: 600;
 }
 
-.notice-content {
+.announcement-content {
   display: flex;
   flex-direction: column;
-  gap: 10rpx;
+  gap: 16rpx;
 }
 
-.notice-text {
+.announcement-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  padding: 12rpx 16rpx;
+  background: rgba(240, 249, 255, 0.6);
+  border-radius: 12rpx;
+  border: 1rpx solid rgba(186, 231, 255, 0.8);
+}
+
+.announcement-text {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: #1890ff;
   line-height: 1.5;
 }
 
@@ -582,11 +615,15 @@ const handleImageLoad = () => {
   display: flex;
   align-items: center;
   gap: 10rpx;
+  background: rgba(240, 249, 255, 0.8);
+  border-radius: 8rpx;
+  padding: 8rpx 12rpx;
+  border: 1rpx solid #bae7ff;
 }
 
 .qq-label {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: #1890ff;
 }
 
 .qq-number {
@@ -594,6 +631,21 @@ const handleImageLoad = () => {
   color: #1890ff;
   text-decoration: underline;
   cursor: pointer;
+  font-weight: 600;
+  padding: 4rpx 8rpx;
+  background: rgba(24, 144, 255, 0.1);
+  border-radius: 6rpx;
+  transition: all 0.3s ease;
+
+  &:active {
+    background: rgba(24, 144, 255, 0.2);
+    transform: scale(0.95);
+  }
+}
+
+.dev-qq {
+  align-self: flex-start;
+  margin-top: 4rpx;
 }
 
 // 2×2 导航网格样式
