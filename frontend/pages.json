@@ -33,7 +33,7 @@
 		{
 			"path": "pages/course-plan/index",
 			"style": {
-				"navigationBarTitleText": "培养计划",
+				"navigationBarTitleText": "培养方案",
 				"enablePullDownRefresh": false
 			}
 		},

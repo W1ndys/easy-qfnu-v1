@@ -1,12 +1,12 @@
 <template>
   <PageLayout>
-    <LoadingScreen v-if="isLoading" text="正在获取培养计划..." />
+    <LoadingScreen v-if="isLoading" text="正在获取培养方案..." />
 
     <view v-else class="page-rounded-container">
       <EmptyState
         v-if="modules.length === 0"
         icon-type="info-filled"
-        title="暂无培养计划数据"
+        title="暂无培养方案数据"
         description="请稍后重试或下拉刷新"
         :show-retry="true"
         @retry="fetchCoursePlan" />
@@ -55,7 +55,7 @@
           </view>
         </ModernCard>
 
-        <ModernCard title="培养计划模块">
+        <ModernCard title="培养方案模块">
           <view class="modules-list">
             <view
               v-for="(m, idx) in sortedModules"
@@ -317,7 +317,7 @@ const fetchCoursePlan = async () => {
     if (res.statusCode === 200) {
       // 兼容两种返回：带 success 的结构或直接返回数据
       payload = res.data?.success ? res.data.data : res.data;
-      console.log("培养计划数据获取成功", payload);
+      console.log("培养方案数据获取成功", payload);
     } else if (res.statusCode === 401) {
       console.error("身份验证失败，请重新登录");
       uni.removeStorageSync("token");
@@ -327,8 +327,8 @@ const fetchCoursePlan = async () => {
       }, 1500);
       return;
     } else if (res.statusCode === 404) {
-      console.error("未找到培养计划数据");
-      uni.showToast({ title: "未找到培养计划数据", icon: "none" });
+      console.error("未找到培养方案数据");
+      uni.showToast({ title: "未找到培养方案数据", icon: "none" });
       return;
     } else {
       // 获取详细的错误信息
@@ -342,28 +342,28 @@ const fetchCoursePlan = async () => {
     }
 
     if (!Array.isArray(payload.modules)) {
-      console.warn("返回的培养计划格式异常", payload);
-      uni.showToast({ title: "培养计划格式异常", icon: "none" });
+      console.warn("返回的培养方案格式异常", payload);
+      uni.showToast({ title: "培养方案格式异常", icon: "none" });
       modules.value = [];
       return;
     }
 
     modules.value = payload.modules;
-    console.log(`成功加载了${modules.value.length}个培养计划模块`);
+    console.log(`成功加载了${modules.value.length}个培养方案模块`);
 
     // 初始化折叠状态：全部折叠
     expanded.value = modules.value.map(() => false);
     
     if (modules.value.length === 0) {
-      uni.showToast({ title: "暂无培养计划数据", icon: "none" });
+      uni.showToast({ title: "暂无培养方案数据", icon: "none" });
     } else {
       // 数据加载成功后检查是否需要显示提示
       checkShowNotice();
     }
     } catch (err) {
-    console.error("获取培养计划失败", err);
+    console.error("获取培养方案失败", err);
     uni.showToast({ 
-      title: err.message || "获取培养计划失败，请稍后重试", 
+      title: err.message || "获取培养方案失败，请稍后重试", 
       icon: "none", 
       duration: 2000 
     });
