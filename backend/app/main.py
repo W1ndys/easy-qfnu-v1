@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from loguru import logger
 import sys
 import os
+from app.services.scheduler_service import scheduler
 
 # 日志系统完善
 from datetime import datetime
@@ -131,6 +132,11 @@ app.include_router(course_plan_router.router, prefix="/api/v1", tags=["培养方
 logger.info("培养方案路由注册完成")
 
 logger.info("所有API路由注册完成")
+
+# 启动定时任务
+logger.info("正在启动定时任务...")
+scheduler.start()
+logger.info("定时任务启动完成")
 
 if __name__ == "__main__":
     logger.info("正在启动Uvicorn服务...")
