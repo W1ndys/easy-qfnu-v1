@@ -3,7 +3,8 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "登录"
+				"navigationBarTitleText": "登录",
+				"enablePullDownRefresh": false
 			}
 		},
 		{
@@ -25,21 +26,22 @@
 			"style": {
 				"navigationBarTitleText": "平均分查询",
 				"navigationBarBackgroundColor": "#f7f8fa",
-				"navigationBarTextStyle": "black"
+				"navigationBarTextStyle": "black",
+				"enablePullDownRefresh": false
 			}
 		},
 		{
 			"path": "pages/course-plan/index",
 			"style": {
 				"navigationBarTitleText": "培养计划",
-				"enablePullDownRefresh": true
+				"enablePullDownRefresh": false
 			}
 		},
 		{
 			"path": "pages/freshman-questions-search/index",
 			"style": {
 				"navigationBarTitleText": "新生入学考试辅助",
-				"enablePullDownRefresh": true
+				"enablePullDownRefresh": false
 			}
 		}
 	],

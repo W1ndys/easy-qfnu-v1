@@ -77,6 +77,11 @@
         "router" : {
             "mode" : "hash",
             "base" : ""
+        },
+        "optimization" : {
+            "treeShaking" : {
+                "enable" : true
+            }
         }
     },
     "mp-qq" : {
