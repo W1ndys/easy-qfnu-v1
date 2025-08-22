@@ -97,7 +97,7 @@
         <view class="support-content">
           <view class="support-text">
             <text class="support-title">助力项目发展</text>
-            <text class="support-desc">本服务完全免费试用，服务器每日支出约为3-5元，以及前期服务器设备等支出几百依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞赏~</text>
+            <text class="support-desc">本服务完全免费试用，服务器每日支出约为7元左右，以及前期服务器设备等支出几百依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞赏~</text>
           </view>
           <view class="qr-code-container">
             <image 
