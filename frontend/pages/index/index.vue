@@ -82,17 +82,23 @@
           <text class="activation-link" @click="openActivationPage">激活账号</text>
         </view>
 
-        <!-- 测试阶段提示 -->
-        <view class="test-notice">
-          <view class="notice-header">
-            <uni-icons type="info" size="16" color="#ff9500"></uni-icons>
-            <text class="notice-title">测试阶段</text>
+        <!-- 公告栏 -->
+        <view class="announcement-section">
+          <view class="announcement-header">
+            <uni-icons type="sound" size="16" color="#1890ff"></uni-icons>
+            <text class="announcement-title">公告栏</text>
           </view>
-          <view class="notice-content">
-            <text class="notice-text">该程序正在测试阶段，功能可能不稳定</text>
-            <view class="qq-group">
-              <text class="qq-label">加入QQ群获取最新消息：</text>
-              <text class="qq-number" @click="copyQQGroup">1053432087</text>
+          <view class="announcement-content">
+            <view class="announcement-item">
+              <text class="announcement-text">该程序正在测试阶段，功能可能不稳定</text>
+              <view class="qq-group">
+                <text class="qq-label">加入QQ群获取最新消息：</text>
+                <text class="qq-number" @click="copyQQGroup">1053432087</text>
+              </view>
+            </view>
+            <view class="announcement-item">
+              <text class="announcement-text">如有对Easy-QFNU（曲奇教务）有建议意见或开发想法或其他相关内容的欢迎添加Easy-QFNU开发策划交流群：</text>
+              <text class="qq-number dev-qq" @click="copyDevQQGroup">1057327742</text>
             </view>
           </view>
         </view>
@@ -381,6 +387,16 @@ const copyQQGroup = () => {
     data: "1053432087",
     success() {
       uni.showToast({ title: "QQ群号已复制到剪贴板，请自行搜索加群", icon: "success" });
+    },
+  });
+};
+
+// 复制开发QQ群号
+const copyDevQQGroup = () => {
+  uni.setClipboardData({
+    data: "1057327742",
+    success() {
+      uni.showToast({ title: "开发交流群号已复制到剪贴板，请自行搜索加群", icon: "success" });
     },
   });
 };
@@ -760,43 +776,55 @@ const openActivationPage = () => {
   transform: scale(0.95);
 }
 
-.test-notice {
+.announcement-section {
   width: 100%;
-  background: #fffbe6;
+  background: #f0f9ff;
   border-radius: 16rpx;
   padding: 20rpx 24rpx;
   margin-bottom: 30rpx;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  border: 1rpx solid #ffe58f;
+  border: 1rpx solid #bae7ff;
   box-sizing: border-box;
 }
 
-.notice-header {
+.announcement-header {
   display: flex;
   align-items: center;
-  margin-bottom: 10rpx;
+  margin-bottom: 12rpx;
 }
 
-.notice-title {
+.announcement-title {
   font-size: 26rpx;
   font-weight: 600;
-  color: #faad14;
+  color: #1890ff;
   margin-left: 8rpx;
 }
 
-.notice-content {
+.announcement-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.announcement-item {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  padding: 12rpx 16rpx;
+  background: rgba(240, 249, 255, 0.6);
+  border-radius: 12rpx;
+  border: 1rpx solid rgba(186, 231, 255, 0.8);
+  box-sizing: border-box;
 }
 
-.notice-text {
+.announcement-text {
   font-size: 22rpx;
-  color: #faad14;
-  margin-bottom: 10rpx;
+  color: #1890ff;
+  margin-bottom: 8rpx;
   line-height: 1.4;
   word-wrap: break-word;
 }
@@ -805,17 +833,17 @@ const openActivationPage = () => {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  background: rgba(255, 251, 230, 0.8);
+  background: rgba(240, 249, 255, 0.8);
   border-radius: 8rpx;
   padding: 8rpx 12rpx;
-  border: 1rpx solid #ffe58f;
+  border: 1rpx solid #bae7ff;
   width: 100%;
   box-sizing: border-box;
 }
 
 .qq-label {
   font-size: 22rpx;
-  color: #faad14;
+  color: #1890ff;
   margin-right: 8rpx;
   flex-shrink: 0;
 }
@@ -826,25 +854,20 @@ const openActivationPage = () => {
   text-decoration: underline;
   cursor: pointer;
   font-weight: 600;
-}
+  padding: 4rpx 8rpx;
+  background: rgba(24, 144, 255, 0.1);
+  border-radius: 6rpx;
+  transition: all 0.3s ease;
 
-.footer-text {
-  text-align: center;
-  font-size: 22rpx;
-  color: #a0aec0;
-  font-weight: 400;
-
-  text {
-    opacity: 0.8;
+  &:active {
+    background: rgba(24, 144, 255, 0.2);
+    transform: scale(0.95);
   }
 }
 
-// 统一外层圆角白卡容器
-.page-rounded-container {
-  background: #ffffff;
-  border-radius: 40rpx;
-  box-shadow: 0 20rpx 60rpx var(--shadow-light);
-  border: 1rpx solid var(--border-light);
+.dev-qq {
+  align-self: flex-start;
+  margin-top: 4rpx;
 }
 
 // 响应式适配
@@ -870,7 +893,7 @@ const openActivationPage = () => {
     padding: 40rpx 40rpx 30rpx;
   }
   
-  .test-notice {
+  .announcement-section {
     padding: 16rpx 20rpx;
     margin-bottom: 20rpx;
   }
