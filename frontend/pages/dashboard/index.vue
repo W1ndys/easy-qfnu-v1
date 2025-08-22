@@ -73,6 +73,10 @@
             <uni-icons type="closeempty" size="20" color="#ffffff"></uni-icons>
             <text>退出登录</text>
           </button>
+          <button class="action-btn clear-cache-btn" @click="handleClearCache">
+            <uni-icons type="trash" size="20" color="#ffffff"></uni-icons>
+            <text>清除缓存</text>
+          </button>
           <button class="action-btn agreement-btn" @click="handleUserAgreement">
             <uni-icons type="paperplane" size="20" color="#ffffff"></uni-icons>
             <text>用户协议</text>
@@ -288,6 +292,45 @@ const handleLogout = () => {
         setTimeout(() => {
           uni.reLaunch({ url: "/pages/index/index" });
         }, 1000);
+      }
+    },
+  });
+};
+
+// 清除缓存
+const handleClearCache = () => {
+  uni.showModal({
+    title: "清除缓存",
+    content: "确定要清除所有本地缓存数据吗？这将清除除登录凭证外的所有本地数据。",
+    confirmText: "清除",
+    cancelText: "取消",
+    confirmColor: "#ff4d4f",
+    success: (res) => {
+      if (res.confirm) {
+        try {
+          // 获取当前token，避免清除登录状态
+          const currentToken = uni.getStorageSync("token");
+          
+          // 清除所有存储
+          uni.clearStorageSync();
+          
+          // 恢复token，保持登录状态
+          if (currentToken) {
+            uni.setStorageSync("token", currentToken);
+          }
+          
+          uni.showToast({
+            title: "缓存已清除",
+            icon: "success",
+            duration: 2000
+          });
+        } catch (error) {
+          console.error("清除缓存失败:", error);
+          uni.showToast({
+            title: "清除缓存失败",
+            icon: "error"
+          });
+        }
       }
     },
   });
@@ -666,6 +709,16 @@ const handleImageLoad = () => {
 
   &:active {
     box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.4);
+  }
+}
+
+.clear-cache-btn {
+  background: linear-gradient(135deg, #f5222d 0%, #ff4d4f 100%);
+  color: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(245, 34, 45, 0.3);
+
+  &:active {
+    box-shadow: 0 4rpx 12rpx rgba(245, 34, 45, 0.4);
   }
 }
 
