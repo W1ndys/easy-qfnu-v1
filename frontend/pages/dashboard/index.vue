@@ -8,7 +8,7 @@
             <view class="avatar-wrapper">
               <image
                 class="avatar"
-                src="https://picx.zhimg.com/80/v2-694acb11077d5c11ea852452803fb445_720w.png"
+                src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png"
                 mode="aspectFit"></image>
               <view class="status-indicator"></view>
             </view>
@@ -609,8 +609,19 @@ const handleImageLoad = () => {
 
 .grid-2x2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(300rpx, 1fr));
   gap: 20rpx;
+  
+  // 响应式调整
+  @media (max-width: 750px) {
+    grid-template-columns: repeat(auto-fit, minmax(280rpx, 1fr));
+    gap: 16rpx;
+  }
+  
+  @media (max-width: 500px) {
+    grid-template-columns: repeat(auto-fit, minmax(240rpx, 1fr));
+    gap: 12rpx;
+  }
 }
 
 .grid-cell {
@@ -623,6 +634,7 @@ const handleImageLoad = () => {
   align-items: flex-start;
   gap: 10rpx;
   transition: all 0.2s ease;
+  min-height: 160rpx; // 确保所有卡片高度一致
 
   &:active {
     transform: scale(0.98);
