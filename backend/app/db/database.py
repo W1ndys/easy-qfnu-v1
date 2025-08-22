@@ -229,6 +229,46 @@ def delete_session(student_id: str) -> bool:
         db.close()
 
 
+def cleanup_expired_sessions(hours_ago: int = 2) -> int:
+    """
+    清理指定小时数之前的过期session
+
+    Args:
+        hours_ago: 清理多少小时前的session，默认2小时
+
+    Returns:
+        int: 被清理的session数量
+    """
+    db = SessionLocal()
+    try:
+        # 计算截止时间
+        cutoff_time = datetime.datetime.now() - datetime.timedelta(hours=hours_ago)
+        logger.info(
+            f"开始清理 {hours_ago} 小时前的过期session，截止时间: {cutoff_time}"
+        )
+
+        # 查询并删除过期的session
+        expired_sessions = (
+            db.query(SessionStore).filter(SessionStore.updated_at < cutoff_time).all()
+        )
+
+        deleted_count = 0
+        for session in expired_sessions:
+            db.delete(session)
+            deleted_count += 1
+
+        db.commit()
+        logger.info(f"成功清理 {deleted_count} 个过期session")
+        return deleted_count
+
+    except Exception as e:
+        logger.error(f"清理过期session失败: {e}")
+        db.rollback()
+        return 0
+    finally:
+        db.close()
+
+
 def delete_session_by_hash(student_id_hash: str) -> bool:
     """通过学号hash值删除session信息"""
     db = SessionLocal()

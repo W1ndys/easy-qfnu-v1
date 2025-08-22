@@ -7,10 +7,10 @@ from app.services.auth_service import auth_service
 from loguru import logger
 
 # 导入安全相关函数
-# 导入安全相关函数
 from app.core.security import get_current_user
 from app.core.hash_utils import get_student_id_for_display
 from app.db.database import delete_session_by_hash
+from app.services.scheduler_service import scheduler
 
 router = APIRouter()
 security = HTTPBearer()
@@ -362,3 +362,17 @@ async def get_current_user_info(current_user_hash: str = Depends(get_current_use
         "is_authenticated": True,
         "note": "为保护隐私，此处不显示明文学号",
     }
+
+
+# 在文件末尾添加启动定时器的代码
+def start_session_cleanup_scheduler():
+    """启动session清理定时器"""
+    try:
+        # 添加session清理任务，每2小时清理2小时前的session
+        scheduler.add_session_cleanup_job(cleanup_hours=2, interval_hours=2)
+
+        # 启动调度器
+        scheduler.start()
+        logger.info("Session清理定时器已启动")
+    except Exception as e:
+        logger.error(f"启动Session清理定时器失败: {e}")

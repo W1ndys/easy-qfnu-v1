@@ -135,9 +135,15 @@ logger.info("所有API路由注册完成")
 
 # 启动定时任务
 logger.info("正在启动定时任务...")
+try:
+    # 添加session清理任务，每2小时清理2小时前的session
+    scheduler.add_session_cleanup_job(cleanup_hours=2, interval_hours=2)
+    logger.info("Session清理定时任务已添加")
+except Exception as e:
+    logger.error(f"添加Session清理定时任务失败: {e}")
+
 scheduler.start()
 logger.info("定时任务启动完成")
-
 if __name__ == "__main__":
     logger.info("正在启动Uvicorn服务...")
     logger.info(f"服务配置: host=127.0.0.1, port=8000, reload=True")

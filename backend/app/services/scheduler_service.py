@@ -88,6 +88,39 @@ class SchedulerService:
         except Exception as e:
             logger.error(f"恢复定时任务失败: {e}")
 
+    def add_session_cleanup_job(self, cleanup_hours: int = 2, interval_hours: int = 2):
+        """
+        添加session清理定时任务
+
+        Args:
+            cleanup_hours: 清理多少小时前的session
+            interval_hours: 每多少小时执行一次清理
+        """
+        from app.db.database import cleanup_expired_sessions
+
+        def cleanup_job():
+            """执行session清理的定时任务"""
+            try:
+                deleted_count = cleanup_expired_sessions(cleanup_hours)
+                logger.info(
+                    f"定时清理任务执行完成，清理了 {deleted_count} 个过期session"
+                )
+            except Exception as e:
+                logger.error(f"定时清理任务执行失败: {e}")
+
+        # 添加定时任务，每interval_hours小时执行一次
+        job = self.add_job(
+            cleanup_job,
+            trigger_type="interval",
+            hours=interval_hours,
+            id="session_cleanup_job",
+        )
+
+        logger.info(
+            f"Session清理定时任务已添加，每{interval_hours}小时执行一次，清理{cleanup_hours}小时前的session"
+        )
+        return job
+
 
 # 全局调度器实例
 scheduler = SchedulerService()
