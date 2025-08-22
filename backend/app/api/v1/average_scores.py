@@ -27,7 +27,10 @@ class AverageScoreResponse(BaseModel):
 
 
 @router.get(
-    "/average-scores", summary="查询平均分", response_model=AverageScoreResponse
+    "/average-scores",
+    summary="查询平均分",
+    response_model=AverageScoreResponse,
+    tags=["成绩"],
 )
 async def query_average_scores(
     course: str = Query(
