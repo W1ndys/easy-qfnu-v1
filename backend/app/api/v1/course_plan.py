@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from app.services.course_plan_service import CoursePlanService
-from app.services.base_service import get_user_session, BaseEducationService
+from app.services.course_plan import CoursePlanService
+from app.services.base import get_user_session, BaseEducationService
 from loguru import logger
 
 

@@ -1,4 +1,4 @@
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from loguru import logger
@@ -7,7 +7,8 @@ from typing import Callable, Any
 
 class SchedulerService:
     def __init__(self):
-        self.scheduler = AsyncIOScheduler()
+        # 使用 BackgroundScheduler 而不是 AsyncIOScheduler，避免事件循环问题
+        self.scheduler = BackgroundScheduler()
         self._is_running = False
 
     def start(self):
@@ -34,12 +35,15 @@ class SchedulerService:
             **kwargs: 触发器参数
         """
         try:
+            # 从 kwargs 中提取 id 参数
+            job_id = kwargs.pop("id", f"{func.__name__}_{id(func)}")
+
             if trigger_type == "interval":
                 # 间隔执行，例如每5分钟
                 job = self.scheduler.add_job(
                     func,
                     trigger=IntervalTrigger(**kwargs),
-                    id=f"{func.__name__}_{id(func)}",
+                    id=job_id,
                     replace_existing=True,
                 )
             elif trigger_type == "cron":
@@ -47,7 +51,7 @@ class SchedulerService:
                 job = self.scheduler.add_job(
                     func,
                     trigger=CronTrigger(**kwargs),
-                    id=f"{func.__name__}_{id(func)}",
+                    id=job_id,
                     replace_existing=True,
                 )
             else:
@@ -127,23 +131,18 @@ scheduler = SchedulerService()
 
 # ========== 主函数使用示例 ==========
 if __name__ == "__main__":
-    import asyncio
+    import time
 
-    async def main():
-        import time
+    def my_job():
+        logger.info("定时任务执行：你好，世界！")
 
-        def my_job():
-            logger.info("定时任务执行：你好，世界！")
+    # 添加一个每2秒执行一次的定时任务
+    job = scheduler.add_job(my_job, trigger_type="interval", seconds=2)
 
-        # 添加一个每2秒执行一次的定时任务
-        job = scheduler.add_job(my_job, trigger_type="interval", seconds=2)
+    scheduler.start()
 
-        scheduler.start()
+    logger.info("主函数示例：调度器已启动，等待10秒后停止...")
+    time.sleep(10)
 
-        logger.info("主函数示例：调度器已启动，等待10秒后停止...")
-        await asyncio.sleep(10)
-
-        scheduler.stop()
-        logger.info("主函数示例：调度器已停止。")
-
-    asyncio.run(main())
+    scheduler.stop()
+    logger.info("主函数示例：调度器已停止。")

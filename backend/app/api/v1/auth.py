@@ -3,14 +3,14 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.schemas.user import UserLogin, Token, RefreshTokenRequest, TokenResponse
 from app.schemas.gpa import ErrorResponse
-from app.services.auth_service import auth_service
+from app.services.auth import auth_service
 from loguru import logger
 
 # 导入安全相关函数
 from app.core.security import get_current_user
 from app.core.hash_utils import get_student_id_for_display
 from app.db.database import delete_session_by_hash
-from app.services.scheduler_service import scheduler
+from app.services.scheduler import scheduler
 
 router = APIRouter()
 security = HTTPBearer()

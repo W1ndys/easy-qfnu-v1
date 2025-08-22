@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from loguru import logger
 import sys
 import os
-from app.services.scheduler_service import scheduler
+from app.services.scheduler import scheduler
 
 # 日志系统完善
 from datetime import datetime
@@ -49,6 +49,7 @@ from app.api.v1 import grades as grades_router
 from app.api.v1 import average_scores as average_scores_router
 from app.api.v1 import course_plan as course_plan_router
 from app.db.database import init_db
+from app.services.feishu import send_feishu_msg
 
 logger.info("正在创建FastAPI应用实例...")
 # 创建FastAPI应用实例
@@ -130,29 +131,65 @@ logger.info("平均分查询路由注册完成")
 
 app.include_router(course_plan_router.router, prefix="/api/v1", tags=["培养方案"])
 logger.info("培养方案路由注册完成")
-
 logger.info("所有API路由注册完成")
 
-# 启动定时任务
-logger.info("正在启动定时任务...")
-try:
-    # 添加session清理任务，每2小时清理2小时前的session
-    scheduler.add_session_cleanup_job(cleanup_hours=2, interval_hours=2)
-    logger.info("Session清理定时任务已添加")
-except Exception as e:
-    logger.error(f"添加Session清理定时任务失败: {e}")
+# 使用 FastAPI 生命周期事件来启动定时任务和发送通知
+from contextlib import asynccontextmanager
 
-scheduler.start()
-logger.info("定时任务启动完成")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    # 启动时执行
+    logger.info("应用启动事件触发，正在初始化服务...")
+
+    # 启动定时任务
+    logger.info("正在启动定时任务...")
+    try:
+        scheduler.add_session_cleanup_job(cleanup_hours=2, interval_hours=2)
+        logger.info("Session清理定时任务已添加")
+    except Exception as e:
+        logger.error(f"添加Session清理定时任务失败: {e}")
+
+    scheduler.start()
+    logger.info("定时任务启动完成")
+
+    # 发送飞书通知
+    try:
+        send_feishu_msg(
+            "Easy-QFNUJW API 启动成功",
+            f"Easy-QFNUJW API 启动成功，当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        )
+        logger.info("飞书启动通知发送成功")
+    except Exception as e:
+        logger.error(f"发送飞书启动通知失败: {e}")
+
+    yield
+
+    # 关闭时执行
+    logger.info("应用关闭事件触发，正在清理资源...")
+    try:
+        scheduler.stop()
+        logger.info("定时任务已停止")
+    except Exception as e:
+        logger.error(f"停止定时任务失败: {e}")
+
+
+# 创建FastAPI应用实例时使用lifespan
+app = FastAPI(title="Easy-QFNUJW API", version="1.0.0", lifespan=lifespan)
+
 if __name__ == "__main__":
     logger.info("正在启动Uvicorn服务...")
-    logger.info(f"服务配置: host=127.0.0.1, port=8000, reload=True")
-    # 这里的 "app.main:app" 指向的是 app文件夹下的main.py文件中的app实例
+
+    # 根据环境变量决定是否启用reload
+    reload_mode = os.getenv("RELOAD_MODE", "false").lower() == "true"
+    logger.info(f"服务配置: host=127.0.0.1, port=8000, reload={reload_mode}")
+
     uvicorn.run(
         "app.main:app",
         host="127.0.0.1",
         port=8000,
-        reload=True,
+        reload=reload_mode,  # 使用环境变量控制
         proxy_headers=True,
         forwarded_allow_ips="*",
     )

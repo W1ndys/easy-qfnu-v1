@@ -12,7 +12,7 @@ from app.services.scraper import (
     get_available_semesters,
     calculate_gpa_advanced,
 )
-from app.services.base_service import get_user_session, BaseEducationService
+from app.services.base import get_user_session, BaseEducationService
 from loguru import logger
 
 router = APIRouter()
