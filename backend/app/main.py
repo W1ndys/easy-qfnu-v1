@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from loguru import logger
 import sys
 import os
-from app.services.scheduler import scheduler
+from contextlib import asynccontextmanager
 
 # 日志系统完善
 from datetime import datetime
@@ -44,16 +44,54 @@ logger.info("正在加载环境变量...")
 load_dotenv()
 logger.info("环境变量加载完成")
 
-from app.api.v1 import auth as auth_router
-from app.api.v1 import grades as grades_router
-from app.api.v1 import average_scores as average_scores_router
-from app.api.v1 import course_plan as course_plan_router
-from app.db.database import init_db
-from app.services.feishu import send_feishu_msg
 
-logger.info("正在创建FastAPI应用实例...")
+# 先定义 lifespan 函数
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    # 启动时执行
+    logger.info("应用启动事件触发，正在初始化服务...")
+
+    # 启动定时任务
+    logger.info("正在启动定时任务...")
+    try:
+        from app.services.scheduler import scheduler
+
+        scheduler.add_session_cleanup_job(cleanup_hours=2, interval_hours=2)
+        logger.info("Session清理定时任务已添加")
+        scheduler.start()
+        logger.info("定时任务启动完成")
+    except Exception as e:
+        logger.error(f"启动定时任务失败: {e}")
+
+    # 发送飞书通知
+    try:
+        from app.services.feishu import send_feishu_msg
+
+        send_feishu_msg(
+            "Easy-QFNUJW API 启动成功",
+            f"Easy-QFNUJW API 启动成功，当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        )
+        logger.info("飞书启动通知发送成功")
+    except Exception as e:
+        logger.error(f"发送飞书启动通知失败: {e}")
+
+    yield
+
+    # 关闭时执行
+    logger.info("应用关闭事件触发，正在清理资源...")
+    try:
+        from app.services.scheduler import scheduler
+
+        scheduler.stop()
+        logger.info("定时任务已停止")
+    except Exception as e:
+        logger.error(f"停止定时任务失败: {e}")
+
+
 # 创建FastAPI应用实例
-app = FastAPI(title="Easy-QFNUJW API", version="1.0.0")
+logger.info("正在创建FastAPI应用实例...")
+app = FastAPI(title="Easy-QFNUJW API", version="1.0.0", lifespan=lifespan)
 logger.info("FastAPI应用实例创建成功")
 
 # 配置CORS中间件
@@ -80,6 +118,8 @@ logger.info("CORS中间件配置完成")
 # 初始化数据库
 logger.info("正在初始化数据库...")
 try:
+    from app.db.database import init_db
+
     init_db()
     logger.info("数据库初始化成功")
 except Exception as e:
@@ -118,65 +158,45 @@ def read_root():
 
 # 使用 include_router 将各个API模块挂载到主应用上
 logger.info("正在注册API路由...")
-# prefix="/api/v1" 表示这个模块下所有接口的URL都会以/api/v1开头
-# tags=["认证"] 用于在API文档中进行分组，非常方便
-app.include_router(auth_router.router, prefix="/api/v1", tags=["认证"])
-logger.info("认证路由注册完成")
+try:
+    from app.api.v1 import auth as auth_router
 
-app.include_router(grades_router.router, prefix="/api/v1", tags=["成绩"])
-logger.info("成绩路由注册完成")
+    app.include_router(auth_router.router, prefix="/api/v1")
+    logger.info("认证路由注册完成")
+except Exception as e:
+    logger.error(f"认证路由注册失败: {e}")
 
-app.include_router(average_scores_router.router, prefix="/api/v1", tags=["平均分查询"])
-logger.info("平均分查询路由注册完成")
+try:
+    from app.api.v1 import grades as grades_router
 
-app.include_router(course_plan_router.router, prefix="/api/v1", tags=["培养方案"])
-logger.info("培养方案路由注册完成")
+    app.include_router(grades_router.router, prefix="/api/v1")
+    logger.info("成绩路由注册完成")
+except Exception as e:
+    logger.error(f"成绩路由注册失败: {e}")
+
+try:
+    from app.api.v1 import average_scores as average_scores_router
+
+    app.include_router(average_scores_router.router, prefix="/api/v1")
+    logger.info("平均分查询路由注册完成")
+except Exception as e:
+    logger.error(f"平均分查询路由注册失败: {e}")
+
+try:
+    from app.api.v1 import course_plan as course_plan_router
+
+    app.include_router(course_plan_router.router, prefix="/api/v1")
+    logger.info("培养方案路由注册完成")
+except Exception as e:
+    logger.error(f"培养方案路由注册失败: {e}")
+
 logger.info("所有API路由注册完成")
 
-# 使用 FastAPI 生命周期事件来启动定时任务和发送通知
-from contextlib import asynccontextmanager
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """应用生命周期管理"""
-    # 启动时执行
-    logger.info("应用启动事件触发，正在初始化服务...")
-
-    # 启动定时任务
-    logger.info("正在启动定时任务...")
-    try:
-        scheduler.add_session_cleanup_job(cleanup_hours=2, interval_hours=2)
-        logger.info("Session清理定时任务已添加")
-    except Exception as e:
-        logger.error(f"添加Session清理定时任务失败: {e}")
-
-    scheduler.start()
-    logger.info("定时任务启动完成")
-
-    # 发送飞书通知
-    try:
-        send_feishu_msg(
-            "Easy-QFNUJW API 启动成功",
-            f"Easy-QFNUJW API 启动成功，当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        )
-        logger.info("飞书启动通知发送成功")
-    except Exception as e:
-        logger.error(f"发送飞书启动通知失败: {e}")
-
-    yield
-
-    # 关闭时执行
-    logger.info("应用关闭事件触发，正在清理资源...")
-    try:
-        scheduler.stop()
-        logger.info("定时任务已停止")
-    except Exception as e:
-        logger.error(f"停止定时任务失败: {e}")
-
-
-# 创建FastAPI应用实例时使用lifespan
-app = FastAPI(title="Easy-QFNUJW API", version="1.0.0", lifespan=lifespan)
+# 验证路由注册
+logger.info(f"应用路由数量: {len(app.routes)}")
+for route in app.routes:
+    if hasattr(route, "path"):
+        logger.info(f"路由: {route.path} - 方法: {getattr(route, 'methods', 'N/A')}")
 
 if __name__ == "__main__":
     logger.info("正在启动Uvicorn服务...")
@@ -189,7 +209,7 @@ if __name__ == "__main__":
         "app.main:app",
         host="127.0.0.1",
         port=8000,
-        reload=reload_mode,  # 使用环境变量控制
+        reload=reload_mode,
         proxy_headers=True,
         forwarded_allow_ips="*",
     )
