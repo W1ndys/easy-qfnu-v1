@@ -10,6 +10,7 @@ from loguru import logger
 # 导入安全相关函数
 from app.core.security import get_current_user
 from app.core.hash_utils import get_student_id_for_display
+from app.db.database import delete_session_by_hash
 
 router = APIRouter()
 security = HTTPBearer()
@@ -236,21 +237,24 @@ async def refresh_token(token_data: RefreshTokenRequest, request: Request):
     "/logout",
     summary="用户登出",
     description="""
-用户登出，撤销当前的访问令牌。
+用户登出，撤销当前的访问令牌并清理数据库中的session信息。
 
 **功能说明：**
 - 将当前Token加入黑名单
 - 立即使Token失效
 - 安全地结束用户会话
+- 同步删除数据库中的session信息，确保完全清理
 
 **安全特性：**
 - 防止已登出Token的重复使用
 - 即时生效的Token撤销
+- 彻底清理用户会话数据
 
 **注意事项：**
 - 登出后需要重新登录获取新Token
 - 建议前端清除本地存储的Token
 - Refresh Token也会一并失效
+- Session信息会从数据库中完全删除
 """,
     tags=["认证"],
     responses={
@@ -271,7 +275,7 @@ async def logout(
     """
     用户登出
 
-    撤销当前访问令牌，使其立即失效。
+    撤销当前访问令牌，使其立即失效，并清理数据库中的session信息。
 
     Args:
         credentials: HTTP Bearer认证凭据
@@ -289,6 +293,14 @@ async def logout(
     try:
         # 使用认证服务处理登出
         auth_service.logout_user(token)
+
+        # 删除数据库中的session信息
+        session_deleted = delete_session_by_hash(current_user_hash)
+        if session_deleted:
+            logger.info(f"用户 {current_user_hash} 的session信息已从数据库中删除")
+        else:
+            logger.warning(f"用户 {current_user_hash} 的session信息删除失败或不存在")
+
         logger.info(f"用户 {current_user_hash} 登出成功")
         return {"message": "登出成功"}
     except Exception as e:

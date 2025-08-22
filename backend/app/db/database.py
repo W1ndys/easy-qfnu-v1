@@ -194,5 +194,69 @@ def get_session_by_hash(student_id_hash: str) -> Optional[requests.Session]:
         db.close()
 
 
+def delete_session(student_id: str) -> bool:
+    """删除指定学号的session信息（使用学号hash）"""
+    db = SessionLocal()
+    try:
+        # 将明文学号转换为hash值
+        student_id_hash = hash_student_id(student_id)
+        logger.debug(f"删除session - 原始学号: {student_id}, hash: {student_id_hash}")
+
+        db_session_record = (
+            db.query(SessionStore)
+            .filter(SessionStore.student_id_hash == student_id_hash)
+            .first()
+        )
+
+        if db_session_record:
+            db.delete(db_session_record)
+            db.commit()
+            logger.info(
+                f"成功删除session - 学号: {student_id}, hash: {student_id_hash}"
+            )
+            return True
+        else:
+            logger.info(
+                f"数据库中未找到要删除的session - 学号: {student_id}, hash: {student_id_hash}"
+            )
+            return False
+
+    except Exception as e:
+        logger.error(f"删除session失败: {e}")
+        db.rollback()
+        return False
+    finally:
+        db.close()
+
+
+def delete_session_by_hash(student_id_hash: str) -> bool:
+    """通过学号hash值删除session信息"""
+    db = SessionLocal()
+    try:
+        logger.debug(f"通过hash删除session - 学号hash: {student_id_hash}")
+
+        db_session_record = (
+            db.query(SessionStore)
+            .filter(SessionStore.student_id_hash == student_id_hash)
+            .first()
+        )
+
+        if db_session_record:
+            db.delete(db_session_record)
+            db.commit()
+            logger.info(f"成功删除学号hash {student_id_hash} 的session")
+            return True
+        else:
+            logger.info(f"数据库中未找到学号hash {student_id_hash} 的session")
+            return False
+
+    except Exception as e:
+        logger.error(f"通过hash删除session失败: {e}")
+        db.rollback()
+        return False
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
     init_db()
