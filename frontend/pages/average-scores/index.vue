@@ -126,7 +126,7 @@
           <view class="course-header">
             <view class="course-info">
               <view class="course-icon">
-                <uni-icons type="book" size="24" color="#ffffff"></uni-icons>
+                <uni-icons type="book" size="20" color="#7f4515"></uni-icons>
               </view>
               <text class="course-name">{{ courseName }}</text>
             </view>
@@ -135,63 +135,39 @@
           <view class="course-content">
             <view
               class="teacher-section"
-              v-for="(semesters, teacherName) in teachers"
+              v-for="(teacherName, teacherIndex) in Object.keys(teachers)"
               :key="teacherName">
               <view class="teacher-header">
                 <view class="teacher-info">
                   <view class="teacher-avatar">
                     <uni-icons
                       type="person"
-                      size="20"
+                      size="16"
                       color="#7f4515"></uni-icons>
                   </view>
                   <text class="teacher-name">{{ teacherName }}</text>
                 </view>
               </view>
 
-              <view class="semester-grid">
+              <view class="semester-list">
                 <view
-                  class="semester-card"
-                  v-for="(data, semester) in semesters"
+                  class="semester-item"
+                  v-for="(data, semester) in teachers[teacherName]"
                   :key="semester">
-                  <view class="semester-header">
-                    <view class="semester-badge">
-                      <text class="semester-name">{{ semester }}</text>
-                    </view>
+                  <view class="semester-info">
+                    <text class="semester-name">{{ semester }}</text>
                     <text class="update-time" v-if="data.update_time">
                       {{ formatTime(data.update_time) }}
                     </text>
                   </view>
-
-                  <view class="score-grid">
-                    <view class="score-item primary">
-                      <view class="score-icon">
-                        <uni-icons
-                          type="bars"
-                          size="20"
-                          color="#7f4515"></uni-icons>
-                      </view>
-                      <view class="score-content">
-                        <text class="score-label">平均分</text>
-                        <text class="score-value">{{
-                          data.average_score.toFixed(2)
-                        }}</text>
-                      </view>
+                  <view class="score-info">
+                    <view class="score-item">
+                      <text class="score-label">平均分</text>
+                      <text class="score-value primary">{{ data.average_score.toFixed(2) }}</text>
                     </view>
-
-                    <view class="score-item secondary">
-                      <view class="score-icon">
-                        <uni-icons
-                          type="person"
-                          size="20"
-                          color="#6c757d"></uni-icons>
-                      </view>
-                      <view class="score-content">
-                        <text class="score-label">参与人数</text>
-                        <text class="score-value"
-                          >{{ data.student_count }}人</text
-                        >
-                      </view>
+                    <view class="score-item">
+                      <text class="score-label">人数</text>
+                      <text class="score-value secondary">{{ data.student_count }}</text>
                     </view>
                   </view>
                 </view>
@@ -772,24 +748,25 @@ export default {
 
 // 结果区域
 .results-header {
-  padding: 30rpx;
+  padding: 20rpx 30rpx;
   text-align: center;
+  margin-bottom: 20rpx;
 }
 
 .results-info {
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+  gap: 6rpx;
 }
 
 .results-title {
-  font-size: 32rpx;
-  font-weight: 700;
+  font-size: 28rpx;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .results-count {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: var(--text-secondary);
 }
 
@@ -797,22 +774,23 @@ export default {
 .course-card {
   padding: 0;
   overflow: hidden;
+  margin-bottom: 24rpx;
 }
 
 .course-header {
-  background: linear-gradient(135deg, #495057, #6c757d);
-  padding: 40rpx;
+  background: linear-gradient(135deg, #7f4515, #8c5527);
+  padding: 24rpx 30rpx;
 }
 
 .course-info {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .course-icon {
-  width: 60rpx;
-  height: 60rpx;
+  width: 44rpx;
+  height: 44rpx;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   display: flex;
@@ -821,19 +799,19 @@ export default {
 }
 
 .course-name {
-  font-size: 32rpx;
-  font-weight: 700;
+  font-size: 28rpx;
+  font-weight: 600;
   color: #ffffff;
   flex: 1;
 }
 
 .course-content {
-  padding: 40rpx;
+  padding: 20rpx 30rpx 30rpx;
 }
 
 // 教师区域
 .teacher-section {
-  margin-bottom: 40rpx;
+  margin-bottom: 24rpx;
 
   &:last-child {
     margin-bottom: 0;
@@ -841,19 +819,19 @@ export default {
 }
 
 .teacher-header {
-  margin-bottom: 30rpx;
+  margin-bottom: 16rpx;
 }
 
 .teacher-info {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
 }
 
 .teacher-avatar {
-  width: 50rpx;
-  height: 50rpx;
-  background: rgba(155, 4, 0, 0.1);
+  width: 36rpx;
+  height: 36rpx;
+  background: rgba(127, 69, 21, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -861,117 +839,82 @@ export default {
 }
 
 .teacher-name {
-  font-size: 28rpx;
-  font-weight: 600;
+  font-size: 24rpx;
+  font-weight: 500;
   color: var(--text-primary);
 }
 
-// 学期网格
-.semester-grid {
+// 学期列表
+.semester-list {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 12rpx;
 }
 
-.semester-card {
-  background: #f8fafc;
+.semester-item {
+  background: #f8f9fa;
   border-radius: var(--radius-small);
-  padding: 30rpx;
+  padding: 16rpx 20rpx;
   border: 1rpx solid #e9ecef;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 
   &:hover {
     background: #ffffff;
-    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+    border-color: rgba(127, 69, 21, 0.2);
   }
 }
 
-.semester-header {
+.semester-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24rpx;
+  margin-bottom: 12rpx;
 }
 
-.semester-badge {
+.semester-name {
   background: linear-gradient(135deg, #7f4515, #8c5527);
   color: #ffffff;
-  padding: 8rpx 16rpx;
-  border-radius: 20rpx;
-  font-size: 22rpx;
-  font-weight: 600;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  font-weight: 500;
 }
 
 .update-time {
-  font-size: 20rpx;
+  font-size: 18rpx;
   color: var(--text-light);
 }
 
-// 分数网格
-.score-grid {
+// 分数信息
+.score-info {
   display: flex;
-  gap: 20rpx;
+  gap: 24rpx;
 }
 
 .score-item {
   flex: 1;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 16rpx;
-  background: #ffffff;
-  padding: 24rpx;
-  border-radius: var(--radius-small);
-  border: 1rpx solid #e9ecef;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2rpx);
-    box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
-  }
-}
-
-.score-icon {
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.score-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
 }
 
 .score-label {
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .score-value {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.primary .score-icon {
-  background: rgba(127, 69, 21, 0.08);
-}
-
-.primary .score-value {
-  color: #7f4515;
-}
-
-.secondary .score-icon {
-  background: rgba(108, 117, 125, 0.1);
-}
-
-.secondary .score-value {
-  color: #6c757d;
+  font-size: 22rpx;
+  font-weight: 600;
+  
+  &.primary {
+    color: #7f4515;
+  }
+  
+  &.secondary {
+    color: #6c757d;
+  }
 }
 
 // 状态页面样式
@@ -1046,12 +989,25 @@ export default {
     flex-direction: column;
   }
 
-  .score-grid {
+  .score-info {
     flex-direction: column;
+    gap: 8rpx;
   }
 
   .page-title {
     font-size: 36rpx;
+  }
+  
+  .course-card {
+    margin-bottom: 20rpx;
+  }
+  
+  .course-header {
+    padding: 20rpx 24rpx;
+  }
+  
+  .course-content {
+    padding: 16rpx 24rpx 24rpx;
   }
 }
 </style>

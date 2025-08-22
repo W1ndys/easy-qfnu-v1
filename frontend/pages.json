@@ -34,6 +34,13 @@
 				"navigationBarTitleText": "培养计划",
 				"enablePullDownRefresh": true
 			}
+		},
+		{
+			"path": "pages/freshman_questions_search/index",
+			"style": {
+				"navigationBarTitleText": "新生入学考试搜题",
+				"enablePullDownRefresh": true
+			}
 		}
 	],
 	"easycom": {

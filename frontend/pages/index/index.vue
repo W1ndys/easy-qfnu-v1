@@ -14,9 +14,16 @@
         <image class="logo" src="https://picx.zhimg.com/80/v2-694acb11077d5c11ea852452803fb445_720w.png" mode="aspectFit"></image>
         <view class="app-title">曲奇教务</view>
         <view class="app-subtitle">让你的QFNU更简单</view>
+        
+        <!-- 新生搜题小入口 -->
+        <view class="freshman-entry" @click="goToFreshmanSearch">
+          <uni-icons type="help" size="14" color="#7f4515"></uni-icons>
+          <text class="entry-text">新生入学考试搜题</text>
+          <uni-icons type="arrowright" size="12" color="#7f4515"></uni-icons>
+        </view>
       </view>
 
-      <!-- 登录表单 -->
+      <!-- 登录卡片 -->
       <view class="login-card page-rounded-container">
         <view class="form-header">
           <text class="form-title">欢迎回来</text>
@@ -111,15 +118,18 @@ const formData = ref({
   password: "",
 });
 const isLoading = ref(false);
-
-// 记住密码相关
 const rememberPassword = ref(false);
 const hasCachedCredentials = ref(false);
-
-// 同意协议
 const agreed = ref(false);
-const AGREEMENT_URL =
-  "https://cq4hqujcxu3.feishu.cn/docx/EYE6d5ufAoQt5Axx7MFc4XMrnAf";
+
+// 新增：跳转到新生搜题页面
+const goToFreshmanSearch = () => {
+  uni.navigateTo({
+    url: "/pages/freshman_questions_search/index"
+  });
+};
+
+// 记住密码相关
 const onAgreeChange = (e) => {
   try {
     agreed.value =
@@ -137,77 +147,6 @@ const onRememberChange = (e) => {
   } catch (err) {
     rememberPassword.value = false;
   }
-};
-const openAgreement = () => {
-  uni.showModal({
-    title: "用户协议",
-    content: `即将跳转到用户协议页面：\n${AGREEMENT_URL}\n\n是否继续？`,
-    confirmText: "前往",
-    cancelText: "复制链接",
-    confirmColor: "#7F4515",
-    success: (res) => {
-      if (res.confirm) {
-        // 用户选择前往
-        // #ifdef H5
-        if (typeof window !== "undefined" && window.open) {
-          window.open(AGREEMENT_URL, "_blank");
-        } else {
-          // 备用方案：复制链接
-          uni.setClipboardData({
-            data: AGREEMENT_URL,
-            success() {
-              uni.showToast({ 
-                title: "链接已复制，请在浏览器中打开", 
-                icon: "success",
-                duration: 3000
-              });
-            },
-          });
-        }
-        // #endif
-
-        // #ifdef APP-PLUS
-        plus.runtime.openURL(AGREEMENT_URL);
-        // #endif
-
-        // #ifdef MP
-        // 小程序环境下无法直接打开外部链接，提示复制
-        uni.setClipboardData({
-          data: AGREEMENT_URL,
-          success() {
-            uni.showToast({ 
-              title: "链接已复制，请在浏览器中打开", 
-              icon: "success",
-              duration: 3000
-            });
-          },
-        });
-        // #endif
-      } else if (res.cancel) {
-        // 用户选择复制链接
-        uni.setClipboardData({
-          data: AGREEMENT_URL,
-          success() {
-            uni.showToast({ 
-              title: "协议链接已复制到剪贴板", 
-              icon: "success",
-              duration: 2000
-            });
-          },
-        });
-      }
-    },
-  });
-};
-
-// 复制QQ群号
-const copyQQGroup = () => {
-  uni.setClipboardData({
-    data: "1053432087",
-    success() {
-      uni.showToast({ title: "QQ群号已复制到剪贴板，请自行搜索加群", icon: "success" });
-    },
-  });
 };
 
 // 页面加载时检查缓存的token
@@ -374,6 +313,78 @@ const handleLogin = async () => {
   }
 };
 
+const AGREEMENT_URL =
+  "https://cq4hqujcxu3.feishu.cn/docx/EYE6d5ufAoQt5Axx7MFc4XMrnAf";
+const openAgreement = () => {
+  uni.showModal({
+    title: "用户协议",
+    content: `即将跳转到用户协议页面：\n${AGREEMENT_URL}\n\n是否继续？`,
+    confirmText: "前往",
+    cancelText: "复制链接",
+    confirmColor: "#7F4515",
+    success: (res) => {
+      if (res.confirm) {
+        // 用户选择前往
+        // #ifdef H5
+        if (typeof window !== "undefined" && window.open) {
+          window.open(AGREEMENT_URL, "_blank");
+        } else {
+          uni.setClipboardData({
+            data: AGREEMENT_URL,
+            success() {
+              uni.showToast({ 
+                title: "链接已复制，请在浏览器中打开", 
+                icon: "success",
+                duration: 3000
+              });
+            },
+          });
+        }
+        // #endif
+
+        // #ifdef APP-PLUS
+        plus.runtime.openURL(AGREEMENT_URL);
+        // #endif
+
+        // #ifdef MP
+        uni.setClipboardData({
+          data: AGREEMENT_URL,
+          success() {
+            uni.showToast({ 
+              title: "链接已复制，请在浏览器中打开", 
+              icon: "success",
+              duration: 3000
+            });
+          },
+        });
+        // #endif
+      } else if (res.cancel) {
+        // 用户选择复制链接
+        uni.setClipboardData({
+          data: AGREEMENT_URL,
+          success() {
+            uni.showToast({ 
+              title: "协议链接已复制到剪贴板", 
+              icon: "success",
+              duration: 2000
+            });
+          },
+        });
+      }
+    },
+  });
+};
+
+// 复制QQ群号
+const copyQQGroup = () => {
+  uni.setClipboardData({
+    data: "1053432087",
+    success() {
+      uni.showToast({ title: "QQ群号已复制到剪贴板，请自行搜索加群", icon: "success" });
+    },
+  });
+};
+
 const ACTIVATION_URL = "http://ids.qfnu.edu.cn/retrieve-password/activationMobile/index.html";
 
 // 打开账号激活页面
@@ -391,7 +402,6 @@ const openActivationPage = () => {
         if (typeof window !== "undefined" && window.open) {
           window.open(ACTIVATION_URL, "_blank");
         } else {
-          // 备用方案：复制链接
           uni.setClipboardData({
             data: ACTIVATION_URL,
             success() {
@@ -410,7 +420,6 @@ const openActivationPage = () => {
         // #endif
 
         // #ifdef MP
-        // 小程序环境下无法直接打开外部链接，提示复制
         uni.setClipboardData({
           data: ACTIVATION_URL,
           success() {
@@ -511,7 +520,6 @@ const openActivationPage = () => {
   z-index: 1;
 }
 
-// Logo区域样式
 .logo-section {
   display: flex;
   flex-direction: column;
@@ -539,9 +547,34 @@ const openActivationPage = () => {
   font-size: 28rpx;
   color: #7f8c8d;
   font-weight: 400;
+  margin-bottom: 20rpx;
 }
 
-// 登录卡片
+// 新增：新生搜题小入口样式
+.freshman-entry {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 20rpx;
+  background: rgba(127, 69, 21, 0.08);
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(127, 69, 21, 0.15);
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:active {
+    background: rgba(127, 69, 21, 0.15);
+    transform: scale(0.95);
+  }
+}
+
+.entry-text {
+  font-size: 22rpx;
+  color: #7f4515;
+  font-weight: 500;
+}
+
+// 登录卡片样式
 .login-card {
   width: 100%;
   max-width: 680rpx;
@@ -840,16 +873,6 @@ const openActivationPage = () => {
   .test-notice {
     padding: 16rpx 20rpx;
     margin-bottom: 20rpx;
-  }
-  
-  .notice-title {
-    font-size: 24rpx;
-  }
-  
-  .notice-text,
-  .qq-label,
-  .qq-number {
-    font-size: 20rpx;
   }
 }
 </style>
