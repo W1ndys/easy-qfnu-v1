@@ -8,11 +8,12 @@ from loguru import logger
 import sys
 import os
 from contextlib import asynccontextmanager
+from app.middleware.origin_validation import OriginValidationMiddleware  # 临时注释掉
 
 # 日志系统完善
 from datetime import datetime
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
 # 以启动时间命名日志文件
 LOG_DIR = os.getenv("LOG_DIR", "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -107,13 +108,20 @@ app.add_middleware(
         "http://easy-qfnu.top",
         "https://*.easy-qfnu.top",
         "http://*.easy-qfnu.top",
+        "https://servicewechat.com",
+        "https://*.servicewechat.com",
     ],
-    allow_origin_regex=r"^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$|^https?:\/\/([a-zA-Z0-9-]+\.)*easy-qfnu\.top(:\d+)?$",
+    allow_origin_regex=r"^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$|^https?:\/\/([a-zA-Z0-9-]+\.)*easy-qfnu\.top(:\d+)?$|^https:\/\/([a-zA-Z0-9-]+\.)*servicewechat\.com$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 logger.info("CORS中间件配置完成")
+
+# 添加来源验证中间件
+logger.info("正在添加来源验证中间件...")
+app.add_middleware(OriginValidationMiddleware)
+logger.info("来源验证中间件添加完成")
 
 # 初始化数据库
 logger.info("正在初始化数据库...")
@@ -156,47 +164,26 @@ def read_root():
     return {"message": "Welcome to Easy-QFNUJW API"}
 
 
-# 使用 include_router 将各个API模块挂载到主应用上
+# 使用模块化路由注册
 logger.info("正在注册API路由...")
 try:
-    from app.api.v1 import auth as auth_router
+    from app.api.v1 import api_router
 
-    app.include_router(auth_router.router, prefix="/api/v1")
-    logger.info("认证路由注册完成")
+    app.include_router(api_router, prefix="/api/v1")
+    logger.info("所有API路由注册完成")
+
+    # 验证路由注册
+    logger.info(f"应用路由数量: {len(app.routes)}")
+    for route in app.routes:
+        if hasattr(route, "path"):
+            logger.debug(
+                f"路由: {route.path} - 方法: {getattr(route, 'methods', 'N/A')}"
+            )
+
 except Exception as e:
-    logger.error(f"认证路由注册失败: {e}")
+    logger.error(f"API路由注册失败: {e}")
+    raise
 
-try:
-    from app.api.v1 import grades as grades_router
-
-    app.include_router(grades_router.router, prefix="/api/v1")
-    logger.info("成绩路由注册完成")
-except Exception as e:
-    logger.error(f"成绩路由注册失败: {e}")
-
-try:
-    from app.api.v1 import average_scores as average_scores_router
-
-    app.include_router(average_scores_router.router, prefix="/api/v1")
-    logger.info("平均分查询路由注册完成")
-except Exception as e:
-    logger.error(f"平均分查询路由注册失败: {e}")
-
-try:
-    from app.api.v1 import course_plan as course_plan_router
-
-    app.include_router(course_plan_router.router, prefix="/api/v1")
-    logger.info("培养方案路由注册完成")
-except Exception as e:
-    logger.error(f"培养方案路由注册失败: {e}")
-
-logger.info("所有API路由注册完成")
-
-# 验证路由注册
-logger.info(f"应用路由数量: {len(app.routes)}")
-for route in app.routes:
-    if hasattr(route, "path"):
-        logger.info(f"路由: {route.path} - 方法: {getattr(route, 'methods', 'N/A')}")
 
 if __name__ == "__main__":
     logger.info("正在启动Uvicorn服务...")

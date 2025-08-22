@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, Query, Depends
 from pydantic import BaseModel
 from app.core.security import get_current_user
 from app.services.average_scores import average_scores_service
