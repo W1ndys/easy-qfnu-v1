@@ -282,7 +282,7 @@ export default {
                 const response = await this.searchQuestions({
                     query: this.searchForm.question.trim(),
                     topk: 3,
-                    threshold: 0.55
+                    threshold: 0.2
                 });
 
                 if (response.ok) {

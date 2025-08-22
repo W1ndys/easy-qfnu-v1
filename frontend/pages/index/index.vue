@@ -125,7 +125,7 @@ const agreed = ref(false);
 // 新增：跳转到新生搜题页面
 const goToFreshmanSearch = () => {
   uni.navigateTo({
-    url: "/pages/freshman_questions_search/index"
+    url: "/pages/freshman-questions-search/index"
   });
 };
 

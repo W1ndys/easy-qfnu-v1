@@ -36,7 +36,7 @@
 			}
 		},
 		{
-			"path": "pages/freshman_questions_search/index",
+			"path": "pages/freshman-questions-search/index",
 			"style": {
 				"navigationBarTitleText": "新生入学考试辅助",
 				"enablePullDownRefresh": true
