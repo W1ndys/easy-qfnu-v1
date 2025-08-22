@@ -277,9 +277,25 @@ export default {
     uni.setNavigationBarTitle({
       title: "平均分查询",
     });
+    this.checkLoginStatus();
+  },
+
+  onShow() {
+    // 页面显示时检查登录状态
+    this.checkLoginStatus();
   },
 
   methods: {
+    checkLoginStatus() {
+      const token = uni.getStorageSync("token");
+      if (!token) {
+        uni.showToast({ title: "请先登录", icon: "none" });
+        uni.reLaunch({ url: "/pages/index/index" });
+        return false;
+      }
+      return true;
+    },
+
     validateCourse() {
       const length = this.searchForm.course.trim().length;
       this.courseError = length > 0 && length < 3;
@@ -291,6 +307,11 @@ export default {
     },
 
     async handleSearch() {
+      // 先检查登录状态
+      if (!this.checkLoginStatus()) {
+        return;
+      }
+
       if (!this.searchForm.course.trim()) {
         uni.showToast({
           title: "请输入课程名称或代码",
@@ -386,7 +407,6 @@ export default {
     },
 
     async queryAverageScores(params) {
-      // 统一从 App.globalData 读取 API 基础域名
       const baseURL = getApp().globalData.apiBaseURL;
       const token = uni.getStorageSync("token");
 
@@ -410,12 +430,14 @@ export default {
           },
           success: (res) => {
             if (res.statusCode === 401) {
+              uni.removeStorageSync("token");
               uni.showToast({
                 title: "登录已过期，请重新登录",
                 icon: "none",
               });
-              uni.removeStorageSync("token");
-              uni.reLaunch({ url: "/pages/index/index" });
+              setTimeout(() => {
+                uni.reLaunch({ url: "/pages/index/index" });
+              }, 1500);
               return;
             }
 

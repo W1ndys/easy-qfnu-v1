@@ -113,7 +113,7 @@
 
 <script setup>
 import { ref } from "vue";
-import { onLoad } from "@dcloudio/uni-app";
+import { onLoad, onShow } from "@dcloudio/uni-app";
 import { decode } from "../../utils/jwt-decode.js";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import ModernCard from "../../components/ModernCard/ModernCard.vue";
@@ -178,6 +178,11 @@ onLoad(() => {
   checkLoginStatus();
 });
 
+onShow(() => {
+  // 页面显示时也检查登录状态
+  checkLoginStatus();
+});
+
 // 检查登录状态
 const checkLoginStatus = () => {
   const token = uni.getStorageSync("token");
@@ -185,14 +190,17 @@ const checkLoginStatus = () => {
   if (!token) {
     uni.showToast({ title: "请先登录", icon: "none" });
     uni.reLaunch({ url: "/pages/index/index" });
+    return;
   } else {
     try {
       const payload = decode(token);
       studentId.value = payload.sub;
     } catch (error) {
       console.error("Token解析失败", error);
+      uni.removeStorageSync("token");
       uni.showToast({ title: "凭证无效,请重新登录", icon: "none" });
       uni.reLaunch({ url: "/pages/index/index" });
+      return;
     }
   }
 };

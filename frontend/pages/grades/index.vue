@@ -142,7 +142,7 @@
 
 <script setup>
 import { ref } from "vue";
-import { onLoad } from "@dcloudio/uni-app";
+import { onLoad, onShow } from "@dcloudio/uni-app";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
 import EmptyState from "../../components/EmptyState/EmptyState.vue";
@@ -168,10 +168,30 @@ const customGPAResult = ref(null);
 
 // --- 页面生命周期 ---
 onLoad(() => {
-  fetchGrades(); // 页面一加载就调用获取成绩的函数
+  checkLoginAndFetch();
+});
+
+onShow(() => {
+  // 页面显示时也检查登录状态
+  const token = uni.getStorageSync("token");
+  if (!token) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
+    return;
+  }
 });
 
 // --- 核心逻辑函数 ---
+const checkLoginAndFetch = () => {
+  const token = uni.getStorageSync("token");
+  if (!token) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
+    return;
+  }
+  fetchGrades();
+};
+
 const fetchGrades = async () => {
   const token = uni.getStorageSync("token");
   if (!token) {
@@ -216,6 +236,7 @@ const fetchGrades = async () => {
       setTimeout(() => {
         uni.reLaunch({ url: "/pages/index/index" });
       }, 1500);
+      return;
     } else {
       const errorMessage = res.data.detail || "获取成绩失败";
       uni.showToast({ title: errorMessage, icon: "none" });
@@ -300,6 +321,7 @@ const calculateCustomGPA = async () => {
   const token = uni.getStorageSync("token");
   if (!token) {
     uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
     return;
   }
 
@@ -328,6 +350,7 @@ const calculateCustomGPA = async () => {
       setTimeout(() => {
         uni.reLaunch({ url: "/pages/index/index" });
       }, 1500);
+      return;
     } else {
       const errorMessage = res.data.detail || "GPA计算失败";
       uni.showToast({ title: errorMessage, icon: "none" });

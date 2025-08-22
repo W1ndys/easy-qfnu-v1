@@ -212,7 +212,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
-import { onLoad, onPullDownRefresh } from "@dcloudio/uni-app";
+import { onLoad, onShow, onPullDownRefresh } from "@dcloudio/uni-app";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import ModernCard from "../../components/ModernCard/ModernCard.vue";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
@@ -263,13 +263,40 @@ const sortedModules = computed(() => {
 });
 
 onLoad(() => {
-  fetchCoursePlan();
+  checkLoginAndFetch();
+});
+
+onShow(() => {
+  // 页面显示时检查登录状态
+  const token = uni.getStorageSync("token");
+  if (!token) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
+    return;
+  }
 });
 
 onPullDownRefresh(async () => {
+  const token = uni.getStorageSync("token");
+  if (!token) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
+    uni.stopPullDownRefresh();
+    return;
+  }
   await fetchCoursePlan();
   uni.stopPullDownRefresh();
 });
+
+const checkLoginAndFetch = () => {
+  const token = uni.getStorageSync("token");
+  if (!token) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
+    return;
+  }
+  fetchCoursePlan();
+};
 
 const fetchCoursePlan = async () => {
   const token = uni.getStorageSync("token");
@@ -296,9 +323,10 @@ const fetchCoursePlan = async () => {
       console.log("培养计划数据获取成功", payload);
     } else if (res.statusCode === 401) {
       console.error("身份验证失败，请重新登录");
-      uni.showToast({ title: "身份验证失败，请重新登录", icon: "none" });
+      uni.removeStorageSync("token");
+      uni.showToast({ title: "登录已过期，请重新登录", icon: "none" });
       setTimeout(() => {
-      uni.reLaunch({ url: "/pages/index/index" });
+        uni.reLaunch({ url: "/pages/index/index" });
       }, 1500);
       return;
     } else if (res.statusCode === 404) {
