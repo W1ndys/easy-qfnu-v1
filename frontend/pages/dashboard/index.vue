@@ -476,16 +476,19 @@ const handleImageLoad = () => {
 
 // 页外层统一圆角白卡容器
 .page-rounded-container {
-  background: #ffffff;
-  border-radius: 40rpx;
-  padding: 30rpx;
-  box-shadow: 0 20rpx 60rpx var(--shadow-light);
+  background: #fff;
+  border-radius: 32rpx; // 缩小圆角
+  padding: 18rpx 12rpx; // 减少整体 padding
+  box-shadow: 0 8rpx 24rpx var(--shadow-light);
   border: 1rpx solid var(--border-light);
 }
 
 // 用户信息卡片
 .profile-card {
-  margin-bottom: 40rpx;
+  margin-bottom: 24rpx; // 减少间距
+  :deep(.card-content) {
+    padding: 18rpx 12rpx !important; // 减少内容 padding
+  }
 }
 
 .profile-content {
@@ -554,13 +557,13 @@ const handleImageLoad = () => {
 
 // 公告栏卡片
 .announcement-card {
-  margin-bottom: 40rpx;
+  margin-bottom: 24rpx;
   
   :deep(.card-content) {
     background: #f0f9ff !important;
     border: 1rpx solid #bae7ff !important;
     border-radius: var(--radius-medium) !important;
-    padding: 28rpx !important;
+    padding: 16rpx 12rpx !important; // 缩小 padding
   }
 }
 
@@ -600,19 +603,21 @@ const handleImageLoad = () => {
 
 // 2×2 导航网格样式
 .grid-card {
-  margin-bottom: 40rpx;
+  margin-bottom: 24rpx;
+  :deep(.card-content) {
+    padding: 16rpx 12rpx !important;
+  }
 }
 
 .grid-title {
-  font-size: 28rpx;
-  color: var(--text-secondary);
-  margin-bottom: 20rpx;
+  font-size: 26rpx;
+  margin-bottom: 12rpx;
 }
 
 .grid-2x2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300rpx, 1fr));
-  gap: 20rpx;
+  gap: 12rpx; // 缩小网格间距
   
   // 响应式调整
   @media (max-width: 750px) {
@@ -630,13 +635,13 @@ const handleImageLoad = () => {
   background: #ffffff;
   border: 1rpx solid var(--border-light);
   border-radius: var(--radius-medium);
-  padding: 28rpx;
+  padding: 18rpx 12rpx; // 缩小卡片内容 padding
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 10rpx;
   transition: all 0.2s ease;
-  min-height: 160rpx; // 确保所有卡片高度一致
+  min-height: 120rpx;
 
   &:active {
     transform: scale(0.98);
@@ -675,20 +680,20 @@ const handleImageLoad = () => {
 .quick-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 16rpx;
+  gap: 10rpx;
 }
 
 .action-btn {
   flex: 1;
-  min-width: calc(50% - 8rpx);
+  min-width: calc(50% - 5rpx);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  height: 72rpx;
-  padding: 16rpx 24rpx;
+  height: 56rpx;
+  padding: 10rpx 12rpx;
   border-radius: 9999rpx;
-  font-size: 24rpx;
+  font-size: 22rpx;
   font-weight: 600;
   border: none;
   transition: all 0.3s ease;
@@ -768,14 +773,17 @@ const handleImageLoad = () => {
 
 // 赞赏支持卡片
 .support-card {
-  margin-top: 40rpx;
+  margin-top: 24rpx;
+  :deep(.card-content) {
+    padding: 16rpx 12rpx !important;
+  }
 }
 
 .support-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30rpx;
+  gap: 18rpx;
 }
 
 .support-text {
@@ -806,8 +814,8 @@ const handleImageLoad = () => {
 }
 
 .qr-code {
-  width: 300rpx;
-  height: 300rpx;
+  width: 220rpx;
+  height: 220rpx;
   border-radius: var(--radius-medium);
   border: 1rpx solid var(--border-light);
   box-shadow: 0 8rpx 24rpx var(--shadow-light);
