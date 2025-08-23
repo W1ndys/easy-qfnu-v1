@@ -23,25 +23,15 @@
 
       <!-- 公告栏 -->
       <ModernCard class="announcement-card">
-        <view class="announcement-section">
-          <view class="announcement-header">
-            <uni-icons type="sound" size="16" color="#1890ff"></uni-icons>
-            <text class="announcement-title">公告栏</text>
-          </view>
-          <view class="announcement-content">
-            <view class="announcement-item">
-              <text class="announcement-text">该程序正在测试阶段，功能可能不稳定</text>
-              <view class="qq-group">
-                <text class="qq-label">加入QQ群获取最新消息：</text>
-                <text class="qq-number" @click="copyQQGroup">1053432087</text>
-              </view>
-            </view>
-            <view class="announcement-item">
-              <text class="announcement-text">如有对Easy-QFNU（曲奇教务）有建议意见或开发想法或其他相关内容的欢迎添加Easy-QFNU开发策划交流群：</text>
-              <text class="qq-number dev-qq" @click="copyDevQQGroup">1057327742</text>
-            </view>
-          </view>
+        <view class="announcement-header">
+          <uni-icons type="sound" size="16" color="#1890ff"></uni-icons>
+          <text class="announcement-title">公告栏</text>
         </view>
+        
+        <text class="announcement-text">该程序正在测试阶段，功能可能不稳定</text>
+        <text class="announcement-text">加入QQ群获取最新消息：<text class="qq-link" @click="copyQQGroup">1053432087</text></text>
+        
+        <text class="announcement-text">如有对Easy-QFNU（曲奇教务）有建议意见或开发想法或其他相关内容的欢迎添加Easy-QFNU开发策划交流群：<text class="qq-link" @click="copyDevQQGroup">1057327742</text></text>
       </ModernCard>
 
       <!-- 2×2 导航网格 -->
@@ -565,87 +555,47 @@ const handleImageLoad = () => {
 // 公告栏卡片
 .announcement-card {
   margin-bottom: 40rpx;
-  background: #f0f9ff;
-  border: 1rpx solid #bae7ff;
-  border-radius: var(--radius-medium);
-  padding: 28rpx;
-}
-
-.announcement-section {
-  display: flex;
-  flex-direction: column;
-  gap: 15rpx;
+  
+  :deep(.card-content) {
+    background: #f0f9ff !important;
+    border: 1rpx solid #bae7ff !important;
+    border-radius: var(--radius-medium) !important;
+    padding: 28rpx !important;
+  }
 }
 
 .announcement-header {
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  margin-bottom: 20rpx;
 }
 
 .announcement-title {
   font-size: 28rpx;
   color: #1890ff;
   font-weight: 600;
-}
-
-.announcement-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.announcement-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-  padding: 12rpx 16rpx;
-  background: rgba(240, 249, 255, 0.6);
-  border-radius: 12rpx;
-  border: 1rpx solid rgba(186, 231, 255, 0.8);
+  margin-left: 8rpx;
 }
 
 .announcement-text {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: #1890ff;
-  line-height: 1.5;
-}
-
-.qq-group {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  background: rgba(240, 249, 255, 0.8);
-  border-radius: 8rpx;
-  padding: 8rpx 12rpx;
-  border: 1rpx solid #bae7ff;
-}
-
-.qq-label {
-  font-size: 24rpx;
-  color: #1890ff;
-}
-
-.qq-number {
-  font-size: 24rpx;
-  color: #1890ff;
-  text-decoration: underline;
-  cursor: pointer;
-  font-weight: 600;
-  padding: 4rpx 8rpx;
-  background: rgba(24, 144, 255, 0.1);
-  border-radius: 6rpx;
-  transition: all 0.3s ease;
-
-  &:active {
-    background: rgba(24, 144, 255, 0.2);
-    transform: scale(0.95);
+  line-height: 1.6;
+  margin-bottom: 16rpx;
+  display: block;
+  
+  &:last-child {
+    margin-bottom: 0;
   }
 }
 
-.dev-qq {
-  align-self: flex-start;
-  margin-top: 4rpx;
+.qq-link {
+  color: #1890ff;
+  text-decoration: underline;
+  font-weight: 600;
+  padding: 2rpx 4rpx;
+  background: rgba(24, 144, 255, 0.1);
+  border-radius: 4rpx;
 }
 
 // 2×2 导航网格样式
