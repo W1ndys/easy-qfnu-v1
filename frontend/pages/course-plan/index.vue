@@ -131,12 +131,14 @@
                   <view class="subtotal-divider"></view>
                   
                   <text class="subtotal-title">已修课程小计</text>
-                  <text class="subtotal-hours">
-                    已修总学时 {{ calculateCompletedHours(m).total || 0 }}
-                  </text>
-                  <template v-for="hourInfo in formatHours(calculateCompletedHours(m))" :key="hourInfo">
-                    <text class="subtotal-meta">{{ hourInfo }}</text>
-                  </template>
+                  <view class="subtotal-completed-group">
+                    <text class="subtotal-hours">
+                      已修总学时 {{ calculateCompletedHours(m).total || 0 }}
+                    </text>
+                    <template v-for="hourInfo in formatHours(calculateCompletedHours(m))" :key="hourInfo">
+                      <text class="subtotal-meta">{{ hourInfo }}</text>
+                    </template>
+                  </view>
                 </view>
 
                 <view class="course-sort-hint">
@@ -1115,9 +1117,27 @@ const closeModal = () => {
   padding: 6rpx 10rpx;
   background: rgba(127, 69, 21, 0.05);
   border-radius: 8rpx;
-  flex: 1;
   text-align: center;
   min-width: 80rpx;
+}
+
+.subtotal-credits {
+  flex: 1;
+}
+
+.subtotal-hours {
+  flex: 1;
+}
+
+.subtotal-completed-group {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.subtotal-completed-group .subtotal-hours {
+  flex: initial; /* Reset flex for this specific case */
 }
 
 .subtotal-meta {
