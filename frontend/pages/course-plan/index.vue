@@ -117,6 +117,28 @@
               </view>
                 <!-- 课程详情，展开时显示 -->
                 <view v-show="expanded[getOriginalIndex(m)]" class="course-details">
+                <view
+                  v-if="m.subtotal"
+                  class="module-subtotal">
+                  <text class="subtotal-title">模块要求小计</text>
+                  <text class="subtotal-credits"
+                    >要求学分 {{ m.subtotal.total_credits }}</text
+                  >
+                  <text class="subtotal-hours"
+                    >要求总学时 {{ m.subtotal.hours?.total || 0 }}</text
+                  >
+                  
+                  <view class="subtotal-divider"></view>
+                  
+                  <text class="subtotal-title">已修课程小计</text>
+                  <text class="subtotal-hours">
+                    已修总学时 {{ calculateCompletedHours(m).total || 0 }}
+                  </text>
+                  <template v-for="hourInfo in formatHours(calculateCompletedHours(m))" :key="hourInfo">
+                    <text class="subtotal-meta">{{ hourInfo }}</text>
+                  </template>
+                </view>
+
                 <view class="course-sort-hint">
                   <text class="sort-hint-text">
                   <uni-icons type="info" size="16" color="#666" />
@@ -157,18 +179,6 @@
                     </template>
                   </view>
                   </view>
-                </view>
-
-                <view
-                  v-if="m.subtotal"
-                  class="module-subtotal">
-                  <text class="subtotal-title">小计</text>
-                  <text class="subtotal-credits"
-                    >学分 {{ m.subtotal.total_credits }}</text
-                  >
-                  <text class="subtotal-hours"
-                    >总学时 {{ m.subtotal.hours?.total }}</text
-                  >
                 </view>
               </view>
             </view>
@@ -407,6 +417,25 @@ const getProgress = (module) => {
   if (need <= 0) return 0;
   const pct = Math.min(100, Math.max(0, Math.round((done / need) * 100)));
   return pct;
+};
+
+const calculateCompletedHours = (module) => {
+  if (!module.courses || module.courses.length === 0) {
+    return { total: 0 };
+  }
+
+  const completedCourses = module.courses.filter(isCourseCompleted);
+  
+  const completedHours = completedCourses.reduce((acc, course) => {
+    if (course.hours && typeof course.hours === 'object') {
+      for (const [key, value] of Object.entries(course.hours)) {
+        acc[key] = (acc[key] || 0) + (Number(value) || 0);
+      }
+    }
+    return acc;
+  }, {});
+
+  return completedHours;
 };
 
 const formatHours = (hours) => {
@@ -976,7 +1005,7 @@ const closeModal = () => {
 .module-subtotal {
   margin: 12rpx 16rpx;
   padding: 12rpx;
-  border-top: 1rpx solid #e8e8e8;
+  border-bottom: 1rpx solid #e8e8e8;
   background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%);
   border-radius: 12rpx;
   display: flex;
@@ -995,6 +1024,13 @@ const closeModal = () => {
   margin-bottom: 4rpx;
 }
 
+.subtotal-divider {
+  width: 100%;
+  height: 1rpx;
+  background-color: #e8e8e8;
+  margin: 8rpx 0;
+}
+
 .subtotal-credits,
 .subtotal-hours {
   color: var(--text-secondary);
@@ -1004,6 +1040,17 @@ const closeModal = () => {
   flex: 1;
   text-align: center;
   min-width: 80rpx;
+}
+
+.subtotal-meta {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  padding: 3rpx 6rpx;
+  background: #f8f9fa;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 6rpx;
+  white-space: nowrap;
 }
 
 /* 弹窗样式 */
