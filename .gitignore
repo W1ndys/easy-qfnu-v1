@@ -211,3 +211,4 @@ data/
 node_modules/
 *git*.bat
 *git*.sh
+unpackage/
