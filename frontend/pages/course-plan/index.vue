@@ -131,7 +131,8 @@
                   :class="{ completed: isCourseCompleted(c) }">
                   <view class="course-main">
                     <view class="course-title-section">
-                    <text class="course-name">{{ c.course_name }}</text>
+                      <text class="course-name">{{ c.course_name }}</text>
+                      <text v-if="c.course_code" class="course-code">代码: {{ c.course_code }}</text>
                     </view>
                     <view class="chips">
                     <text
@@ -149,12 +150,11 @@
                   </view>
                   <view class="course-meta">
                     <text class="meta">学分 {{ c.credits }}</text>
-                    <text class="meta" v-if="c.semester"
-                    >学期 {{ c.semester }}</text
-                    >
-                    <text class="meta" v-if="c.hours?.total"
-                    >学时 {{ c.hours.total }}</text
-                    >
+                    <text class="meta" v-if="c.semester">学期 {{ c.semester }}</text>
+                    <text class="meta" v-if="c.hours?.total">总学时 {{ c.hours.total }}</text>
+                    <template v-for="hourInfo in formatHours(c.hours)" :key="hourInfo">
+                      <text class="meta">{{ hourInfo }}</text>
+                    </template>
                   </view>
                   </view>
                 </view>
@@ -407,6 +407,26 @@ const getProgress = (module) => {
   if (need <= 0) return 0;
   const pct = Math.min(100, Math.max(0, Math.round((done / need) * 100)));
   return pct;
+};
+
+const formatHours = (hours) => {
+  if (!hours || typeof hours !== 'object') return [];
+  
+  const hourTypes = {
+    lecture: '讲授',
+    practice: '实践',
+    seminar: '研讨',
+    experiment: '实验',
+    design: '设计',
+    computer: '上机',
+    discussion: '讨论',
+    extracurricular: '课外',
+    online: '在线',
+  };
+
+  return Object.entries(hours)
+    .filter(([key, value]) => key !== 'total' && Number(value) > 0)
+    .map(([key, value]) => `${hourTypes[key] || key}: ${value}`);
 };
 
 const formatNumber = (n) => {
@@ -879,16 +899,16 @@ const closeModal = () => {
 
 .course-main {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16rpx;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10rpx;
 }
 
 .course-title-section {
-  flex: 1;
+  width: 100%;
   display: flex;
-  align-items: center;
-  gap: 10rpx;
+  flex-direction: column;
+  gap: 4rpx;
 }
 
 .course-name {
@@ -897,6 +917,12 @@ const closeModal = () => {
   font-weight: 600;
   line-height: 1.4;
   word-break: break-word;
+}
+
+.course-code {
+  font-size: 20rpx;
+  color: var(--text-light);
+  font-weight: 400;
 }
 
 /* 未修课程指示器 */
@@ -919,8 +945,7 @@ const closeModal = () => {
   display: flex;
   flex-wrap: wrap;
   gap: 8rpx;
-  justify-content: flex-end;
-  max-width: 45%;
+  width: 100%;
 }
 
 .chip {
@@ -934,7 +959,7 @@ const closeModal = () => {
   display: flex;
   flex-wrap: wrap;
   gap: 6rpx 12rpx;
-  padding: 6rpx 0 0;
+  padding: 8rpx 0 0;
   border-top: 1rpx solid #f5f5f5;
 }
 
