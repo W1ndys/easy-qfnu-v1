@@ -157,7 +157,7 @@
                         <text class="course-name">{{ c.course_name }}</text>
                         <text v-if="isCurrentSemesterCourse(c) && !isCourseCompleted(c)" class="current-semester-tag">本学期</text>
                       </view>
-                      <text v-if="c.course_code" class="course-code">代码: {{ c.course_code }}</text>
+                      <text v-if="c.course_code" class="course-code" @click.stop="copyCourseCode(c.course_code)">代码: {{ c.course_code }}</text>
                     </view>
                     <view class="chips">
                     <text
@@ -175,7 +175,7 @@
                   </view>
                   <view class="course-meta">
                     <text class="meta">学分 {{ c.credits }}</text>
-                    <text class="meta" v-if="c.semester" :class="{ 'current-semester': isCurrentSemesterCourse(c) }">学期 {{ c.semester }}</text>
+                    <text class="meta" v-if="c.semester">学期 {{ c.semester }}</text>
                     <text class="meta" v-if="c.hours?.total">总学时 {{ c.hours.total }}</text>
                     <template v-for="hourInfo in formatHours(c.hours)" :key="hourInfo">
                       <text class="meta">{{ hourInfo }}</text>
@@ -409,6 +409,20 @@ const toggleModule = (index) => {
 // 获取模块在原始数组中的索引（用于展开状态映射）
 const getOriginalIndex = (module) => {
   return modules.value.findIndex(m => m.module_name === module.module_name);
+};
+
+// 复制课程代码
+const copyCourseCode = (code) => {
+  if (!code) return;
+  uni.setClipboardData({
+    data: code,
+    success: () => {
+      uni.showToast({
+        title: '课程代码已复制',
+        icon: 'none'
+      });
+    }
+  });
 };
 
 // 判断课程是否已完成
@@ -985,8 +999,18 @@ const closeModal = () => {
 
 .course-code {
   font-size: 20rpx;
-  color: var(--text-light);
+  color: #8c8c8c;
   font-weight: 400;
+  background: #f5f5f5;
+  padding: 2rpx 8rpx;
+  border-radius: 6rpx;
+  align-self: flex-start;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.course-code:active {
+  background-color: #e0e0e0;
 }
 
 /* 未修课程指示器 */
@@ -1029,12 +1053,13 @@ const closeModal = () => {
 
 .meta {
   font-size: 20rpx;
-  color: var(--text-secondary);
+  color: #595959;
   line-height: 1.3;
-  padding: 3rpx 6rpx;
-  background: #f8f9fa;
+  padding: 3rpx 8rpx;
+  background: #f0f2f5;
   border-radius: 6rpx;
   white-space: nowrap;
+  border: 1rpx solid #e8e8e8;
 }
 
 .meta.current-semester {
