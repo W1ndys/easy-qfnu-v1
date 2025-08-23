@@ -142,7 +142,7 @@
                 <view class="course-sort-hint">
                   <text class="sort-hint-text">
                   <uni-icons type="info" size="16" color="#666" />
-                  {{ isIncomplete(m) ? '未修课程已置顶显示' : '已修课程已置顶显示' }}
+                  {{ isIncomplete(m) ? '未修课程已置顶显示，本学期课程优先' : '已修课程已置顶显示' }}
                   </text>
                 </view>
                 <view class="course-list">
@@ -153,7 +153,10 @@
                   :class="{ completed: isCourseCompleted(c) }">
                   <view class="course-main">
                     <view class="course-title-section">
-                      <text class="course-name">{{ c.course_name }}</text>
+                      <view class="course-name-wrapper">
+                        <text class="course-name">{{ c.course_name }}</text>
+                        <text v-if="isCurrentSemesterCourse(c) && !isCourseCompleted(c)" class="current-semester-tag">本学期</text>
+                      </view>
                       <text v-if="c.course_code" class="course-code">代码: {{ c.course_code }}</text>
                     </view>
                     <view class="chips">
@@ -172,7 +175,7 @@
                   </view>
                   <view class="course-meta">
                     <text class="meta">学分 {{ c.credits }}</text>
-                    <text class="meta" v-if="c.semester">学期 {{ c.semester }}</text>
+                    <text class="meta" v-if="c.semester" :class="{ 'current-semester': isCurrentSemesterCourse(c) }">学期 {{ c.semester }}</text>
                     <text class="meta" v-if="c.hours?.total">总学时 {{ c.hours.total }}</text>
                     <template v-for="hourInfo in formatHours(c.hours)" :key="hourInfo">
                       <text class="meta">{{ hourInfo }}</text>
@@ -229,6 +232,7 @@ const isLoading = ref(true);
 const modules = ref([]);
 const expanded = ref([]); // 每个模块的折叠状态
 const showNoticeModal = ref(false);
+const CURRENT_SEMESTER = 7; // TODO: 后续从后端获取或用户设置
 
 // 计算属性：按未修满状态排序的模块列表
 const sortedModules = computed(() => {
@@ -256,6 +260,14 @@ const sortedModules = computed(() => {
           // 未修满的模块：未修课程置顶
           if (!aCompleted && bCompleted) return -1;
           if (aCompleted && !bCompleted) return 1;
+          
+          // 如果都是未修课程，则本学期课程优先
+          if (!aCompleted && !bCompleted) {
+            const aIsCurrent = isCurrentSemesterCourse(a);
+            const bIsCurrent = isCurrentSemesterCourse(b);
+            if (aIsCurrent && !bIsCurrent) return -1;
+            if (!aIsCurrent && bIsCurrent) return 1;
+          }
         } else {
           // 已修满的模块：已修课程置顶
           if (aCompleted && !bCompleted) return -1;
@@ -403,6 +415,10 @@ const getOriginalIndex = (module) => {
 const isCourseCompleted = (course) => {
   if (!course.completion_status) return false;
   return course.completion_status.includes('已修');
+};
+
+const isCurrentSemesterCourse = (course) => {
+  return course.semester && Number(course.semester) === CURRENT_SEMESTER;
 };
 
 const isIncomplete = (module) => {
@@ -940,12 +956,31 @@ const closeModal = () => {
   gap: 4rpx;
 }
 
+.course-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
 .course-name {
   font-size: 26rpx;
   color: var(--text-primary);
   font-weight: 600;
   line-height: 1.4;
   word-break: break-word;
+}
+
+.current-semester-tag {
+  font-size: 18rpx;
+  color: #1890ff;
+  background: #e6f7ff;
+  padding: 2rpx 8rpx;
+  border-radius: 6rpx;
+  border: 1rpx solid #91d5ff;
+  font-weight: 600;
+  white-space: nowrap;
+  align-self: center;
 }
 
 .course-code {
@@ -1000,6 +1035,13 @@ const closeModal = () => {
   background: #f8f9fa;
   border-radius: 6rpx;
   white-space: nowrap;
+}
+
+.meta.current-semester {
+  color: #1890ff;
+  background: #e6f7ff;
+  border: 1rpx solid #91d5ff;
+  font-weight: 600;
 }
 
 .module-subtotal {
