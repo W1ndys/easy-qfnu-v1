@@ -6,9 +6,7 @@
         <view class="profile-content">
           <view class="avatar-section">
             <view class="avatar-wrapper">
-              <image
-                class="avatar"
-                src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png"
+              <image class="avatar" src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png"
                 mode="aspectFit"></image>
               <view class="status-indicator"></view>
             </view>
@@ -27,28 +25,22 @@
           <uni-icons type="sound" size="16" color="#1890ff"></uni-icons>
           <text class="announcement-title">公告栏</text>
         </view>
-        
+
         <text class="announcement-text">该程序正在测试阶段，功能可能不稳定</text>
         <text class="announcement-text">加入QQ群获取最新消息：<text class="qq-link" @click="copyQQGroup">1053432087</text></text>
-        
-        <text class="announcement-text">如有对Easy-QFNU（曲奇教务）有建议意见或开发想法或其他相关内容的欢迎添加Easy-QFNU开发策划交流群：<text class="qq-link" @click="copyDevQQGroup">1057327742</text></text>
+
+        <text class="announcement-text">如有对Easy-QFNU（曲奇教务）有建议意见或开发想法或其他相关内容的欢迎添加Easy-QFNU开发策划交流群：<text class="qq-link"
+            @click="copyDevQQGroup">1057327742</text></text>
       </ModernCard>
 
       <!-- 2×2 导航网格 -->
       <ModernCard class="grid-card">
         <view class="grid-title">核心功能</view>
         <view class="grid-2x2">
-          <view
-            v-for="(item, index) in features"
-            :key="index"
-            class="grid-cell"
-            :class="{ disabled: !item.url }"
+          <view v-for="(item, index) in features" :key="index" class="grid-cell" :class="{ disabled: !item.url }"
             @click="handleNavigate(index)">
             <view class="cell-icon">
-              <uni-icons
-                :type="item.icon"
-                size="30"
-                :color="item.url ? '#7F4515' : '#C0C6CF'" />
+              <uni-icons :type="item.icon" size="30" :color="item.url ? '#7F4515' : '#C0C6CF'" />
             </view>
             <text class="cell-title">{{ item.text }}</text>
             <text v-if="item.description" class="cell-desc">{{
@@ -96,12 +88,9 @@
             <text class="support-desc">本服务完全免费试用，服务器每日支出约为7元左右，以及前期服务器设备等支出几百依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞赏~</text>
           </view>
           <view class="qr-code-container">
-            <image 
-              class="qr-code" 
+            <image class="qr-code"
               src="https://picx.zhimg.com/80/v2-076422270c197b0031c609e47be2e36c_720w.png?source=d16d100b"
-              mode="aspectFit"
-              @error="handleImageError"
-              @load="handleImageLoad">
+              mode="aspectFit" @error="handleImageError" @load="handleImageLoad">
             </image>
             <text class="qr-code-label">微信赞赏</text>
           </view>
@@ -149,15 +138,16 @@ const features = ref([
     url: "/pages/course-plan/index",
   },
   {
+    text: "预选课查询",
+    description: "夫子校园提供技术支持",
+    icon: "checkmarkempty",
+    url: "http://xk.s.fz.z-xin.net/",
+    external: true, // 标记为外部链接
+  },
+  {
     text: "课表查询",
     description: "即将推出",
     icon: "calendar",
-    url: "",
-  },
-  {
-    text: "预选课查询",
-    description: "即将推出",
-    icon: "checkmarkempty",
     url: "",
   },
   {
@@ -211,55 +201,28 @@ const handleNavigate = (index) => {
   const targetPage = features.value[index];
 
   if (targetPage.url) {
-    console.log("导航到:", targetPage.url);
-
-    // 检查是否为外部链接
+    // 外部链接处理
     if (targetPage.external) {
-      // 处理外部链接 - 统一使用弹窗显示
-      uni.showModal({
-        title: "外部链接",
-        content: `即将跳转到外部网站：\n${targetPage.url}\n\n是否继续？`,
-        confirmText: "前往",
-        cancelText: "复制链接",
-        confirmColor: "#7F4515",
-        success: (res) => {
-          if (res.confirm) {
-            // 用户选择前往
-            // #ifdef APP-PLUS
-            plus.runtime.openURL(targetPage.url);
-            // #endif
+      // #ifdef H5
+      window.open(targetPage.url, "_blank");
+      // #endif
 
-            // #ifdef H5
-            window.open(targetPage.url, "_blank");
-            // #endif
-
-            // #ifdef MP
-            // 小程序环境下无法直接打开外部链接，提示复制
-            uni.setClipboardData({
-              data: targetPage.url,
-              success: () => {
-                uni.showToast({
-                  title: "链接已复制，请在浏览器中打开",
-                  icon: "success",
-                  duration: 3000
-                });
-              },
-            });
-            // #endif
-          } else if (res.cancel) {
-            // 用户选择复制链接
-            uni.setClipboardData({
-              data: targetPage.url,
-              success: () => {
-                uni.showToast({
-                  title: "链接已复制到剪贴板",
-                  icon: "success",
-                });
-              },
-            });
-          }
+      // #ifdef MP
+      uni.setClipboardData({
+        data: targetPage.url,
+        success: () => {
+          uni.showToast({
+            title: "外链已复制，请在浏览器中打开",
+            icon: "success",
+            duration: 3000
+          });
         },
       });
+      // #endif
+
+      // #ifdef APP-PLUS
+      plus.runtime.openURL(targetPage.url);
+      // #endif
     } else {
       // 内部页面导航
       uni.navigateTo({ url: targetPage.url });
@@ -306,15 +269,15 @@ const handleClearCache = () => {
         try {
           // 获取当前token，避免清除登录状态
           const currentToken = uni.getStorageSync("token");
-          
+
           // 清除所有存储
           uni.clearStorageSync();
-          
+
           // 恢复token，保持登录状态
           if (currentToken) {
             uni.setStorageSync("token", currentToken);
           }
-          
+
           uni.showToast({
             title: "缓存已清除",
             icon: "success",
@@ -411,50 +374,26 @@ const handleContact = () => {
 
 // 统一处理外部链接
 const handleExternalLink = (title, url) => {
-  uni.showModal({
-    title: title,
-    content: `即将跳转到外部网站：\n${url}\n\n是否继续？`,
-    confirmText: "前往",
-    cancelText: "复制链接",
-    confirmColor: "#7F4515",
-    success: (res) => {
-      if (res.confirm) {
-        // 用户选择前往
-        // #ifdef APP-PLUS
-        plus.runtime.openURL(url);
-        // #endif
+  // #ifdef H5
+  window.open(url, "_blank");
+  // #endif
 
-        // #ifdef H5
-        window.open(url, "_blank");
-        // #endif
-
-        // #ifdef MP
-        // 小程序环境下无法直接打开外部链接，提示复制
-        uni.setClipboardData({
-          data: url,
-          success: () => {
-            uni.showToast({
-              title: "链接已复制，请在浏览器中打开",
-              icon: "success",
-              duration: 3000
-            });
-          },
-        });
-        // #endif
-      } else if (res.cancel) {
-        // 用户选择复制链接
-        uni.setClipboardData({
-          data: url,
-          success: () => {
-            uni.showToast({
-              title: "链接已复制到剪贴板",
-              icon: "success",
-            });
-          },
-        });
-      }
+  // #ifdef MP
+  uni.setClipboardData({
+    data: url,
+    success: () => {
+      uni.showToast({
+        title: "外链已复制，请在浏览器中打开",
+        icon: "success",
+        duration: 3000
+      });
     },
   });
+  // #endif
+
+  // #ifdef APP-PLUS
+  plus.runtime.openURL(url);
+  // #endif
 };
 
 // 处理图片加载错误
@@ -486,6 +425,7 @@ const handleImageLoad = () => {
 // 用户信息卡片
 .profile-card {
   margin-bottom: 24rpx; // 减少间距
+
   :deep(.card-content) {
     padding: 18rpx 12rpx !important; // 减少内容 padding
   }
@@ -558,7 +498,7 @@ const handleImageLoad = () => {
 // 公告栏卡片
 .announcement-card {
   margin-bottom: 24rpx;
-  
+
   :deep(.card-content) {
     background: #f0f9ff !important;
     border: 1rpx solid #bae7ff !important;
@@ -586,7 +526,7 @@ const handleImageLoad = () => {
   line-height: 1.6;
   margin-bottom: 16rpx;
   display: block;
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -604,6 +544,7 @@ const handleImageLoad = () => {
 // 2×2 导航网格样式
 .grid-card {
   margin-bottom: 24rpx;
+
   :deep(.card-content) {
     padding: 16rpx 12rpx !important;
   }
@@ -618,13 +559,13 @@ const handleImageLoad = () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300rpx, 1fr));
   gap: 12rpx; // 缩小网格间距
-  
+
   // 响应式调整
   @media (max-width: 750px) {
     grid-template-columns: repeat(auto-fit, minmax(280rpx, 1fr));
     gap: 16rpx;
   }
-  
+
   @media (max-width: 500px) {
     grid-template-columns: repeat(auto-fit, minmax(240rpx, 1fr));
     gap: 12rpx;
@@ -646,10 +587,12 @@ const handleImageLoad = () => {
   &:active {
     transform: scale(0.98);
   }
+
   &:not(.disabled):hover {
     box-shadow: 0 12rpx 34rpx var(--shadow-light);
     transform: translateY(-2rpx);
   }
+
   &.disabled {
     opacity: 0.6;
   }
@@ -774,6 +717,7 @@ const handleImageLoad = () => {
 // 赞赏支持卡片
 .support-card {
   margin-top: 24rpx;
+
   :deep(.card-content) {
     padding: 16rpx 12rpx !important;
   }
