@@ -1,5 +1,14 @@
 <template>
   <scroll-view class="container" scroll-y="true" @scrolltoupper="onPullRefresh">
+    <!-- 顶部公告弹幕 -->
+    <view class="announcement-marquee" @click="handleMarqueeClick">
+      <view class="marquee-content">
+        <text class="marquee-text">
+          📢 该程序正在测试阶段，功能可能不稳定 | 加入QQ群获取最新消息：1053432087 | 开发策划交流群：1057327742 | 欢迎提出建议和意见
+        </text>
+      </view>
+    </view>
+
     <!-- 背景装饰 -->
     <view class="background-decoration">
       <view class="circle circle-1"></view>
@@ -82,23 +91,10 @@
           <text class="activation-link" @click="openActivationPage">激活账号</text>
         </view>
 
-        <!-- 公告栏 -->
-        <view class="announcement-section">
-          <view class="announcement-header">
-            <uni-icons type="sound" size="16" color="#1890ff"></uni-icons>
-            <text class="announcement-title">公告栏</text>
-          </view>
-          
-          <text class="announcement-text">该程序正在测试阶段，功能可能不稳定</text>
-          <text class="announcement-text">加入QQ群获取最新消息：<text class="qq-link" @click="copyQQGroup">1053432087</text></text>
-          
-          <text class="announcement-text">如有对Easy-QFNU（曲奇教务）有建议意见或开发想法或其他相关内容的欢迎添加Easy-QFNU开发策划交流群：<text class="qq-link" @click="copyDevQQGroup">1057327742</text></text>
+        <view class="footer-text">
+          <text>© 2025-现在 Easy-QFNU 版权所有</text>
+          <text>本应用为第三方教务工具，与学校官方无关</text>
         </view>
-
-          <view class="footer-text">
-              <text>© 2025-现在 Easy-QFNU 版权所有</text>
-              <text>本应用为第三方教务工具，与学校官方无关</text>
-          </view>
       </view>
     </view>
   </scroll-view>
@@ -465,14 +461,79 @@ const openActivationPage = () => {
     },
   });
 };
+
+// 新增：点击弹幕处理QQ群复制
+const handleMarqueeClick = () => {
+  uni.showActionSheet({
+    itemList: ['复制用户群号 1053432087', '复制开发群号 1057327742'],
+    success: (res) => {
+      if (res.tapIndex === 0) {
+        copyQQGroup();
+      } else if (res.tapIndex === 1) {
+        copyDevQQGroup();
+      }
+    }
+  });
+};
 </script>
 
 <style lang="scss" scoped>
+// 顶部公告弹幕样式
+.announcement-marquee {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80rpx; // 增加高度确保文本有足够空间
+  background: rgba(247, 248, 250, 0.95);
+  backdrop-filter: blur(10rpx);
+  border-bottom: 1rpx solid rgba(127, 69, 21, 0.1);
+  z-index: 999;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.marquee-content {
+  white-space: nowrap; // 确保不换行
+  animation: marquee 30s linear infinite; // 稍微放慢速度
+  cursor: pointer;
+  line-height: 80rpx; // 与容器高度保持一致
+  height: 80rpx; // 明确设置高度
+  display: flex;
+  align-items: center;
+  
+  &:hover {
+    animation-play-state: paused;
+  }
+}
+
+.marquee-text {
+  font-size: 24rpx; // 稍微增大字体
+  color: #7f4515;
+  font-weight: 500;
+  letter-spacing: 0.5rpx;
+  padding: 0 40rpx; // 增加左右间距
+  white-space: nowrap; // 确保文本不换行
+  display: inline-block; // 确保内联块级显示
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100vw);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
 .container {
   position: relative;
   width: 100%;
   height: 100vh;
   background: #f7f8fa;
+  padding-top: 80rpx; /* 调整为新的弹幕高度 */
 }
 
 // 背景装饰圆圈
@@ -531,7 +592,7 @@ const openActivationPage = () => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  min-height: 100vh;
+  min-height: calc(100vh - 80rpx); /* 调整为新的弹幕高度 */
   padding: 60rpx 60rpx 40rpx;
   box-sizing: border-box;
   position: relative;
@@ -779,45 +840,6 @@ const openActivationPage = () => {
   transform: scale(0.95);
 }
 
-.announcement-section {
-  width: 100%;
-  background: #f0f9ff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 30rpx;
-  border: 1rpx solid #bae7ff;
-}
-
-.announcement-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 16rpx;
-}
-
-.announcement-title {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #1890ff;
-  margin-left: 8rpx;
-}
-
-.announcement-text {
-  font-size: 24rpx;
-  color: #1890ff;
-  line-height: 1.6;
-  margin-bottom: 12rpx;
-  display: block;
-}
-
-.qq-link {
-  color: #1890ff;
-  text-decoration: underline;
-  font-weight: 600;
-  padding: 2rpx 4rpx;
-  background: rgba(24, 144, 255, 0.1);
-  border-radius: 4rpx;
-}
-
 .footer-text {
   text-align: center;
   margin-top: 20rpx;
@@ -829,6 +851,12 @@ const openActivationPage = () => {
     color: #9ca3af;
     line-height: 1.4;
     font-weight: 400;
+    display: block;
+    margin-bottom: 8rpx;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 }
 
@@ -836,7 +864,7 @@ const openActivationPage = () => {
 @media (max-height: 600px) {
   .content-wrapper {
     padding: 30rpx 60rpx 30rpx;
-    min-height: calc(100vh + 200rpx);
+    min-height: calc(100vh + 200rpx - 80rpx); // 使用新的弹幕高度
   }
 
   .logo-section {
@@ -856,9 +884,18 @@ const openActivationPage = () => {
     padding: 40rpx 40rpx 30rpx;
   }
   
-  .announcement-section {
-    padding: 16rpx 20rpx;
-    margin-bottom: 20rpx;
+  .announcement-marquee {
+    height: 60rpx; // 小屏幕稍微减小高度
+  }
+  
+  .marquee-content {
+    line-height: 60rpx;
+    height: 60rpx;
+  }
+  
+  .marquee-text {
+    font-size: 20rpx; // 小屏幕减小字体
+    padding: 0 30rpx; // 减小间距
   }
 }
 
