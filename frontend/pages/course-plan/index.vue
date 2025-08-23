@@ -155,7 +155,7 @@
                     <view class="course-title-section">
                       <view class="course-name-wrapper">
                         <text class="course-name">{{ c.course_name }}</text>
-                        <text v-if="isCurrentSemesterCourse(c) && !isCourseCompleted(c)" class="current-semester-tag">本学期</text>
+                        <text v-if="isCurrentSemesterCourse(c) && !isCourseCompleted(c)" class="current-semester-tag">本学期可选</text>
                       </view>
                       <text v-if="c.course_code" class="course-code" @click.stop="copyCourseCode(c.course_code)">代码: {{ c.course_code }}</text>
                     </view>
@@ -261,7 +261,7 @@ const sortedModules = computed(() => {
           if (!aCompleted && bCompleted) return -1;
           if (aCompleted && !bCompleted) return 1;
           
-          // 如果都是未修课程，则本学期课程优先
+          // 如果都是未修课程，则本学期可选的课程优先
           if (!aCompleted && !bCompleted) {
             const aIsCurrent = isCurrentSemesterCourse(a);
             const bIsCurrent = isCurrentSemesterCourse(b);
@@ -272,6 +272,13 @@ const sortedModules = computed(() => {
           // 已修满的模块：已修课程置顶
           if (aCompleted && !bCompleted) return -1;
           if (!aCompleted && bCompleted) return 1;
+        }
+        
+        // 在相同优先级内，按学期号降序排列
+        const semesterA = Number(a.semester) || 0;
+        const semesterB = Number(b.semester) || 0;
+        if (semesterA !== semesterB) {
+          return semesterB - semesterA;
         }
         
         // 同样状态下保持原顺序
@@ -432,7 +439,11 @@ const isCourseCompleted = (course) => {
 };
 
 const isCurrentSemesterCourse = (course) => {
-  return course.semester && Number(course.semester) === CURRENT_SEMESTER;
+  if (!course.semester) return false;
+  const courseSemester = Number(course.semester);
+  // 1. 课程学期小于等于当前学期
+  // 2. 课程学期与当前学期的奇偶性相同
+  return courseSemester <= CURRENT_SEMESTER && (courseSemester % 2 === CURRENT_SEMESTER % 2);
 };
 
 const isIncomplete = (module) => {
