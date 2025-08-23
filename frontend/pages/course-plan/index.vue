@@ -742,13 +742,13 @@ const closeModal = () => {
 }
 
 .total-progress-container {
-  padding: 8rpx 0;
+  padding: 0;
 }
 
 .total-header {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .total-title-section {
@@ -916,7 +916,7 @@ const closeModal = () => {
 .course-item {
   border: 1rpx solid #e8e8e8;
   border-radius: 12rpx;
-  padding: 12rpx 16rpx;
+  padding: 10rpx 14rpx;
   background: #ffffff;
   display: flex;
   flex-direction: column;
