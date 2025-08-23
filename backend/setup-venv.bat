@@ -1,6 +1,6 @@
 @echo off
 setlocal
-
+chcp 65001 >nul
 REM --- 配置 ---
 set VENV_DIR=.venv
 set PYTHON_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
