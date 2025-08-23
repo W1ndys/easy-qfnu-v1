@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <scroll-view class="container" scroll-y="true" @scrolltoupper="onPullRefresh">
     <!-- 背景装饰 -->
     <view class="background-decoration">
       <view class="circle circle-1"></view>
@@ -95,12 +95,13 @@
           <text class="announcement-text">如有对Easy-QFNU（曲奇教务）有建议意见或开发想法或其他相关内容的欢迎添加Easy-QFNU开发策划交流群：<text class="qq-link" @click="copyDevQQGroup">1057327742</text></text>
         </view>
 
-        <view class="footer-text">
-          <text>本程序为第三方应用，非学校官方出品</text>
-        </view>
+          <view class="footer-text">
+              <text>© 2025-现在 Easy-QFNU 版权所有</text>
+              <text>本应用为第三方教务工具，与学校官方无关</text>
+          </view>
       </view>
     </view>
-  </view>
+  </scroll-view>
 </template>
 
 <script setup>
@@ -145,6 +146,15 @@ const onRememberChange = (e) => {
   } catch (err) {
     rememberPassword.value = false;
   }
+};
+
+// 新增：下拉刷新处理
+const onPullRefresh = () => {
+  console.log("下拉刷新");
+  // 这里可以添加刷新逻辑，比如重新检查登录状态
+  checkLoginStatus();
+  // 停止下拉刷新
+  uni.stopPullDownRefresh();
 };
 
 // 页面加载时检查缓存的token
@@ -463,17 +473,17 @@ const openActivationPage = () => {
   width: 100%;
   height: 100vh;
   background: #f7f8fa;
-  overflow: hidden;
 }
 
 // 背景装饰圆圈
 .background-decoration {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
+  z-index: 0;
 }
 
 .circle {
@@ -521,8 +531,8 @@ const openActivationPage = () => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  height: 100vh;
-  padding: 60rpx 60rpx 0;
+  min-height: 100vh;
+  padding: 60rpx 60rpx 40rpx;
   box-sizing: border-box;
   position: relative;
   z-index: 1;
@@ -592,6 +602,7 @@ const openActivationPage = () => {
   box-shadow: none;
   backdrop-filter: blur(20rpx);
   border: none;
+  margin-bottom: 40rpx;
 }
 
 .form-header {
@@ -807,10 +818,25 @@ const openActivationPage = () => {
   border-radius: 4rpx;
 }
 
+.footer-text {
+  text-align: center;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #e2e8f0;
+  
+  text {
+    font-size: 22rpx;
+    color: #9ca3af;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+}
+
 // 响应式适配
 @media (max-height: 600px) {
   .content-wrapper {
-    padding: 30rpx 60rpx 0;
+    padding: 30rpx 60rpx 30rpx;
+    min-height: calc(100vh + 200rpx);
   }
 
   .logo-section {
@@ -833,6 +859,25 @@ const openActivationPage = () => {
   .announcement-section {
     padding: 16rpx 20rpx;
     margin-bottom: 20rpx;
+  }
+}
+
+// 新增：支持更大屏幕的适配
+@media (min-width: 768px) {
+  .content-wrapper {
+    padding: 80rpx 120rpx 60rpx;
+    max-width: 1200rpx;
+    margin: 0 auto;
+  }
+  
+  .login-card {
+    max-width: 600rpx;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    padding: 100rpx 200rpx 80rpx;
   }
 }
 </style>
