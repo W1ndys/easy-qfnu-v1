@@ -1,7 +1,6 @@
 <template>
   <PageLayout>
     <view class="page-rounded-container">
-      <!-- 用户信息卡片 -->
       <ModernCard class="profile-card" highlight>
         <view class="profile-content">
           <view class="avatar-section">
@@ -12,14 +11,28 @@
             </view>
           </view>
           <view class="user-info">
-            <text class="welcome-text">欢迎回来</text>
-            <text class="user-id">{{ studentId }}</text>
-            <text class="user-role">曲园er~</text>
+            <view class="main-info">
+              <text class="user-name">{{ profile.student_name }}</text>
+              <text class="user-id">学号: {{ profile.student_id }}</text>
+            </view>
+            <view class="details-info">
+              <view class="detail-item">
+                <text class="detail-label">学院</text>
+                <text class="detail-value">{{ profile.college }}</text>
+              </view>
+              <view class="detail-item">
+                <text class="detail-label">专业</text>
+                <text class="detail-value">{{ profile.major }}</text>
+              </view>
+              <view class="detail-item">
+                <text class="detail-label">班级</text>
+                <text class="detail-value">{{ profile.class_name }}</text>
+              </view>
+            </view>
           </view>
         </view>
       </ModernCard>
 
-      <!-- 公告栏 -->
       <ModernCard class="announcement-card">
         <view class="announcement-header">
           <uni-icons type="sound" size="16" color="#1890ff"></uni-icons>
@@ -33,7 +46,6 @@
             @click="copyDevQQGroup">1057327742</text></text>
       </ModernCard>
 
-      <!-- 2×2 导航网格 -->
       <ModernCard class="grid-card">
         <view class="grid-title">核心功能</view>
         <view class="grid-2x2">
@@ -50,7 +62,6 @@
         </view>
       </ModernCard>
 
-      <!-- 快捷操作 -->
       <ModernCard title="快捷操作">
         <view class="quick-actions">
           <button class="action-btn refresh-btn" @click="handleRefresh">
@@ -80,12 +91,12 @@
         </view>
       </ModernCard>
 
-      <!-- 赞赏支持 -->
       <ModernCard title="支持开发" class="support-card">
         <view class="support-content">
           <view class="support-text">
             <text class="support-title">助力项目发展</text>
-            <text class="support-desc">本服务完全免费试用，服务器每日支出约为7元左右，以及前期服务器设备等支出几百依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞赏~</text>
+            <text
+              class="support-desc">本服务完全免费试用，服务器每日支出约为7元左右，以及前期服务器设备等支出几百依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞赏~</text>
           </view>
           <view class="qr-code-container">
             <image class="qr-code"
@@ -101,18 +112,31 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { onLoad, onShow } from "@dcloudio/uni-app";
-import { decode } from "../../utils/jwt-decode.js";
+import {
+  ref
+} from "vue";
+import {
+  onLoad,
+  onShow
+} from "@dcloudio/uni-app";
+import {
+  decode
+} from "../../utils/jwt-decode.js";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import ModernCard from "../../components/ModernCard/ModernCard.vue";
 
 // --- 页面数据 ---
-const studentId = ref("加载中...");
+// 将个人信息整合到一个响应式对象中
+const profile = ref({
+  student_name: "...",
+  student_id: "加载中...",
+  college: "...",
+  major: "...",
+  class_name: "...",
+});
 
-// 定义功能列表，使用现代化图标
-const features = ref([
-  {
+// 定义功能列表
+const features = ref([{
     text: "成绩查询",
     description: "查看成绩与GPA分析",
     icon: "paperplane",
@@ -163,33 +187,90 @@ const features = ref([
     url: "",
   },
 ]);
+
 // --- 页面生命周期函数 ---
 onLoad(() => {
   checkLoginStatus();
 });
 
 onShow(() => {
-  // 页面显示时也检查登录状态
+  // 页面显示时也检查登录状态并获取最新数据
   checkLoginStatus();
 });
 
+// --- API 调用 ---
+// 获取个人信息
+const fetchProfile = async () => {
+  const token = uni.getStorageSync("token");
+  if (!token) return;
+
+  const baseURL = getApp().globalData.apiBaseURL;
+
+  uni.request({
+    url: `${baseURL}/api/v1/profile`,
+    method: "GET",
+    header: {
+      Authorization: `Bearer ${token}`,
+    },
+    success: (res) => {
+      if (res.statusCode === 200 && res.data.success) {
+        profile.value = res.data.data;
+      } else {
+        uni.showToast({
+          title: res.data.message || `获取信息失败 (${res.statusCode})`,
+          icon: "none",
+        });
+        // 如果是401未授权，说明token失效，自动退出
+        if (res.statusCode === 401) {
+          uni.removeStorageSync("token");
+          setTimeout(() => {
+            uni.reLaunch({
+              url: "/pages/index/index"
+            });
+          }, 1500);
+        }
+      }
+    },
+    fail: (err) => {
+      console.error("获取个人信息请求失败", err);
+      uni.showToast({
+        title: "网络请求失败，请稍后重试",
+        icon: "none",
+      });
+    },
+  });
+};
+
+// --- 核心逻辑 ---
 // 检查登录状态
 const checkLoginStatus = () => {
   const token = uni.getStorageSync("token");
 
   if (!token) {
-    uni.showToast({ title: "请先登录", icon: "none" });
-    uni.reLaunch({ url: "/pages/index/index" });
+    uni.showToast({
+      title: "请先登录",
+      icon: "none"
+    });
+    uni.reLaunch({
+      url: "/pages/index/index"
+    });
     return;
   } else {
     try {
       const payload = decode(token);
-      studentId.value = payload.sub;
+      // 先用token中的学号快速填充，再调用API获取完整信息
+      profile.value.student_id = payload.sub;
+      fetchProfile(); // 获取完整的个人信息
     } catch (error) {
       console.error("Token解析失败", error);
       uni.removeStorageSync("token");
-      uni.showToast({ title: "凭证无效,请重新登录", icon: "none" });
-      uni.reLaunch({ url: "/pages/index/index" });
+      uni.showToast({
+        title: "凭证无效,请重新登录",
+        icon: "none"
+      });
+      uni.reLaunch({
+        url: "/pages/index/index"
+      });
       return;
     }
   }
@@ -225,18 +306,32 @@ const handleNavigate = (index) => {
       // #endif
     } else {
       // 内部页面导航
-      uni.navigateTo({ url: targetPage.url });
+      uni.navigateTo({
+        url: targetPage.url
+      });
     }
   } else {
-    uni.showToast({ title: "功能正在开发中...", icon: "none" });
+    uni.showToast({
+      title: "功能正在开发中...",
+      icon: "none"
+    });
   }
 };
 
 // 刷新数据
 const handleRefresh = () => {
-  uni.showToast({ title: "数据已刷新", icon: "success" });
-  checkLoginStatus();
+  uni.showLoading({
+    title: '正在刷新...'
+  });
+  fetchProfile().finally(() => {
+    uni.hideLoading();
+    uni.showToast({
+      title: "数据已刷新",
+      icon: "success"
+    });
+  });
 };
+
 
 // 处理退出登录
 const handleLogout = () => {
@@ -247,9 +342,14 @@ const handleLogout = () => {
     success: (res) => {
       if (res.confirm) {
         uni.removeStorageSync("token");
-        uni.showToast({ title: "已退出登录", icon: "success" });
+        uni.showToast({
+          title: "已退出登录",
+          icon: "success"
+        });
         setTimeout(() => {
-          uni.reLaunch({ url: "/pages/index/index" });
+          uni.reLaunch({
+            url: "/pages/index/index"
+          });
         }, 1000);
       }
     },
@@ -424,10 +524,10 @@ const handleImageLoad = () => {
 
 // 用户信息卡片
 .profile-card {
-  margin-bottom: 24rpx; // 减少间距
+  margin-bottom: 24rpx;
 
   :deep(.card-content) {
-    padding: 18rpx 12rpx !important; // 减少内容 padding
+    padding: 24rpx 18rpx !important; // 调整内边距
   }
 }
 
@@ -469,31 +569,60 @@ const handleImageLoad = () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+  gap: 16rpx;
+  /* 增加主区域和详情区域的间距 */
 }
 
-.welcome-text {
-  font-size: 28rpx;
-  color: var(--text-secondary);
-  font-weight: 400;
+.main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.user-name {
+  font-size: 40rpx;
+  /* 突出姓名 */
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .user-id {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-size: 28rpx;
+  /* 学号字体稍小 */
+  font-weight: 400;
+  color: var(--text-secondary);
   letter-spacing: 1rpx;
 }
 
-.user-role {
-  font-size: 24rpx;
-  color: var(--text-light);
-  background: rgba(155, 4, 0, 0.1);
-  padding: 8rpx 16rpx;
-  border-radius: 20rpx;
-  display: inline-block;
-  width: fit-content;
+.details-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-top: 10rpx;
+  padding-top: 10rpx;
+  border-top: 1rpx solid var(--border-light);
+  /* 添加分割线 */
 }
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 标签和值两端对齐 */
+  font-size: 26rpx;
+}
+
+.detail-label {
+  color: var(--text-light);
+  margin-right: 16rpx;
+}
+
+.detail-value {
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: right;
+}
+
 
 // 公告栏卡片
 .announcement-card {
