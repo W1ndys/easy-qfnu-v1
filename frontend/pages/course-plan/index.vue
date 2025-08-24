@@ -859,7 +859,7 @@ const closeModal = () => {
 
 /* 学籍设置卡片 */
 .settings-card {
-  margin-bottom: 16rpx;
+  margin-bottom: 12rpx;
 }
 
 .setting-item {
@@ -893,7 +893,7 @@ const closeModal = () => {
 
 /* 数据状态卡片样式 */
 .data-status-card {
-  margin-bottom: 16rpx;
+  margin-bottom: 12rpx;
 }
 
 .data-status-container {
@@ -1181,7 +1181,7 @@ const closeModal = () => {
 
 /* 总学分进度卡片 */
 .total-progress-card {
-  margin-bottom: 16rpx;
+  margin-bottom: 12rpx;
 }
 
 .total-progress-container {
