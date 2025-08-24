@@ -298,8 +298,9 @@ async def calculate_custom_gpa(
         HTTPException: 当获取成绩失败或计算出错时抛出异常
     """
     try:
+        # 说明：request.exclude_indices 在服务内部按“选中模式(include)”处理
         logger.info(
-            f"开始自定义GPA计算，选中课程: {request.exclude_indices}, 去重修: {request.remove_retakes}"
+            f"开始自定义GPA计算，选中课程(按include模式): {request.exclude_indices}, 去重修: {request.remove_retakes}"
         )
 
         logger.debug("获取用户成绩数据用于GPA计算...")
@@ -312,7 +313,7 @@ async def calculate_custom_gpa(
         logger.debug("开始执行自定义GPA计算...")
         gpa_result = calculate_gpa_advanced(
             grades_data=grades_data,
-            exclude_indices=request.exclude_indices,
+            include_indices=request.exclude_indices,  # exclude_indices 按 include 模式使用
             remove_retakes=request.remove_retakes,
         )
 

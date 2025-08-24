@@ -422,7 +422,7 @@ def get_available_semesters(session: requests.Session):
 
 def calculate_gpa_advanced(
     grades_data: list,
-    exclude_indices: Optional[List[int]] = None,
+    include_indices: Optional[List[int]] = None,
     remove_retakes: bool = False,
 ):
     """
@@ -430,7 +430,7 @@ def calculate_gpa_advanced(
 
     Args:
         grades_data: 成绩数据列表
-        exclude_indices: 要包含计算的课程序号列表（如果为空或None，则包含所有课程）
+        include_indices: 要包含计算的课程序号列表（如果为空或None，则包含所有课程）
         remove_retakes: 是否去除重修补考，取最高绩点
 
     Returns:
@@ -438,27 +438,27 @@ def calculate_gpa_advanced(
     """
     try:
         logger.info(
-            f"开始高级GPA计算，数据量: {len(grades_data)}, 选中课程: {exclude_indices}, 去重修: {remove_retakes}"
+            f"开始高级GPA计算，数据量: {len(grades_data)}, 选中课程: {include_indices}, 去重修: {remove_retakes}"
         )
 
-        if exclude_indices is None:
-            exclude_indices = []
+        if include_indices is None:
+            include_indices = []
 
         # 保存原始数据用于生成完整课程列表
         original_data = grades_data.copy()
 
-        # 过滤数据 - 修改逻辑：如果指定了课程列表，则只包含这些课程
+        # 过滤数据 - 只包含指定的课程
         filtered_data = []
         for grade_item in grades_data:
             sequence = grade_item.get("index", "")
 
             # 如果没有指定课程列表，包含所有课程
-            if not exclude_indices:
+            if not include_indices:
                 filtered_data.append(grade_item)
                 continue
 
             # 如果指定了课程列表，只包含列表中的课程
-            if sequence and str(sequence) in [str(idx) for idx in exclude_indices]:
+            if sequence and str(sequence) in [str(idx) for idx in include_indices]:
                 logger.debug(
                     f"包含课程: {grade_item.get('courseName', 'Unknown')} (序号: {sequence})"
                 )
@@ -478,7 +478,7 @@ def calculate_gpa_advanced(
 
         # 计算总体GPA，传入原始数据以生成完整课程列表
         logger.debug("开始计算总体GPA...")
-        total_gpa = _calculate_total_gpa(filtered_data, exclude_indices, original_data)
+        total_gpa = _calculate_total_gpa(filtered_data, include_indices, original_data)
 
         # 计算详细的GPA分析（按学年、学期）
         logger.debug("开始计算详细GPA分析...")
@@ -492,7 +492,9 @@ def calculate_gpa_advanced(
             "semester_gpa": detailed_gpa["semester_gpa"],
             "available_years": detailed_gpa["available_years"],
             "available_semesters": detailed_gpa["available_semesters"],
-            "excluded_count": len(exclude_indices) if exclude_indices else 0,
+            "included_count": (
+                len(include_indices) if include_indices else len(grades_data)
+            ),
             "retakes_processed": remove_retakes,
             "message": "GPA计算完成",
         }
@@ -503,7 +505,7 @@ def calculate_gpa_advanced(
             "success": False,
             "total_gpa": {},
             "yearly_gpa": {},
-            "excluded_count": 0,
+            "included_count": 0,
             "retakes_processed": False,
             "message": f"计算GPA时出错: {e}",
         }
@@ -633,7 +635,7 @@ def _calculate_detailed_gpa(grades_data: list):
 
 def _calculate_total_gpa(
     grades_data: list,
-    exclude_indices: Optional[List[int]] = None,
+    include_indices: Optional[List[int]] = None,
     original_data: Optional[list] = None,
 ):
     """
@@ -641,7 +643,7 @@ def _calculate_total_gpa(
 
     Args:
         grades_data: 成绩数据列表（已过滤）
-        exclude_indices: 包含计算的课程序号列表
+        include_indices: 包含计算的课程序号列表
         original_data: 原始成绩数据列表（用于标记包含/排除状态）
 
     Returns:
@@ -649,8 +651,8 @@ def _calculate_total_gpa(
     """
     logger.debug(f"开始计算总体GPA，数据量: {len(grades_data)}")
 
-    if exclude_indices is None:
-        exclude_indices = []
+    if include_indices is None:
+        include_indices = []
 
     total_credit = 0.0
     total_grade_point = 0.0
@@ -659,7 +661,7 @@ def _calculate_total_gpa(
 
     # 如果有原始数据，生成包含排除状态的完整课程列表
     if original_data:
-        selected_indices_str = [str(idx) for idx in exclude_indices]
+        selected_indices_str = [str(idx) for idx in include_indices]
         for grade_item in original_data:
             credit_str = grade_item.get("credit", "0")
             grade_point_str = grade_item.get("gpa", "0")
@@ -676,7 +678,7 @@ def _calculate_total_gpa(
                 # 判断是否被包含在计算中
                 # 如果没有指定课程列表，则包含所有课程
                 # 如果指定了课程列表，只包含列表中的课程
-                if not exclude_indices:
+                if not include_indices:
                     is_included = True
                     exclude_reason = None
                 else:
