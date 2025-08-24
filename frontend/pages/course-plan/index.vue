@@ -3,30 +3,17 @@
     <LoadingScreen v-if="isLoading" text="正在获取培养方案..." />
 
     <view v-else class="page-rounded-container">
-      <EmptyState
-        v-if="modules.length === 0"
-        icon-type="info-filled"
-        title="暂无培养方案数据"
-        description="请稍后重试或下拉刷新"
-        :show-retry="true"
-        @retry="fetchCoursePlan"
-      />
+      <EmptyState v-if="modules.length === 0" icon-type="info-filled" title="暂无培养方案数据" description="请稍后重试或下拉刷新"
+        :show-retry="true" @retry="fetchCoursePlan" />
 
       <view v-else>
         <ModernCard title="数据状态" class="data-status-card">
           <view class="data-status-container">
             <view class="status-info">
               <view class="status-item">
-                <uni-icons
-                  type="cloud"
-                  size="20"
-                  :color="dataSource === 'live' ? '#52c41a' : '#1890ff'"
-                />
+                <uni-icons type="cloud" size="20" :color="dataSource === 'live' ? '#52c41a' : '#1890ff'" />
                 <text class="status-label">数据来源:</text>
-                <text
-                  class="status-value"
-                  :class="dataSource === 'live' ? 'status-live' : 'status-cache'"
-                >
+                <text class="status-value" :class="dataSource === 'live' ? 'status-live' : 'status-cache'">
                   {{ dataSource === "live" ? "实时获取" : "缓存数据" }}
                 </text>
               </view>
@@ -39,18 +26,9 @@
             </view>
 
             <view class="refresh-actions">
-              <button
-                class="refresh-btn"
-                :class="{ loading: isRefreshing }"
-                :disabled="isRefreshing"
-                @click="refreshCache"
-              >
-                <uni-icons
-                  type="refresh"
-                  size="18"
-                  color="#1890ff"
-                  :class="{ spinning: isRefreshing }"
-                />
+              <button class="refresh-btn" :class="{ loading: isRefreshing }" :disabled="isRefreshing"
+                @click="refreshCache">
+                <uni-icons type="refresh" size="18" color="#1890ff" :class="{ spinning: isRefreshing }" />
                 <text>{{ isRefreshing ? "刷新中..." : "刷新数据" }}</text>
               </button>
             </view>
@@ -64,12 +42,7 @@
           </view>
           <view class="setting-item">
             <text class="setting-label">入学年份:</text>
-            <picker
-              mode="selector"
-              :range="enrollmentYearRange"
-              :value="enrollmentYearIndex"
-              @change="onYearChange"
-            >
+            <picker mode="selector" :range="enrollmentYearRange" :value="enrollmentYearIndex" @change="onYearChange">
               <view class="picker-value">
                 <text>{{ enrollmentYear || "请选择" }}</text>
                 <uni-icons type="bottom" size="16" color="#666" />
@@ -89,41 +62,28 @@
             <view class="total-header">
               <view class="total-title-section">
                 <text class="total-title">培养方案总进度</text>
-                <view
-                  class="status-chip"
-                  :class="
-                    isTotalIncomplete ? 'chip-module-incomplete' : 'chip-module-complete'
-                  "
-                >
+                <view class="status-chip" :class="isTotalIncomplete ? 'chip-module-incomplete' : 'chip-module-complete'
+                  ">
                   <text>{{ isTotalIncomplete ? "未修满" : "已修满" }}</text>
                 </view>
               </view>
 
               <view class="total-credits-info">
-                <text class="total-credits-text"
-                  >{{ formatNumber(totalCompletedCredits) }}/{{
-                    formatNumber(totalRequiredCredits)
-                  }}
-                  学分</text
-                >
-                <text v-if="isTotalIncomplete" class="total-shortage-text"
-                  >差
+                <text class="total-credits-text">{{ formatNumber(totalCompletedCredits) }}/{{
+                  formatNumber(totalRequiredCredits)
+                }}
+                  学分</text>
+                <text v-if="isTotalIncomplete" class="total-shortage-text">差
                   {{ formatNumber(totalRequiredCredits - totalCompletedCredits) }}
-                  学分</text
-                >
+                  学分</text>
               </view>
 
               <view class="total-progress-bar-container">
                 <view class="progress-bar total-progress-bar">
-                  <view
-                    class="progress-fill"
-                    :style="{ width: totalProgress + '%' }"
-                    :class="{ danger: isTotalIncomplete }"
-                  ></view>
+                  <view class="progress-fill" :style="{ width: totalProgress + '%' }"
+                    :class="{ danger: isTotalIncomplete }"></view>
                 </view>
-                <text class="progress-text total-progress-text"
-                  >{{ totalProgress }}%</text
-                >
+                <text class="progress-text total-progress-text">{{ totalProgress }}%</text>
               </view>
             </view>
           </view>
@@ -131,75 +91,50 @@
 
         <ModernCard title="培养方案模块">
           <view class="modules-list">
-            <view
-              v-for="(m, idx) in sortedModules"
-              :key="m.module_name"
-              class="module-card"
-              :class="{
-                incomplete: isIncomplete(m),
-                expanded: expanded[getOriginalIndex(m)],
-              }"
-            >
+            <view v-for="(m, idx) in sortedModules" :key="m.module_name" class="module-card" :class="{
+              incomplete: isIncomplete(m),
+              expanded: expanded[getOriginalIndex(m)],
+            }">
               <view class="module-header" @click="toggleModule(getOriginalIndex(m))">
                 <view class="header-info">
                   <view class="header-top">
                     <text class="module-title">{{ m.module_name }}</text>
-                    <view
-                      class="status-chip"
-                      :class="
-                        isIncomplete(m)
-                          ? 'chip-module-incomplete'
-                          : 'chip-module-complete'
-                      "
-                    >
+                    <view class="status-chip" :class="isIncomplete(m)
+                        ? 'chip-module-incomplete'
+                        : 'chip-module-complete'
+                      ">
                       <text>{{ isIncomplete(m) ? "未修满" : "已修满" }}</text>
                     </view>
                   </view>
 
                   <view class="header-middle">
                     <view class="credits-info">
-                      <text class="credits-text"
-                        >{{ formatNumber(m.completed_credits) }}/{{
-                          formatNumber(m.required_credits)
-                        }}
-                        学分</text
-                      >
-                      <text class="course-count-text"
-                        >共 {{ (m.courses || []).length }} 门课程</text
-                      >
-                      <text v-if="isIncomplete(m)" class="shortage-text"
-                        >差
+                      <text class="credits-text">{{ formatNumber(m.completed_credits) }}/{{
+                        formatNumber(m.required_credits)
+                      }}
+                        学分</text>
+                      <text class="course-count-text">共 {{ (m.courses || []).length }} 门课程</text>
+                      <text v-if="isIncomplete(m)" class="shortage-text">差
                         {{
                           formatNumber(
                             Number(m.required_credits) - Number(m.completed_credits)
                           )
                         }}
-                        学分</text
-                      >
+                        学分</text>
                     </view>
 
                     <view class="expand-action">
-                      <text class="hint-text" v-if="!expanded[getOriginalIndex(m)]"
-                        >点击展开</text
-                      >
+                      <text class="hint-text" v-if="!expanded[getOriginalIndex(m)]">点击展开</text>
                       <text class="hint-text" v-else>点击收起</text>
-                      <uni-icons
-                        class="chevron-icon"
-                        :class="{ expanded: expanded[getOriginalIndex(m)] }"
-                        type="arrowdown"
-                        size="20"
-                        color="#7F4515"
-                      />
+                      <uni-icons class="chevron-icon" :class="{ expanded: expanded[getOriginalIndex(m)] }"
+                        type="arrowdown" size="20" color="#7F4515" />
                     </view>
                   </view>
 
                   <view class="progress-container">
                     <view class="progress-bar">
-                      <view
-                        class="progress-fill"
-                        :style="{ width: getProgress(m) + '%' }"
-                        :class="{ danger: isIncomplete(m) }"
-                      ></view>
+                      <view class="progress-fill" :style="{ width: getProgress(m) + '%' }"
+                        :class="{ danger: isIncomplete(m) }"></view>
                     </view>
                     <text class="progress-text">{{ getProgress(m) }}%</text>
                   </view>
@@ -208,12 +143,8 @@
               <view class="course-details">
                 <view v-if="m.subtotal" class="module-subtotal">
                   <text class="subtotal-title">模块要求小计</text>
-                  <text class="subtotal-credits"
-                    >要求学分 {{ m.subtotal.total_credits }}</text
-                  >
-                  <text class="subtotal-hours"
-                    >要求总学时 {{ m.subtotal.hours?.total || 0 }}</text
-                  >
+                  <text class="subtotal-credits">要求学分 {{ m.subtotal.total_credits }}</text>
+                  <text class="subtotal-hours">要求总学时 {{ m.subtotal.hours?.total || 0 }}</text>
 
                   <view class="subtotal-divider"></view>
 
@@ -222,10 +153,7 @@
                     <text class="subtotal-hours">
                       已修总学时 {{ calculateCompletedHours(m).total || 0 }}
                     </text>
-                    <template
-                      v-for="hourInfo in formatHours(calculateCompletedHours(m))"
-                      :key="hourInfo"
-                    >
+                    <template v-for="hourInfo in formatHours(calculateCompletedHours(m))" :key="hourInfo">
                       <text class="subtotal-meta">{{ hourInfo }}</text>
                     </template>
                   </view>
@@ -242,37 +170,22 @@
                   </text>
                 </view>
                 <view class="course-list">
-                  <view
-                    v-for="c in m.courses || []"
-                    :key="(c.course_code || '') + (c.course_name || '')"
-                    class="course-item"
-                    :class="{ completed: isCourseCompleted(c) }"
-                  >
+                  <view v-for="c in m.courses || []" :key="(c.course_code || '') + (c.course_name || '')"
+                    class="course-item" :class="{ completed: isCourseCompleted(c) }">
                     <view class="course-main">
                       <view class="course-title-section">
                         <view class="course-name-wrapper">
                           <text class="course-name">{{ c.course_name }}</text>
-                          <text
-                            v-if="isCurrentSemesterCourse(c) && !isCourseCompleted(c)"
-                            class="current-semester-tag"
-                            >本学期可选</text
-                          >
+                          <text v-if="isCurrentSemesterCourse(c) && !isCourseCompleted(c)"
+                            class="current-semester-tag">本学期可选</text>
                         </view>
-                        <text
-                          v-if="c.course_code"
-                          class="course-code"
-                          @click.stop="copyCourseCode(c.course_code)"
-                          >代码: {{ c.course_code }}</text
-                        >
+                        <text v-if="c.course_code" class="course-code" @click.stop="copyCourseCode(c.course_code)">代码:
+                          {{ c.course_code
+                          }}</text>
                       </view>
                       <view class="chips">
-                        <text
-                          class="chip completion-chip"
-                          :class="
-                            isCourseCompleted(c) ? 'chip-completed' : 'chip-incomplete'
-                          "
-                          >{{ c.completion_status || "未修" }}</text
-                        >
+                        <text class="chip completion-chip" :class="isCourseCompleted(c) ? 'chip-completed' : 'chip-incomplete'
+                          ">{{ c.completion_status || "未修" }}</text>
                         <text v-if="c.course_nature" class="chip chip-neutral">{{
                           c.course_nature
                         }}</text>
@@ -284,9 +197,7 @@
                     <view class="course-meta">
                       <text class="meta">学分 {{ c.credits }}</text>
                       <text class="meta" v-if="c.semester">学期 {{ c.semester }}</text>
-                      <text class="meta" v-if="c.hours?.total"
-                        >总学时 {{ c.hours.total }}</text
-                      >
+                      <text class="meta" v-if="c.hours?.total">总学时 {{ c.hours.total }}</text>
                       <template v-for="hourInfo in formatHours(c.hours)" :key="hourInfo">
                         <text class="meta">{{ hourInfo }}</text>
                       </template>
@@ -314,16 +225,14 @@
           <text class="notice-text" style="margin-top: 24rpx">
             根据教务处官方规定：培养方案毕业学分原则上145-170学分，其中人文社会科学类专业毕业学分≤160学分，理科类专业毕业学分≤165学分，工科类专业毕业学分≤170学分，辅修学士学位专业毕业学分70学分左右。
           </text>
-          <text
-            class="notice-text"
-            style="margin-top: 16rpx; font-size: 24rpx; color: #8c8c8c"
-          >
+          <text class="notice-text" style="margin-top: 16rpx; font-size: 24rpx; color: #8c8c8c">
             来源：https://jwc.qfnu.edu.cn/info/1068/7039.htm
           </text>
         </view>
 
         <view class="modal-actions">
-          <button class="action-btn primary-btn" @click="handleConfirm">我已阅读</button>
+          <button class="action-btn primary-btn" @click="handleConfirm"
+            style="background-color: #834A1A; color: white;">我已阅读</button>
         </view>
       </view>
     </view>
