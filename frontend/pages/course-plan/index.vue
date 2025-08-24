@@ -139,8 +139,9 @@
                 incomplete: isIncomplete(m),
                 expanded: expanded[getOriginalIndex(m)],
               }"
+              @click="toggleModule(getOriginalIndex(m))"
             >
-              <view class="module-header" @click="toggleModule(getOriginalIndex(m))">
+              <view class="module-header">
                 <view class="header-info">
                   <view class="header-top">
                     <text class="module-title">{{ m.module_name }}</text>
@@ -205,13 +206,7 @@
                   </view>
                 </view>
               </view>
-              <view
-                class="course-details"
-                :class="{
-                  expanded: expanded[getOriginalIndex(m)],
-                  'is-animating': isAnimating.has(getOriginalIndex(m)),
-                }"
-              >
+              <view class="course-details">
                 <view v-if="m.subtotal" class="module-subtotal">
                   <text class="subtotal-title">模块要求小计</text>
                   <text class="subtotal-credits"
@@ -349,8 +344,8 @@ const modules = ref([]);
 const expanded = ref([]);
 const showNoticeModal = ref(false);
 
-// 【优化】新增 isAnimating 状态，用于追踪动画过程
-const isAnimating = ref(new Set());
+// 【清理】不再需要 isAnimating 状态
+// const isAnimating = ref(new Set());
 
 // 学籍与学期状态
 const enrollmentYear = ref(null);
@@ -364,8 +359,7 @@ const enrollmentYearIndex = computed(() => {
   return enrollmentYearRange.value.indexOf(String(enrollmentYear.value));
 });
 
-// 新增：缓存相关状态
-const dataSource = ref("cache"); // 'cache' | 'live'
+const dataSource = ref("cache");
 const updatedAt = ref("");
 const isRefreshing = ref(false);
 
@@ -385,7 +379,6 @@ const sortedModules = computed(() => {
         courses: [...(module.courses || [])].sort((a, b) => {
           const aCompleted = isCourseCompleted(a);
           const bCompleted = isCourseCompleted(b);
-
           if (moduleIncomplete) {
             if (!aCompleted && bCompleted) return -1;
             if (aCompleted && !bCompleted) return 1;
@@ -399,7 +392,6 @@ const sortedModules = computed(() => {
             if (aCompleted && !bCompleted) return -1;
             if (!aCompleted && bCompleted) return 1;
           }
-
           const semesterA = Number(a.semester) || 0;
           const semesterB = Number(b.semester) || 0;
           if (semesterA !== semesterB) {
@@ -601,21 +593,9 @@ const checkShowNotice = () => {
   }, 500);
 };
 
-// 【优化】重写 toggleModule 函数
+// 【清理】简化回最原始的 toggleModule
 const toggleModule = (index) => {
-  // 如果当前模块正在动画中，则不响应点击，防止状态错乱
-  if (isAnimating.value.has(index)) {
-    return;
-  }
-
-  // 标记当前模块开始动画
-  isAnimating.value.add(index);
   expanded.value[index] = !expanded.value[index];
-
-  // 动画时长为 350ms，在动画结束后，将模块从动画集合中移除
-  setTimeout(() => {
-    isAnimating.value.delete(index);
-  }, 350);
 };
 
 const getOriginalIndex = (module) => {
@@ -727,6 +707,7 @@ const closeModal = () => {
   showNoticeModal.value = false;
 };
 </script>
+
 <style lang="scss" scoped>
 @import "../../styles/common.scss";
 
@@ -738,21 +719,12 @@ const closeModal = () => {
   border: 1rpx solid #e8e8e8;
   margin: 6rpx;
 }
-
-/* 在小屏设备上进一步减少边距 */
-@media (max-width: 750rpx) {
-  .page-rounded-container {
-    margin: 4rpx;
-    padding: 12rpx 8rpx;
-    border-radius: 16rpx;
-  }
-}
-
-/* 学籍设置卡片 */
-.settings-card {
+/* ... 其他基础样式保持不变 ... */
+.settings-card,
+.data-status-card,
+.total-progress-card {
   margin-bottom: 12rpx;
 }
-
 .setting-item {
   display: flex;
   align-items: center;
@@ -760,12 +732,10 @@ const closeModal = () => {
   padding: 8rpx 0;
   font-size: 26rpx;
 }
-
 .setting-label {
   color: var(--text-secondary);
   font-weight: 500;
 }
-
 .picker-value {
   display: flex;
   align-items: center;
@@ -776,17 +746,10 @@ const closeModal = () => {
   background-color: #fafafa;
   color: var(--text-primary);
 }
-
 .setting-value {
   color: var(--text-primary);
   font-weight: 600;
 }
-
-/* 数据状态卡片样式 */
-.data-status-card {
-  margin-bottom: 12rpx;
-}
-
 .data-status-container {
   display: flex;
   justify-content: space-between;
@@ -794,50 +757,42 @@ const closeModal = () => {
   gap: 12rpx;
   flex-wrap: wrap;
 }
-
 .status-info {
   display: flex;
   flex-direction: column;
   gap: 8rpx;
   flex: 1;
 }
-
 .status-item {
   display: flex;
   align-items: center;
   gap: 6rpx;
   flex-wrap: wrap;
 }
-
 .status-label {
   font-size: 24rpx;
   color: var(--text-secondary);
   font-weight: 500;
 }
-
 .status-value {
   font-size: 24rpx;
   font-weight: 600;
   padding: 4rpx 8rpx;
   border-radius: 8rpx;
 }
-
 .status-live {
   color: #389e0d;
   background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
   border: 1rpx solid #95de64;
 }
-
 .status-cache {
   color: #1890ff;
   background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
   border: 1rpx solid #91d5ff;
 }
-
 .refresh-actions {
   flex-shrink: 0;
 }
-
 .refresh-btn {
   display: flex;
   align-items: center;
@@ -852,22 +807,13 @@ const closeModal = () => {
   transition: all 0.3s ease;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
 }
-
 .refresh-btn:not(.loading):active {
   transform: translateY(2rpx);
   box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
 }
-
-.refresh-btn.loading {
-  opacity: 0.7;
-  cursor: not-allowed;
+.spinning {
+  animation: spin 1s linear infinite;
 }
-
-.refresh-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -876,196 +822,11 @@ const closeModal = () => {
     transform: rotate(360deg);
   }
 }
-
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
-/* 模块列表容器 */
 .modules-list {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
 }
-
-/* 单个模块卡片 */
-.module-card {
-  border: 1rpx solid #e8e8e8;
-  border-radius: 16rpx;
-  background: #ffffff;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
-}
-
-.module-card.incomplete {
-  border-color: #ffaaa5;
-  background: linear-gradient(135deg, #fff7f7 0%, #ffffff 100%);
-  box-shadow: 0 6rpx 24rpx rgba(255, 77, 79, 0.15);
-}
-
-.module-card.expanded {
-  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.12);
-  transform: translateY(-4rpx);
-}
-
-/* 模块头部 */
-.module-header {
-  padding: 16rpx 14rpx;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.module-header:active {
-  background: rgba(127, 69, 21, 0.08);
-}
-
-.header-info {
-  width: 100%;
-}
-
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12rpx;
-}
-
-.module-title {
-  font-size: 30rpx;
-  color: var(--text-primary);
-  font-weight: 600;
-  flex: 1;
-  line-height: 1.4;
-  margin-right: 16rpx;
-}
-
-.header-middle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16rpx;
-}
-
-.credits-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-
-.credits-text {
-  font-size: 28rpx;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.course-count-text {
-  font-size: 22rpx;
-  color: #595959;
-  font-weight: 400;
-}
-
-.shortage-text {
-  font-size: 24rpx;
-  color: #e74c3c;
-  font-weight: 500;
-}
-
-.expand-action {
-  display: flex;
-  align-items: center;
-  gap: 6rpx;
-  padding: 6rpx 10rpx;
-  background: rgba(127, 69, 21, 0.08);
-  border-radius: 16rpx;
-}
-
-.hint-text {
-  font-size: 22rpx;
-  color: var(--text-light);
-}
-
-.chevron-icon {
-  transition: transform 0.35s ease;
-}
-
-.chevron-icon.expanded {
-  transform: rotate(180deg);
-}
-
-/* 进度条容器 */
-.progress-container {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-/* 进度条 */
-.progress-bar {
-  flex: 1;
-  height: 20rpx;
-  background: #f5f5f5;
-  border-radius: 10rpx;
-  overflow: hidden;
-  box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #52c41a 0%, #73d13d 100%);
-  border-radius: 10rpx;
-  transition: width 0.6s ease;
-  position: relative;
-}
-
-.progress-fill::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%
-  );
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.progress-fill.danger {
-  background: linear-gradient(90deg, #ff4d4f 0%, #ff7875 100%);
-}
-
-.progress-text {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  font-weight: 500;
-  min-width: 60rpx;
-  text-align: right;
-}
-
-/* 【恢复】总学分进度卡片样式 */
 .total-progress-card {
   margin-bottom: 12rpx;
 }
@@ -1124,74 +885,163 @@ const closeModal = () => {
   text-align: right;
 }
 
-/* 【优化】展开动画 */
-.course-details {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-10rpx);
-  will-change: max-height, opacity, transform;
-  transition: max-height 0.35s ease, opacity 0.3s ease, transform 0.35s ease;
-  border-top: 1rpx solid transparent;
-  background: linear-gradient(180deg, #fafbfc 0%, #f5f6fa 100%);
-}
-.course-details.expanded {
-  max-height: 5000rpx;
-  opacity: 1;
-  transform: translateY(0);
-  border-top-color: #e8e8e8;
-}
-/* 【优化】当父容器处于动画状态时，简化内部课程项的样式以提升性能 */
-.course-details.is-animating .course-item {
-  background: #ffffff !important;
-  box-shadow: none !important;
-  border-color: #e8e8e8 !important;
-}
-.course-details.is-animating .course-item::before {
-  opacity: 0;
-  transition: opacity 0.1s ease;
-}
-
+/* 【最终修复方案】使用 CSS Grid 动画，彻底替换 max-height 方案 */
 .module-card {
-  animation: fadeIn 0.5s ease-out;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 16rpx;
+  background: #ffffff;
+  /* 移除 overflow: hidden，交由内部的 .course-details 处理 */
+
+  /* 1. 将卡片设为 Grid 容器 */
+  display: grid;
+  /* 2. 定义两行：第一行高度自适应，第二行（课程详情）初始高度为0 */
+  grid-template-rows: auto 0fr;
+  /* 3. 对行高变化添加过渡动画 */
+  transition: grid-template-rows 0.35s ease-in-out;
+
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+.module-card.expanded {
+  /* 4. 展开时，第二行的高度变为 1fr，占据所有可用空间 */
+  grid-template-rows: auto 1fr;
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.12);
+  transform: translateY(-4rpx);
+}
+.module-card.incomplete {
+  border-color: #ffaaa5;
+  background: linear-gradient(135deg, #fff7f7 0%, #ffffff 100%);
+}
+.module-header {
+  /* cursor: pointer; 已移动到父级 .module-card */
+  padding: 16rpx 14rpx;
+  transition: background-color 0.2s ease;
+}
+.module-header:active {
+  background: rgba(127, 69, 21, 0.08);
+}
+.course-details {
+  /* 5. 必须设置为 overflow: hidden，否则内容会在 0fr 时溢出 */
+  overflow: hidden;
+  background: linear-gradient(180deg, #fafbfc 0%, #f5f6fa 100%);
+  border-top: 1rpx solid #e8e8e8;
+  min-height: 0; /* 兼容性设置 */
 }
 
-/* 状态标签 */
+/* 因为点击事件放到了 .module-card，所以移除这里的 pointer-events */
+.course-title-section .course-code {
+  cursor: pointer;
+}
+
+/* 删除了所有 course-details 上的动画属性，因为动画已由父级 grid 控制 */
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.module-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  flex: 1;
+  margin-right: 16rpx;
+}
+.header-middle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.credits-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.credits-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.course-count-text {
+  font-size: 22rpx;
+  color: #595959;
+  font-weight: 400;
+}
+.shortage-text {
+  font-size: 24rpx;
+  color: #e74c3c;
+  font-weight: 500;
+}
+.expand-action {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 10rpx;
+  background: rgba(127, 69, 21, 0.08);
+  border-radius: 16rpx;
+}
+.hint-text {
+  font-size: 22rpx;
+  color: var(--text-light);
+}
+.chevron-icon {
+  transition: transform 0.35s ease;
+}
+.chevron-icon.expanded {
+  transform: rotate(180deg);
+}
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.progress-bar {
+  flex: 1;
+  height: 20rpx;
+  background: #f5f5f5;
+  border-radius: 10rpx;
+  overflow: hidden;
+  box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #52c41a 0%, #73d13d 100%);
+  border-radius: 10rpx;
+  transition: width 0.6s ease;
+}
+.progress-fill.danger {
+  background: linear-gradient(90deg, #ff4d4f 0%, #ff7875 100%);
+}
+.progress-text {
+  font-size: 24rpx;
+  font-weight: 500;
+  min-width: 60rpx;
+  text-align: right;
+}
 .status-chip {
   padding: 6rpx 12rpx;
   border-radius: 16rpx;
   font-size: 22rpx;
-  white-space: nowrap;
   font-weight: 500;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+.chip-module-complete,
+.chip-completed {
+  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+  color: #389e0d;
+  border: 1rpx solid #95de64;
+}
+.chip-module-incomplete,
+.chip-incomplete {
+  background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%);
+  color: #cf1322;
+  border: 1rpx solid #ff7875;
 }
 .chip-neutral {
   background: linear-gradient(135deg, #f0f0f0 0%, #d9d9d9 100%);
   color: #595959;
   border: 1rpx solid #bfbfbf;
 }
-.chip-completed {
-  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
-  color: #389e0d;
-  border: 1rpx solid #95de64;
-}
-.chip-incomplete {
-  background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%);
-  color: #cf1322;
-  border: 1rpx solid #ff7875;
-}
-.chip-module-complete {
-  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
-  color: #389e0d;
-  border: 1rpx solid #95de64;
-}
-.chip-module-incomplete {
-  background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%);
-  color: #cf1322;
-  border: 1rpx solid #ff7875;
-}
-
-/* 课程排序提示 */
 .course-sort-hint {
   padding: 8rpx 12rpx 4rpx;
   text-align: center;
@@ -1210,6 +1060,7 @@ const closeModal = () => {
   gap: 8rpx;
   padding: 12rpx;
 }
+/* 移除了 ::after 伪元素方案，因为 Grid 方案不需要它 */
 .course-item {
   border: 1rpx solid #e8e8e8;
   border-radius: 10rpx;
@@ -1221,10 +1072,6 @@ const closeModal = () => {
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
   position: relative;
-}
-.course-item:active {
-  transform: translateY(2rpx);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 .course-item.completed {
   border-color: #87d068;
@@ -1256,27 +1103,8 @@ const closeModal = () => {
   border-radius: 12rpx 0 0 12rpx;
   transition: opacity 0.3s ease;
 }
-.course-main {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8rpx;
-}
-.course-title-section {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-.course-name-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  flex-wrap: wrap;
-}
 .course-name {
   font-size: 26rpx;
-  color: var(--text-primary);
   font-weight: 600;
 }
 .current-semester-tag {
@@ -1297,25 +1125,22 @@ const closeModal = () => {
   padding: 2rpx 8rpx;
   border-radius: 6rpx;
   align-self: flex-start;
-  cursor: pointer;
 }
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6rpx;
-  width: 100%;
 }
 .chip {
   padding: 3rpx 8rpx;
   border-radius: 10rpx;
   font-size: 18rpx;
-  font-weight: 500;
 }
 .course-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 4rpx 8rpx;
-  padding: 6rpx 0 0;
+  padding-top: 6rpx;
   border-top: 1rpx solid #f5f5f5;
 }
 .meta {
@@ -1326,8 +1151,6 @@ const closeModal = () => {
   border-radius: 6rpx;
   border: 1rpx solid #e8e8e8;
 }
-
-/* 【恢复】模块小计样式 */
 .module-subtotal {
   margin: 8rpx 12rpx;
   padding: 10rpx;
@@ -1381,8 +1204,6 @@ const closeModal = () => {
   border: 1rpx solid #e8e8e8;
   border-radius: 6rpx;
 }
-
-/* 弹窗样式 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1404,6 +1225,14 @@ const closeModal = () => {
   width: 100%;
   box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes slideUp {
   from {
@@ -1428,6 +1257,11 @@ const closeModal = () => {
 }
 .modal-content {
   padding: 24rpx;
+}
+.notice-text {
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: var(--text-secondary);
 }
 .modal-actions {
   display: flex;
