@@ -120,7 +120,6 @@ class ProfileService:
                 "college": "",
                 "major": "",
                 "class_name": "",
-                "photo_url": None,
             }
 
             # 解析个人信息项
@@ -150,29 +149,6 @@ class ProfileService:
                             "班级名称：", ""
                         ).strip()
 
-            # 尝试获取头像URL
-            try:
-                photo_div = soup.find("div", class_="circle-80531 zp")
-                if photo_div and isinstance(photo_div, Tag):
-                    style = photo_div.get("style")
-                    if (
-                        style
-                        and isinstance(style, str)
-                        and "background-image:url(" in style
-                    ):
-                        # 提取URL
-                        url_start = style.find("url(") + 4
-                        url_end = style.find(")", url_start)
-                        if url_end > url_start:
-                            photo_url = style[url_start:url_end]
-                            # 如果是相对路径，补充完整域名
-                            if photo_url.startswith("/"):
-                                photo_url = "http://zhjw.qfnu.edu.cn" + photo_url
-                            profile_info["photo_url"] = photo_url
-                            logger.debug(f"解析到头像URL: {photo_url}")
-            except Exception as e:
-                logger.warning(f"解析头像URL失败: {e}")
-
             # 验证必要信息是否都已获取
             required_fields = [
                 "student_name",
@@ -191,11 +167,6 @@ class ProfileService:
 
             logger.info(f"个人信息解析完成: {profile_info}")
 
-            # 确保photo_url是正确的类型
-            photo_url = profile_info["photo_url"]
-            if not isinstance(photo_url, str):
-                photo_url = None
-
             # 创建并返回StudentProfile对象
             return StudentProfile(
                 student_name=profile_info["student_name"],
@@ -203,7 +174,6 @@ class ProfileService:
                 college=profile_info["college"],
                 major=profile_info["major"],
                 class_name=profile_info["class_name"],
-                photo_url=photo_url,
             )
 
         except Exception as e:

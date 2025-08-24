@@ -21,7 +21,6 @@ router = APIRouter()
 
 **功能说明：**
 - 获取学生基本信息：姓名、学号、院系、专业、班级
-- 获取学生头像URL（如果有）
 - 实时从教务系统获取最新信息
 
 **返回信息包括：**
@@ -30,7 +29,6 @@ router = APIRouter()
 - 所属院系
 - 专业名称
 - 班级名称
-- 头像URL（可选）
 
 **注意事项：**
 - 需要有效的JWT Token认证
@@ -57,7 +55,6 @@ router = APIRouter()
                             "college": "计算机科学与技术学院",
                             "major": "计算机科学与技术",
                             "class_name": "22计科1班",
-                            "photo_url": "http://zhjw.qfnu.edu.cn/jsxsd/grxx/xszpLoad",
                         },
                     }
                 }

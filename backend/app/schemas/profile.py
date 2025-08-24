@@ -11,7 +11,6 @@ class StudentProfile(BaseModel):
     college: str  # 所属院系
     major: str  # 专业名称
     class_name: str  # 班级名称
-    photo_url: Optional[str] = None  # 头像URL
 
 
 class ProfileResponse(BaseModel):
