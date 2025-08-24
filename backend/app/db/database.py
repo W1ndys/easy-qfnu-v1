@@ -4,8 +4,8 @@ import pickle
 import datetime
 import requests
 import os
-from typing import Optional, Union
-from sqlalchemy import create_engine, Column, String, Integer, BLOB, TIMESTAMP
+from typing import Optional
+from sqlalchemy import create_engine, Column, String, Integer, BLOB, TIMESTAMP, Text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from app.core.hash_utils import hash_student_id
 from loguru import logger
@@ -31,6 +31,13 @@ class SessionStore(Base):
     session_data = Column(BLOB, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=True)
+
+
+class CoursePlanCache(Base):
+    __tablename__ = "course_plan_cache"
+    student_id_hash = Column(String, primary_key=True, index=True, nullable=False)
+    plan_content = Column(Text, nullable=False)
+    updated_at = Column(TIMESTAMP, nullable=False)
 
 
 def init_db():
@@ -292,6 +299,97 @@ def delete_session_by_hash(student_id_hash: str) -> bool:
 
     except Exception as e:
         logger.error(f"通过hash删除session失败: {e}")
+        db.rollback()
+        return False
+    finally:
+        db.close()
+
+
+def get_course_plan(student_id: str) -> Optional[dict]:
+    """获取用户的培养方案缓存"""
+    db = SessionLocal()
+    try:
+        student_id_hash = hash_student_id(student_id)
+        cache_item = (
+            db.query(CoursePlanCache)
+            .filter(CoursePlanCache.student_id_hash == student_id_hash)
+            .first()
+        )
+
+        if cache_item:
+            # 检查缓存是否在30天内
+            updated_at_value = cache_item.updated_at
+            if isinstance(updated_at_value, datetime.datetime) and (
+                datetime.datetime.now() - updated_at_value
+            ) < datetime.timedelta(days=30):
+                logger.info(f"找到有效的培养方案缓存 - 学号: {student_id}")
+                return {
+                    "plan_content": cache_item.plan_content,
+                    "updated_at": cache_item.updated_at,
+                }
+        logger.info(f"未找到有效的培养方案缓存 - 学号: {student_id}")
+        return None
+    except Exception as e:
+        logger.error(f"获取培养方案缓存失败: {e}")
+        return None
+    finally:
+        db.close()
+
+
+def save_course_plan(student_id: str, plan_content: str):
+    """保存或更新用户的培养方案缓存"""
+    db = SessionLocal()
+    try:
+        student_id_hash = hash_student_id(student_id)
+        now = datetime.datetime.now()
+
+        cache_item = (
+            db.query(CoursePlanCache)
+            .filter(CoursePlanCache.student_id_hash == student_id_hash)
+            .first()
+        )
+
+        if cache_item:
+            setattr(cache_item, "plan_content", plan_content)
+            setattr(cache_item, "updated_at", now)
+            logger.info(f"更新培养方案缓存 - 学号: {student_id}")
+        else:
+            cache_item = CoursePlanCache(
+                student_id_hash=student_id_hash,
+                plan_content=plan_content,
+                updated_at=now,
+            )
+            db.add(cache_item)
+            logger.info(f"新建培养方案缓存 - 学号: {student_id}")
+
+        db.commit()
+    except Exception as e:
+        logger.error(f"保存培养方案缓存失败: {e}")
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+def delete_course_plan(student_id: str) -> bool:
+    """删除用户的培养方案缓存"""
+    db = SessionLocal()
+    try:
+        student_id_hash = hash_student_id(student_id)
+        cache_item = (
+            db.query(CoursePlanCache)
+            .filter(CoursePlanCache.student_id_hash == student_id_hash)
+            .first()
+        )
+
+        if cache_item:
+            db.delete(cache_item)
+            db.commit()
+            logger.info(f"删除培养方案缓存 - 学号: {student_id}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"删除培养方案缓存失败: {e}")
         db.rollback()
         return False
     finally:

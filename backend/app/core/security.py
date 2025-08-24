@@ -328,6 +328,53 @@ def decode_and_validate_token(
         )
 
 
+def get_current_user_id(
+    credentials: HTTPAuthorizationCredentials = Depends(reusable_oauth2),
+) -> str:
+    """
+    从JWT Token中获取并返回用户的明文学号。
+    这个函数仅用于需要明文学号的场景，例如数据库查询。
+    警告：此函数会解码Token但不会返回完整的payload，仅返回学号。
+    """
+    logger.debug("正在从Token中提取明文学号...")
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={
+                "verify_signature": False,
+                "verify_exp": True,
+            },  # 只验证过期，不验证签名
+        )
+
+        # 在payload中寻找原始学号
+        student_id = payload.get("raw_sub")
+        if not student_id:
+            logger.error("Token中未找到原始学号(raw_sub)字段")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token信息不完整，无法识别用户",
+            )
+
+        logger.debug(f"成功从Token中提取学号: {student_id}")
+        return student_id
+
+    except jwt.ExpiredSignatureError:
+        logger.warning("尝试使用已过期的Token提取学号")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token已过期",
+        )
+    except jwt.InvalidTokenError as e:
+        logger.error(f"从Token提取学号时发生错误: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的Token",
+        )
+
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(reusable_oauth2),
 ) -> str:

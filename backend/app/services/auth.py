@@ -59,7 +59,8 @@ class AuthService:
 
             # 创建Token对
             logger.debug("开始创建JWT Token...")
-            user_data = {"sub": student_id}
+            # 同时在payload中存储明文学号和学号hash
+            user_data = {"sub": student_id, "raw_sub": student_id}
             access_token = create_access_token(user_data, client_ip=client_ip)
             refresh_token = create_refresh_token(user_data, client_ip=client_ip)
             logger.info(f"JWT Token创建成功，学号: {student_id}")

@@ -4,18 +4,23 @@ from bs4 import BeautifulSoup
 import re
 from typing import Dict, Any
 from loguru import logger
+import json
+from app.db import database as db
 
 
 class CoursePlanService:
     """培养方案服务类"""
 
     @staticmethod
-    def get_course_plan_data(session: requests.Session) -> Dict[str, Any]:
+    def get_course_plan_data(
+        session: requests.Session, student_id: str
+    ) -> Dict[str, Any]:
         """
-        获取培养方案数据
+        获取培养方案数据，优先从缓存读取
 
         Args:
             session: 已登录的教务系统session
+            student_id: 学号
 
         Returns:
             dict: 包含培养方案数据的字典
@@ -23,8 +28,22 @@ class CoursePlanService:
         Raises:
             Exception: 当获取或解析失败时抛出异常
         """
-        logger.info("开始获取培养方案页面...")
+        logger.info(f"开始获取学号 {student_id} 的培养方案...")
 
+        # 1. 尝试从缓存获取
+        cached_plan = db.get_course_plan(student_id)
+        if cached_plan:
+            logger.info(f"成功从缓存中获取到学号 {student_id} 的培养方案。")
+            return {
+                "success": True,
+                "message": "从缓存加载培养方案成功",
+                "data": json.loads(cached_plan["plan_content"]),
+                "updated_at": cached_plan["updated_at"].isoformat(),
+                "source": "cache",
+            }
+
+        logger.info(f"缓存未命中，从教务系统实时获取学号 {student_id} 的培养方案。")
+        # 2. 缓存未命中，从网络获取
         try:
             url = "http://zhjw.qfnu.edu.cn/jsxsd/pyfa/topyfamx"
             headers = {
@@ -47,6 +66,15 @@ class CoursePlanService:
                 logger.warning(f"解析失败: {data_dict['error']}")
                 raise Exception(data_dict["error"])
 
+            # 3. 保存到缓存
+            try:
+                plan_content_json = json.dumps(data_dict, ensure_ascii=False)
+                db.save_course_plan(student_id, plan_content_json)
+                logger.info(f"已将学号 {student_id} 的新培养方案存入缓存。")
+            except Exception as e:
+                logger.error(f"培养方案存入缓存失败: {e}")
+                # 缓存失败不应影响主流程，仅记录日志
+
             total_modules = len(data_dict.get("modules", []))
             total_courses = sum(
                 len(m.get("courses", [])) for m in data_dict.get("modules", [])
@@ -59,6 +87,7 @@ class CoursePlanService:
                 "success": True,
                 "message": f"成功解析{total_modules}个模块，共{total_courses}门课程",
                 "data": data_dict,
+                "source": "live",
             }
 
         except requests.exceptions.RequestException as e:
