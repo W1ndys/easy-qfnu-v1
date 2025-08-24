@@ -58,6 +58,30 @@
           </view>
         </ModernCard>
 
+        <!-- 学籍设置卡片 -->
+        <ModernCard title="学籍设置" class="settings-card">
+          <view class="setting-item">
+            <text class="setting-label">入学年份:</text>
+            <picker
+              mode="selector"
+              :range="enrollmentYearRange"
+              :value="enrollmentYearIndex"
+              @change="onYearChange"
+            >
+              <view class="picker-value">
+                <text>{{ enrollmentYear || "请选择" }}</text>
+                <uni-icons type="bottom" size="16" color="#666" />
+              </view>
+            </picker>
+          </view>
+          <view class="setting-item">
+            <text class="setting-label">当前学期:</text>
+            <text class="setting-value">{{
+              currentSemester ? `第 ${currentSemester} 学期` : "请先选择入学年份"
+            }}</text>
+          </view>
+        </ModernCard>
+
         <!-- 总学分进度显示 -->
         <ModernCard title="总学分进度" class="total-progress-card">
           <view class="total-progress-container">
@@ -322,7 +346,20 @@ const isLoading = ref(true);
 const modules = ref([]);
 const expanded = ref([]);
 const showNoticeModal = ref(false);
-const CURRENT_SEMESTER = 7;
+
+// 学籍与学期状态
+const enrollmentYear = ref(null);
+const currentSemester = ref(null); // 改为 ref
+
+const enrollmentYearRange = computed(() => {
+  const currentYear = new Date().getFullYear();
+  return Array.from({ length: 5 }, (_, i) => String(currentYear - i));
+});
+const enrollmentYearIndex = computed(() => {
+  return enrollmentYearRange.value.indexOf(String(enrollmentYear.value));
+});
+
+// 移除前端计算的 currentSemester
 
 // 新增：缓存相关状态
 const dataSource = ref("cache"); // 'cache' | 'live'
@@ -385,7 +422,13 @@ const sortedModules = computed(() => {
     });
 });
 
-onLoad(() => {
+onLoad(async () => {
+  // 从缓存加载入学年份
+  const savedYear = uni.getStorageSync("enrollmentYear");
+  if (savedYear) {
+    enrollmentYear.value = savedYear;
+    await fetchCurrentSemester(savedYear); // 获取当前学期
+  }
   checkLoginAndFetch();
 });
 
@@ -419,6 +462,35 @@ const checkLoginAndFetch = () => {
     return;
   }
   fetchCoursePlan();
+};
+
+const fetchCurrentSemester = async (year) => {
+  if (!year) {
+    currentSemester.value = null;
+    return;
+  }
+  try {
+    const token = uni.getStorageSync("token");
+    const res = await uni.request({
+      url: `${getApp().globalData.apiBaseURL}/api/v1/semester-info/${year}`,
+      method: "GET",
+      header: {
+        Authorization: "Bearer " + token,
+      },
+    });
+    if (res.statusCode === 200 && res.data?.success) {
+      currentSemester.value = res.data.data.current_semester;
+    } else {
+      throw new Error(res.data?.message || "获取学期信息失败");
+    }
+  } catch (err) {
+    console.error("获取当前学期失败", err);
+    uni.showToast({
+      title: err.message || "获取学期信息失败",
+      icon: "none",
+    });
+    currentSemester.value = null;
+  }
 };
 
 const fetchCoursePlan = async () => {
@@ -640,12 +712,13 @@ const isCourseCompleted = (course) => {
 };
 
 const isCurrentSemesterCourse = (course) => {
-  if (!course.semester) return false;
+  if (!course.semester || !currentSemester.value) return false;
   const courseSemester = Number(course.semester);
   // 1. 课程学期小于等于当前学期
   // 2. 课程学期与当前学期的奇偶性相同
   return (
-    courseSemester <= CURRENT_SEMESTER && courseSemester % 2 === CURRENT_SEMESTER % 2
+    courseSemester <= currentSemester.value &&
+    courseSemester % 2 === currentSemester.value % 2
   );
 };
 
@@ -737,6 +810,21 @@ const isTotalIncomplete = computed(() => {
   return totalCompletedCredits.value < totalRequiredCredits.value;
 });
 
+// 新增：处理年份选择
+const onYearChange = async (e) => {
+  const index = e.detail.value;
+  const newYear = enrollmentYearRange.value[index];
+  enrollmentYear.value = newYear;
+  uni.setStorageSync("enrollmentYear", newYear);
+
+  await fetchCurrentSemester(newYear); // 重新获取学期
+
+  uni.showToast({
+    title: `学籍已设置为 ${newYear} 级`,
+    icon: "none",
+  });
+};
+
 // 处理确定按钮
 const handleConfirm = () => {
   showNoticeModal.value = false;
@@ -767,6 +855,40 @@ const closeModal = () => {
     padding: 12rpx 8rpx;
     border-radius: 16rpx;
   }
+}
+
+/* 学籍设置卡片 */
+.settings-card {
+  margin-bottom: 16rpx;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 0;
+  font-size: 26rpx;
+}
+
+.setting-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.picker-value {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 6rpx 12rpx;
+  border: 1rpx solid #d9d9d9;
+  border-radius: 8rpx;
+  background-color: #fafafa;
+  color: var(--text-primary);
+}
+
+.setting-value {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 /* 数据状态卡片样式 */
