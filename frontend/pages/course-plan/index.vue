@@ -60,6 +60,10 @@
 
         <!-- 学籍设置卡片 -->
         <ModernCard title="学籍设置" class="settings-card">
+          <view class="enrollment-notice">
+            <uni-icons type="info" size="16" color="#1890ff" />
+            <text class="notice-text">入伍、留级等学生请选择你所在班级的入学年份</text>
+          </view>
           <view class="setting-item">
             <text class="setting-label">入学年份:</text>
             <picker
