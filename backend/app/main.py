@@ -1,7 +1,7 @@
 # app/main.py
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from loguru import logger
@@ -17,8 +17,8 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
 # 以启动时间命名日志文件
 LOG_DIR = os.getenv("LOG_DIR", "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
-# 使用 Loguru 时间占位符，日志轮转命名为 YYYY-MM-DD_hh:mm:ss
-LOG_PATH = os.path.join(LOG_DIR, "{time:YYYY-MM-DD_hh:mm:ss}.log")
+# 使用 Loguru 时间占位符，日志轮转命名为 YYYY-MM-DD_hh-mm-ss（Windows 不允许 :）
+LOG_PATH = os.path.join(LOG_DIR, "{time:YYYY-MM-DD_hh-mm-ss}.log")
 
 # 移除默认的logger
 logger.remove()
@@ -53,6 +53,8 @@ async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     # 启动时执行
     logger.info("应用启动事件触发，正在初始化服务...")
+    # 启动阶段标记为未就绪
+    app.state.ready = False
 
     # 启动定时任务
     logger.info("正在启动定时任务...")
@@ -91,10 +93,15 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"发送飞书启动通知失败: {e}")
 
+    # 启动流程结束，标记为就绪
+    app.state.ready = True
+    logger.info("应用准备就绪")
     yield
 
     # 关闭时执行
     logger.info("应用关闭事件触发，正在清理资源...")
+    # 关闭前标记为未就绪
+    app.state.ready = False
     try:
         from app.services.scheduler import scheduler
 
@@ -129,13 +136,20 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=86400,  # 预检缓存 24h，减少频次
 )
 logger.info("CORS中间件配置完成")
 
-# 添加来源验证中间件
+# 添加来源验证中间件（可通过环境变量控制开关）
 logger.info("正在添加来源验证中间件...")
-app.add_middleware(OriginValidationMiddleware)
-logger.info("来源验证中间件添加完成")
+origin_validation_enabled = (
+    os.getenv("ORIGIN_VALIDATION_ENABLED", "true").lower() == "true"
+)
+if origin_validation_enabled:
+    app.add_middleware(OriginValidationMiddleware)
+    logger.info("来源验证中间件添加完成")
+else:
+    logger.warning("已禁用来源验证中间件（ORIGIN_VALIDATION_ENABLED=false）")
 
 # 初始化数据库
 logger.info("正在初始化数据库...")
@@ -178,6 +192,25 @@ def read_root():
     return {"message": "Welcome to Easy-QFNUJW API"}
 
 
+# 健康检查与就绪检查
+@app.get("/healthz", tags=["Health"])
+def healthz():
+    return {"status": "ok"}
+
+
+@app.get("/readyz", tags=["Health"])
+def readyz():
+    if getattr(app.state, "ready", False):
+        return {"status": "ready"}
+    return Response(status_code=503)
+
+
+# 全局预检请求兜底，防止被其它中间件拦截导致 CORS 失败
+@app.options("/{path:path}")
+async def preflight_handler(path: str):
+    return Response(status_code=200)
+
+
 # 使用模块化路由注册
 logger.info("正在注册API路由...")
 try:
@@ -193,6 +226,10 @@ try:
             logger.debug(
                 f"路由: {route.path} - 方法: {getattr(route, 'methods', 'N/A')}"
             )
+        elif hasattr(route, "path_regex"):
+            logger.debug(
+                f"路由: {getattr(route, 'path_regex', 'unknown')} - 方法: {getattr(route, 'methods', 'N/A')}"
+            )
 
 except Exception as e:
     logger.error(f"API路由注册失败: {e}")
@@ -204,12 +241,15 @@ if __name__ == "__main__":
 
     # 根据环境变量决定是否启用reload
     reload_mode = os.getenv("RELOAD_MODE", "false").lower() == "true"
-    logger.info(f"服务配置: host=127.0.0.1, port=8000, reload={reload_mode}")
+    # 监听地址/端口可配置，默认 0.0.0.0:8000，避免反向代理连接失败导致 502
+    host = os.getenv("APP_HOST", "0.0.0.0")
+    port = int(os.getenv("APP_PORT", "8000"))
+    logger.info(f"服务配置: host={host}, port={port}, reload={reload_mode}")
 
     uvicorn.run(
         "app.main:app",
-        host="127.0.0.1",
-        port=8000,
+        host=host,
+        port=port,
         reload=reload_mode,
         proxy_headers=True,
         forwarded_allow_ips="*",
