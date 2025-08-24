@@ -51,6 +51,7 @@
               v-model="formData.studentId"
               placeholder="学号"
               class="custom-input"
+              :maxlength="11"
             />
           </uni-forms-item>
           <uni-forms-item class="form-item">
@@ -111,7 +112,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { isTokenValid } from "../../utils/jwt-decode.js";
 
@@ -269,11 +270,30 @@ const clearCachedCredentials = () => {
   });
 };
 
+// 学号格式：仅数字，长度控制在 8-11 位（不向用户显式展示）
+const STUDENT_ID_REGEX = /^\d{8,11}$/;
+
+// 输入时自动清洗：只保留数字，并截断到 11 位
+watch(
+  () => formData.value.studentId,
+  (val) => {
+    const digits = (val || "").replace(/\D/g, "").slice(0, 11);
+    if (digits !== val) formData.value.studentId = digits;
+  }
+);
+
 // 2. 定义登录函数 (使用 async/await 语法，更现代)
 const handleLogin = async () => {
   // 简单的输入校验
   if (!formData.value.studentId || !formData.value.password) {
     uni.showToast({ title: "学号和密码不能为空", icon: "none" });
+    return;
+  }
+
+  // 学号格式校验（通用提示，不暴露规则）
+  const sid = (formData.value.studentId || "").trim();
+  if (!STUDENT_ID_REGEX.test(sid)) {
+    uni.showToast({ title: "学号格式不正确", icon: "none" });
     return;
   }
 
@@ -290,7 +310,7 @@ const handleLogin = async () => {
       url: `${getApp().globalData.apiBaseURL}/api/v1/login`, // 统一读取全局域名
       method: "POST",
       data: {
-        student_id: formData.value.studentId,
+        student_id: sid,
         password: formData.value.password,
       },
     });
