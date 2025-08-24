@@ -131,23 +131,32 @@ class ProfileService:
                     text = div.get_text(strip=True)
                     logger.debug(f"处理信息项: {text}")
 
-                    # 解析各个字段
-                    if "学生姓名：" in text:
-                        profile_info["student_name"] = text.replace(
-                            "学生姓名：", ""
-                        ).strip()
-                    elif "学生编号：" in text:
-                        profile_info["student_id"] = text.replace(
-                            "学生编号：", ""
-                        ).strip()
-                    elif "所属院系：" in text:
-                        profile_info["college"] = text.replace("所属院系：", "").strip()
-                    elif "专业名称：" in text:
-                        profile_info["major"] = text.replace("专业名称：", "").strip()
-                    elif "班级名称：" in text:
-                        profile_info["class_name"] = text.replace(
-                            "班级名称：", ""
-                        ).strip()
+                    # 解析各个字段 - 只处理包含完整信息的div，且确保有值
+                    if "学生姓名：" in text and text != "学生姓名：":
+                        value = text.replace("学生姓名：", "").strip()
+                        if value:  # 确保提取到了实际值
+                            profile_info["student_name"] = value
+                            logger.debug(f"解析到学生姓名: {value}")
+                    elif "学生编号：" in text and text != "学生编号：":
+                        value = text.replace("学生编号：", "").strip()
+                        if value:
+                            profile_info["student_id"] = value
+                            logger.debug(f"解析到学生编号: {value}")
+                    elif "所属院系：" in text and text != "所属院系：":
+                        value = text.replace("所属院系：", "").strip()
+                        if value:
+                            profile_info["college"] = value
+                            logger.debug(f"解析到所属院系: {value}")
+                    elif "专业名称：" in text and text != "专业名称：":
+                        value = text.replace("专业名称：", "").strip()
+                        if value:
+                            profile_info["major"] = value
+                            logger.debug(f"解析到专业名称: {value}")
+                    elif "班级名称：" in text and text != "班级名称：":
+                        value = text.replace("班级名称：", "").strip()
+                        if value:
+                            profile_info["class_name"] = value
+                            logger.debug(f"解析到班级名称: {value}")
 
             # 验证必要信息是否都已获取
             required_fields = [
