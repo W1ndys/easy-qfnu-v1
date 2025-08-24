@@ -42,6 +42,14 @@ except ImportError as e:
     logger.error(f"导入题库搜索路由模块失败: {e}")
     freshman_questions_search_router = None
 
+try:
+    from .semester import router as semester_router
+
+    logger.debug("学期工具路由模块导入成功")
+except ImportError as e:
+    logger.error(f"导入学期工具路由模块失败: {e}")
+    semester_router = None
+
 
 # 创建主API路由器
 api_router = APIRouter()
@@ -53,6 +61,7 @@ ROUTER_CONFIGS = [
     (average_scores_router, "", "平均分查询"),
     (course_plan_router, "", "培养方案"),
     (freshman_questions_search_router, "/question", "题库搜索"),
+    (semester_router, "", "学期工具"),
 ]
 
 

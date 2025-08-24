@@ -60,10 +60,23 @@ async def lifespan(app: FastAPI):
 
         scheduler.add_session_cleanup_job(cleanup_hours=2, interval_hours=2)
         logger.info("Session清理定时任务已添加")
+
+        scheduler.add_semester_update_job()
+        logger.info("学期数据更新定时任务已添加")
+
         scheduler.start()
         logger.info("定时任务启动完成")
     except Exception as e:
         logger.error(f"启动定时任务失败: {e}")
+
+    # 初始化学期计算器
+    try:
+        from app.utils.semester_calculator import init_semester_calculator
+
+        init_semester_calculator()
+        logger.info("学期计算器初始化完成")
+    except Exception as e:
+        logger.error(f"初始化学期计算器失败: {e}")
 
     # 发送飞书通知
     try:

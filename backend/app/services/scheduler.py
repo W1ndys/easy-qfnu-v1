@@ -125,6 +125,35 @@ class SchedulerService:
         )
         return job
 
+    def add_semester_update_job(self):
+        """
+        添加学期数据更新定时任务
+        每天凌晨1点检查并更新学期数据
+        """
+        from app.utils.semester_calculator import get_semester_calculator
+
+        def semester_update_job():
+            """执行学期数据更新的定时任务"""
+            try:
+                calculator = get_semester_calculator()
+                calculator.update_semester_data(force_update=True)
+                logger.info("定时更新学期数据任务执行完成")
+                logger.info(f"\n{calculator.get_semester_info_string()}")
+            except Exception as e:
+                logger.error(f"定时更新学期数据任务执行失败: {e}")
+
+        # 添加定时任务，每天凌晨1点执行
+        job = self.add_job(
+            semester_update_job,
+            trigger_type="cron",
+            hour=1,
+            minute=0,
+            id="semester_update_job",
+        )
+
+        logger.info("学期数据更新定时任务已添加，每天凌晨1点执行")
+        return job
+
 
 # 全局调度器实例
 scheduler = SchedulerService()
