@@ -6,9 +6,7 @@
           <view class="profile-content">
             <view class="identity-section">
               <view class="avatar-wrapper">
-                <image
-                  class="avatar"
-                  src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png"
+                <image class="avatar" src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png"
                   mode="aspectFit"></image>
                 <view class="status-indicator"></view>
               </view>
@@ -36,11 +34,7 @@
         </ModernCard>
 
         <view class="notice-bar" @click="openNoticeModal">
-          <uni-icons
-            class="notice-icon"
-            type="sound"
-            size="20"
-            color="#FF6B35"></uni-icons>
+          <uni-icons class="notice-icon" type="sound" size="20" color="#FF6B35"></uni-icons>
           <text class="notice-text">系统正在测试阶段，点击查看QQ群信息</text>
           <uni-icons type="right" size="16" color="#C0C4CC"></uni-icons>
         </view>
@@ -48,17 +42,10 @@
         <ModernCard class="grid-card">
           <view class="grid-title">核心功能</view>
           <view class="grid-2x2">
-            <view
-              v-for="(item, index) in features"
-              :key="index"
-              class="grid-cell"
-              :class="{ disabled: !item.url }"
+            <view v-for="(item, index) in features" :key="index" class="grid-cell" :class="{ disabled: !item.url }"
               @click="handleNavigate(index)">
               <view class="cell-icon">
-                <uni-icons
-                  :type="item.icon"
-                  size="30"
-                  :color="item.url ? '#7F4515' : '#C0C6CF'" />
+                <uni-icons :type="item.icon" size="30" :color="item.url ? '#7F4515' : '#C0C6CF'" />
               </view>
               <text class="cell-title">{{ item.text }}</text>
               <text v-if="item.description" class="cell-desc">{{
@@ -70,41 +57,33 @@
 
         <ModernCard title="快捷操作">
           <view class="quick-actions">
-            <button class="action-btn refresh-btn" @click="handleRefresh">
-              <uni-icons type="refresh" size="20" color="#ffffff"></uni-icons>
+            <button class="action-btn btn-primary" @click="handleRefresh">
+              <uni-icons type="refresh" size="20"></uni-icons>
               <text>刷新数据</text>
             </button>
-            <button class="action-btn logout-btn" @click="handleLogout">
-              <uni-icons
-                type="closeempty"
-                size="20"
-                color="#ffffff"></uni-icons>
+
+            <button class="action-btn btn-danger" @click="handleLogout">
+              <uni-icons type="closeempty" size="20"></uni-icons>
               <text>退出登录</text>
             </button>
-            <button
-              class="action-btn clear-cache-btn"
-              @click="handleClearCache">
-              <uni-icons type="trash" size="20" color="#ffffff"></uni-icons>
-              <text>清除缓存</text>
-            </button>
-            <button
-              class="action-btn agreement-btn"
-              @click="handleUserAgreement">
-              <uni-icons
-                type="paperplane"
-                size="20"
-                color="#ffffff"></uni-icons>
+
+            <button class="action-btn btn-secondary" @click="handleUserAgreement">
+              <uni-icons type="paperplane" size="20"></uni-icons>
               <text>用户协议</text>
             </button>
-            <button class="action-btn changelog-btn" @click="handleChangelog">
-              <uni-icons type="list" size="20" color="#ffffff"></uni-icons>
+
+            <button class="action-btn btn-danger" @click="handleClearCache">
+              <uni-icons type="trash" size="20"></uni-icons>
+              <text>清除缓存</text>
+            </button>
+
+            <button class="action-btn btn-secondary" @click="handleChangelog">
+              <uni-icons type="list" size="20"></uni-icons>
               <text>更新日志</text>
             </button>
-            <button class="action-btn contact-btn" @click="handleContact">
-              <uni-icons
-                type="chatbubble"
-                size="20"
-                color="#ffffff"></uni-icons>
+
+            <button class="action-btn btn-secondary" @click="handleContact">
+              <uni-icons type="chatbubble" size="20"></uni-icons>
               <text>联系作者</text>
             </button>
           </view>
@@ -114,17 +93,12 @@
           <view class="support-content">
             <view class="support-text">
               <text class="support-title">助力项目发展</text>
-              <text class="support-desc"
-                >本服务完全免费试用，服务器每日支出约为7元左右，以及前期服务器设备等支出几百依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞赏~</text
-              >
+              <text class="support-desc">本服务完全免费试用，服务器每日支出约为7元左右，以及前期服务器设备等支出几百依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞赏~</text>
             </view>
             <view class="qr-code-container">
-              <image
-                class="qr-code"
+              <image class="qr-code"
                 src="https://picx.zhimg.com/80/v2-076422270c197b0031c609e47be2e36c_720w.png?source=d16d100b"
-                mode="aspectFit"
-                @error="handleImageError"
-                @load="handleImageLoad">
+                mode="aspectFit" @error="handleImageError" @load="handleImageLoad">
               </image>
               <text class="qr-code-label">微信赞赏</text>
             </view>
@@ -154,10 +128,7 @@
           <view class="community-content-wrapper">
             <view class="community-header">
               <view class="community-icon">
-                <uni-icons
-                  type="chatbubble"
-                  size="20"
-                  color="#7F4515"></uni-icons>
+                <uni-icons type="chatbubble" size="20" color="#7F4515"></uni-icons>
               </view>
               <text class="community-title">加入QQ群</text>
             </view>
@@ -165,10 +136,7 @@
               <view class="group-item">
                 <view class="group-info">
                   <view class="group-name">
-                    <uni-icons
-                      type="sound"
-                      size="20"
-                      color="#7F4515"></uni-icons>
+                    <uni-icons type="sound" size="20" color="#7F4515"></uni-icons>
                     <text class="group-title">官方消息群</text>
                   </view>
                   <text class="group-desc">获取最新消息和通知</text>
@@ -181,10 +149,7 @@
               <view class="group-item">
                 <view class="group-info">
                   <view class="group-name">
-                    <uni-icons
-                      type="star"
-                      size="20"
-                      color="#7F4515"></uni-icons>
+                    <uni-icons type="star" size="20" color="#7F4515"></uni-icons>
                     <text class="group-title">开发交流群</text>
                   </view>
                   <text class="group-desc">建议反馈、开发想法交流</text>
@@ -203,16 +168,14 @@
 </template>
 
 <script setup>
+// Script 部分无需任何改动
 import { ref } from "vue";
 import { onLoad, onShow } from "@dcloudio/uni-app";
 import { decode } from "../../utils/jwt-decode.js";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import ModernCard from "../../components/ModernCard/ModernCard.vue";
 
-// --- MODIFICATION START: 更改弹窗控制方式 ---
-// const showModal = ref(false); // 旧方式，已删除
-const noticePopup = ref(null); // 新方式，获取 uni-popup 组件实例
-// --- MODIFICATION END ---
+const noticePopup = ref(null);
 
 const profile = ref({
   student_name: "...",
@@ -223,52 +186,20 @@ const profile = ref({
 });
 
 const features = ref([
-  {
-    text: "成绩查询",
-    description: "查看成绩与GPA分析",
-    icon: "paperplane",
-    url: "/pages/grades/index",
-  },
-  {
-    text: "平均分查询",
-    description: "查看课程平均分数据",
-    icon: "bars",
-    url: "/pages/average-scores/index",
-  },
-  {
-    text: "选课推荐",
-    description: "智能推荐选课方案",
-    icon: "star",
-    url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/",
-    external: true,
-  },
-  {
-    text: "培养方案",
-    description: "查看模块完成进度",
-    icon: "list",
-    url: "/pages/course-plan/index",
-  },
-  {
-    text: "预选课查询",
-    description: "夫子校园提供技术支持",
-    icon: "checkmarkempty",
-    url: "http://xk.s.fz.z-xin.net/",
-    external: true,
-  },
+  { text: "成绩查询", description: "查看成绩与GPA分析", icon: "paperplane", url: "/pages/grades/index" },
+  { text: "平均分查询", description: "查看课程平均分数据", icon: "bars", url: "/pages/average-scores/index" },
+  { text: "选课推荐", description: "智能推荐选课方案", icon: "star", url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/", external: true },
+  { text: "培养方案", description: "查看模块完成进度", icon: "list", url: "/pages/course-plan/index" },
+  { text: "预选课查询", description: "夫子校园提供技术支持", icon: "checkmarkempty", url: "http://xk.s.fz.z-xin.net/", external: true },
   { text: "课表查询", description: "即将推出", icon: "calendar", url: "" },
   { text: "排名查询", description: "即将推出", icon: "medal", url: "" },
   { text: "更多功能", description: "敬请期待", icon: "gear", url: "" },
 ]);
 
-onLoad(() => {
-  checkLoginStatus();
-});
-onShow(() => {
-  checkLoginStatus();
-});
+onLoad(() => { checkLoginStatus(); });
+onShow(() => { checkLoginStatus(); });
 
 const fetchProfile = async () => {
-  // ... 此处省略未改变的函数体 ...
   const token = uni.getStorageSync("token");
   if (!token) return;
   const baseURL = getApp().globalData.apiBaseURL;
@@ -280,15 +211,10 @@ const fetchProfile = async () => {
       if (res.statusCode === 200 && res.data.success) {
         profile.value = res.data.data;
       } else {
-        uni.showToast({
-          title: res.data.message || `获取信息失败 (${res.statusCode})`,
-          icon: "none",
-        });
+        uni.showToast({ title: res.data.message || `获取信息失败 (${res.statusCode})`, icon: "none" });
         if (res.statusCode === 401) {
           uni.removeStorageSync("token");
-          setTimeout(() => {
-            uni.reLaunch({ url: "/pages/index/index" });
-          }, 1500);
+          setTimeout(() => { uni.reLaunch({ url: "/pages/index/index" }); }, 1500);
         }
       }
     },
@@ -300,7 +226,6 @@ const fetchProfile = async () => {
 };
 
 const checkLoginStatus = () => {
-  // ... 此处省略未改变的函数体 ...
   const token = uni.getStorageSync("token");
   if (!token) {
     uni.showToast({ title: "请先登录", icon: "none" });
@@ -321,38 +246,16 @@ const checkLoginStatus = () => {
   }
 };
 
-// --- MODIFICATION START: 修改弹窗打开和关闭的方法 ---
-const openNoticeModal = () => {
-  if (noticePopup.value) {
-    noticePopup.value.open();
-  }
-};
-
-const closeNoticeModal = () => {
-  if (noticePopup.value) {
-    noticePopup.value.close();
-  }
-};
-// --- MODIFICATION END ---
+const openNoticeModal = () => { if (noticePopup.value) noticePopup.value.open(); };
+const closeNoticeModal = () => { if (noticePopup.value) noticePopup.value.close(); };
 
 const handleNavigate = (index) => {
-  // ... 此处省略未改变的函数体 ...
   const targetPage = features.value[index];
   if (targetPage.url) {
     if (targetPage.external) {
-      if (typeof window !== "undefined") window.open(targetPage.url, "_blank");
-      else if (typeof plus !== "undefined")
-        plus.runtime.openURL(targetPage.url);
-      else
-        uni.setClipboardData({
-          data: targetPage.url,
-          success: () =>
-            uni.showToast({
-              title: "外链已复制,请在浏览器中打开",
-              icon: "success",
-              duration: 3000,
-            }),
-        });
+      if (typeof window !== 'undefined') window.open(targetPage.url, "_blank");
+      else if (typeof plus !== 'undefined') plus.runtime.openURL(targetPage.url);
+      else uni.setClipboardData({ data: targetPage.url, success: () => uni.showToast({ title: "外链已复制,请在浏览器中打开", icon: "success", duration: 3000 }) });
     } else {
       uni.navigateTo({ url: targetPage.url });
     }
@@ -362,7 +265,6 @@ const handleNavigate = (index) => {
 };
 
 const handleRefresh = () => {
-  // ... 此处省略未改变的函数体 ...
   uni.showLoading({ title: "正在刷新..." });
   fetchProfile().finally(() => {
     uni.hideLoading();
@@ -371,43 +273,29 @@ const handleRefresh = () => {
 };
 
 const handleLogout = () => {
-  // ... 此处省略未改变的函数体 ...
   uni.showModal({
-    title: "确认退出",
-    content: "确定要退出登录吗？",
-    confirmColor: "#7F4515",
+    title: "确认退出", content: "确定要退出登录吗？", confirmColor: "#7F4515",
     success: (res) => {
       if (res.confirm) {
         uni.removeStorageSync("token");
         uni.showToast({ title: "已退出登录", icon: "success" });
-        setTimeout(() => {
-          uni.reLaunch({ url: "/pages/index/index" });
-        }, 1000);
+        setTimeout(() => { uni.reLaunch({ url: "/pages/index/index" }); }, 1000);
       }
     },
   });
 };
 
 const handleClearCache = () => {
-  // ... 此处省略未改变的函数体 ...
   uni.showModal({
-    title: "清除缓存",
-    content:
-      "确定要清除所有本地缓存数据吗？这将清除除登录凭证外的所有本地数据。",
-    confirmText: "清除",
-    cancelText: "取消",
-    confirmColor: "#ff4d4f",
+    title: "清除缓存", content: "确定要清除所有本地缓存数据吗？这将清除除登录凭证外的所有本地数据。",
+    confirmText: "清除", cancelText: "取消", confirmColor: "#ff4d4f",
     success: (res) => {
       if (res.confirm) {
         try {
           const token = uni.getStorageSync("token");
           uni.clearStorageSync();
           if (token) uni.setStorageSync("token", token);
-          uni.showToast({
-            title: "缓存已清除",
-            icon: "success",
-            duration: 2000,
-          });
+          uni.showToast({ title: "缓存已清除", icon: "success", duration: 2000 });
         } catch (e) {
           uni.showToast({ title: "清除缓存失败", icon: "error" });
         }
@@ -416,76 +304,38 @@ const handleClearCache = () => {
   });
 };
 
-const copyQQGroup = () => {
-  // ... 此处省略未改变的函数体 ...
-  uni.setClipboardData({
-    data: "1053432087",
-    success: () => uni.showToast({ title: "QQ群号已复制", icon: "success" }),
-  });
-};
-
-const copyDevQQGroup = () => {
-  // ... 此处省略未改变的函数体 ...
-  uni.setClipboardData({
-    data: "1057327742",
-    success: () => uni.showToast({ title: "开发群号已复制", icon: "success" }),
-  });
-};
+const copyQQGroup = () => { uni.setClipboardData({ data: "1053432087", success: () => uni.showToast({ title: "QQ群号已复制", icon: "success" }) }); };
+const copyDevQQGroup = () => { uni.setClipboardData({ data: "1057327742", success: () => uni.showToast({ title: "开发群号已复制", icon: "success" }) }); };
 
 const handleUserAgreement = () => {
-  // ... 此处省略未改变的函数体 ...
   const url = "https://cq4hqujcxu3.feishu.cn/docx/EYE6d5ufAoQt5Axx7MFc4XMrnAf";
   handleExternalLink("用户协议", url);
 };
 
 const handleChangelog = () => {
-  // ... 此处省略未改变的函数体 ...
   const url = "https://cq4hqujcxu3.feishu.cn/docx/BO2od7OI8omtmTxGkB0cn305nFl";
   handleExternalLink("更新日志", url);
 };
 
 const handleContact = () => {
-  // ... 此处省略未改变的函数体 ...
   const qq = "2769731875";
   uni.showModal({
-    title: "联系作者",
-    content: `作者QQ号：${qq}\n\n选择操作：`,
-    confirmText: "复制QQ号",
-    cancelText: "取消",
-    confirmColor: "#7F4515",
+    title: "联系作者", content: `作者QQ号：${qq}\n\n选择操作：`,
+    confirmText: "复制QQ号", cancelText: "取消", confirmColor: "#7F4515",
     success: (res) => {
-      if (res.confirm)
-        uni.setClipboardData({
-          data: qq,
-          success: () =>
-            uni.showToast({ title: "QQ号已复制", icon: "success" }),
-        });
+      if (res.confirm) uni.setClipboardData({ data: qq, success: () => uni.showToast({ title: "QQ号已复制", icon: "success" }) });
     },
   });
 };
 
 const handleExternalLink = (title, url) => {
-  // ... 此处省略未改变的函数体 ...
-  if (typeof window !== "undefined") window.open(url, "_blank");
-  else if (typeof plus !== "undefined") plus.runtime.openURL(url);
-  else
-    uni.setClipboardData({
-      data: url,
-      success: () =>
-        uni.showToast({
-          title: "外链已复制,请在浏览器中打开",
-          icon: "success",
-          duration: 3000,
-        }),
-    });
+  if (typeof window !== 'undefined') window.open(url, "_blank");
+  else if (typeof plus !== 'undefined') plus.runtime.openURL(url);
+  else uni.setClipboardData({ data: url, success: () => uni.showToast({ title: "外链已复制,请在浏览器中打开", icon: "success", duration: 3000 }) });
 };
 
-const handleImageError = () => {
-  uni.showToast({ title: "赞赏码加载失败", icon: "none" });
-};
-const handleImageLoad = () => {
-  console.log("赞赏码加载成功");
-};
+const handleImageError = () => { uni.showToast({ title: "赞赏码加载失败", icon: "none" }); };
+const handleImageLoad = () => { console.log("赞赏码加载成功"); };
 </script>
 
 <style lang="scss" scoped>
@@ -506,6 +356,7 @@ const handleImageLoad = () => {
 
 .profile-card {
   margin-bottom: 10rpx;
+
   :deep(.card-content) {
     padding: 12rpx 8rpx !important;
   }
@@ -516,6 +367,7 @@ const handleImageLoad = () => {
   flex-direction: column;
   gap: 12rpx;
 }
+
 .identity-section {
   display: flex;
   align-items: center;
@@ -523,10 +375,12 @@ const handleImageLoad = () => {
   gap: 24rpx;
   padding: 4rpx 0;
 }
+
 .avatar-wrapper {
   position: relative;
   display: inline-block;
 }
+
 .avatar {
   width: 110rpx;
   height: 110rpx;
@@ -534,6 +388,7 @@ const handleImageLoad = () => {
   border: 3rpx solid rgba(155, 4, 0, 0.1);
   box-shadow: 0 8rpx 20rpx rgba(155, 4, 0, 0.15);
 }
+
 .status-indicator {
   position: absolute;
   bottom: 8rpx;
@@ -544,30 +399,35 @@ const handleImageLoad = () => {
   border-radius: 50%;
   border: 2rpx solid #ffffff;
 }
+
 .identity-info {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 4rpx;
 }
+
 .welcome-text {
   font-size: 22rpx;
   color: var(--text-light);
   font-weight: 400;
   margin-bottom: 2rpx;
 }
+
 .user-name {
   font-size: 38rpx;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
 }
+
 .user-id {
   font-size: 28rpx;
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 1rpx;
 }
+
 .details-section {
   border-top: 1rpx solid var(--border-light);
   padding-top: 12rpx;
@@ -575,6 +435,7 @@ const handleImageLoad = () => {
   flex-direction: column;
   gap: 8rpx;
 }
+
 .detail-item {
   display: flex;
   align-items: center;
@@ -584,12 +445,14 @@ const handleImageLoad = () => {
   border: 1rpx solid rgba(127, 69, 21, 0.08);
   border-radius: 8rpx;
 }
+
 .detail-label {
   font-size: 24rpx;
   color: var(--text-light);
   font-weight: 500;
   min-width: 60rpx;
 }
+
 .detail-value {
   font-size: 26rpx;
   color: var(--text-primary);
@@ -609,14 +472,17 @@ const handleImageLoad = () => {
   border-radius: var(--radius-medium);
   box-shadow: 0 4rpx 12rpx rgba(255, 107, 53, 0.05);
   transition: all 0.2s ease-in-out;
+
   &:active {
     transform: scale(0.98);
     box-shadow: none;
   }
 }
+
 .notice-icon {
   flex-shrink: 0;
 }
+
 .notice-text {
   flex: 1;
   font-size: 26rpx;
@@ -627,7 +493,6 @@ const handleImageLoad = () => {
   white-space: nowrap;
 }
 
-/* ==================== MODIFICATION START: 新增 uni-popup 相关样式 ==================== */
 .popup-content {
   width: 90vw;
   max-width: 680rpx;
@@ -637,6 +502,7 @@ const handleImageLoad = () => {
   display: flex;
   flex-direction: column;
 }
+
 .popup-header {
   display: flex;
   justify-content: space-between;
@@ -644,18 +510,22 @@ const handleImageLoad = () => {
   padding: 24rpx 32rpx;
   border-bottom: 1rpx solid var(--border-light);
 }
+
 .popup-title {
   font-size: 32rpx;
   font-weight: 700;
   color: var(--text-primary);
 }
+
 .popup-close-btn {
   padding: 8rpx;
   border-radius: 50%;
+
   &:active {
     background-color: #e0e0e0;
   }
 }
+
 .popup-body {
   padding: 24rpx 32rpx;
   display: flex;
@@ -665,18 +535,19 @@ const handleImageLoad = () => {
   overflow-y: auto;
 }
 
-/* 复用之前的样式，几乎无需改动 */
 .status-content-wrapper {
   background: #ffffff;
   padding: 20rpx;
   border-radius: var(--radius-medium);
   border: 1rpx solid var(--border-light);
 }
+
 .status-header {
   display: flex;
   align-items: center;
   gap: 12rpx;
 }
+
 .status-icon {
   width: 48rpx;
   height: 48rpx;
@@ -684,15 +555,18 @@ const handleImageLoad = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+
   &.warning {
     background: rgba(255, 107, 53, 0.1);
   }
 }
+
 .status-title {
   font-size: 28rpx;
   color: #ff6b35;
   font-weight: 700;
 }
+
 .status-text {
   font-size: 26rpx;
   color: #8b4513;
@@ -707,6 +581,7 @@ const handleImageLoad = () => {
   border-radius: var(--radius-medium);
   border: 1rpx solid var(--border-light);
 }
+
 .community-header {
   display: flex;
   align-items: center;
@@ -715,6 +590,7 @@ const handleImageLoad = () => {
   border-bottom: 1rpx solid rgba(127, 69, 21, 0.1);
   margin-bottom: 16rpx;
 }
+
 .community-icon {
   width: 48rpx;
   height: 48rpx;
@@ -724,16 +600,19 @@ const handleImageLoad = () => {
   align-items: center;
   justify-content: center;
 }
+
 .community-title {
   font-size: 28rpx;
   color: var(--text-primary);
   font-weight: 700;
 }
+
 .community-groups {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
 }
+
 .group-item {
   display: flex;
   align-items: center;
@@ -743,28 +622,33 @@ const handleImageLoad = () => {
   border: 1rpx solid rgba(127, 69, 21, 0.08);
   border-radius: 12rpx;
 }
+
 .group-info {
   display: flex;
   flex-direction: column;
   gap: 4rpx;
   flex: 1;
 }
+
 .group-name {
   display: flex;
   align-items: center;
   gap: 8rpx;
 }
+
 .group-title {
   font-size: 26rpx;
   color: var(--text-primary);
   font-weight: 600;
 }
+
 .group-desc {
   font-size: 22rpx;
   color: var(--text-secondary);
   line-height: 1.4;
   padding-left: 28rpx;
 }
+
 .copy-btn {
   display: flex;
   align-items: center;
@@ -779,42 +663,50 @@ const handleImageLoad = () => {
   transition: all 0.2s ease;
   min-width: 120rpx;
   justify-content: center;
+
   &::after {
     border: none;
   }
+
   &:active {
     background: rgba(127, 69, 21, 0.15);
     transform: scale(0.95);
   }
+
   text {
     font-weight: inherit;
   }
 }
-/* ==================== MODIFICATION END ==================== */
 
 .grid-card {
   margin-bottom: 16rpx;
+
   :deep(.card-content) {
     padding: 12rpx 8rpx !important;
   }
 }
+
 .grid-title {
   font-size: 26rpx;
   margin-bottom: 8rpx;
 }
+
 .grid-2x2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300rpx, 1fr));
   gap: 8rpx;
+
   @media (max-width: 750px) {
     grid-template-columns: repeat(auto-fit, minmax(280rpx, 1fr));
     gap: 12rpx;
   }
+
   @media (max-width: 500px) {
     grid-template-columns: repeat(auto-fit, minmax(240rpx, 1fr));
     gap: 8rpx;
   }
 }
+
 .grid-cell {
   background: #ffffff;
   border: 1rpx solid var(--border-light);
@@ -826,17 +718,21 @@ const handleImageLoad = () => {
   gap: 8rpx;
   transition: all 0.2s ease;
   min-height: 100rpx;
+
   &:active {
     transform: scale(0.98);
   }
+
   &:not(.disabled):hover {
     box-shadow: 0 12rpx 34rpx var(--shadow-light);
     transform: translateY(-2rpx);
   }
+
   &.disabled {
     opacity: 0.6;
   }
 }
+
 .cell-icon {
   width: 64rpx;
   height: 64rpx;
@@ -846,111 +742,60 @@ const handleImageLoad = () => {
   align-items: center;
   justify-content: center;
 }
+
 .cell-title {
   font-size: 30rpx;
   color: var(--text-primary);
   font-weight: 600;
 }
+
 .cell-desc {
   font-size: 24rpx;
   color: var(--text-light);
 }
 
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8rpx;
-}
-.action-btn {
-  flex: 1;
-  min-width: calc(50% - 4rpx);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  height: 48rpx;
-  padding: 8rpx 10rpx;
-  border-radius: 9999rpx;
-  font-size: 22rpx;
-  font-weight: 600;
-  border: none;
-  transition: all 0.3s ease;
-  &::after {
-    border: none;
-  }
-  &:active {
-    transform: scale(0.95);
-  }
-  text {
-    font-weight: inherit;
-  }
-}
-.refresh-btn {
-  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
-  color: #ffffff;
-  box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.3);
-}
-.logout-btn {
-  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
-  color: #ffffff;
-  box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.3);
-}
-.clear-cache-btn {
-  background: linear-gradient(135deg, #f5222d 0%, #ff4d4f 100%);
-  color: #ffffff;
-  box-shadow: 0 8rpx 24rpx rgba(245, 34, 45, 0.3);
-}
-.agreement-btn {
-  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
-  color: #ffffff;
-  box-shadow: 0 8rpx 24rpx rgba(24, 144, 255, 0.3);
-}
-.changelog-btn {
-  background: linear-gradient(135deg, #722ed1 0%, #9254de 100%);
-  color: #ffffff;
-  box-shadow: 0 8rpx 24rpx rgba(114, 46, 209, 0.3);
-}
-.contact-btn {
-  background: linear-gradient(135deg, #fa8c16 0%, #ffa940 100%);
-  color: #ffffff;
-  box-shadow: 0 8rpx 24rpx rgba(250, 140, 22, 0.3);
-}
-
 .support-card {
   margin-top: 16rpx;
+
   :deep(.card-content) {
     padding: 12rpx 8rpx !important;
   }
 }
+
 .support-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12rpx;
 }
+
 .support-text {
   display: flex;
   flex-direction: column;
   gap: 8rpx;
   text-align: center;
 }
+
 .support-title {
   font-size: 32rpx;
   color: var(--text-primary);
   font-weight: 600;
 }
+
 .support-desc {
   font-size: 26rpx;
   color: var(--text-secondary);
   line-height: 1.6;
   text-align: center;
 }
+
 .qr-code-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12rpx;
 }
+
 .qr-code {
   width: 220rpx;
   height: 220rpx;
@@ -958,9 +803,98 @@ const handleImageLoad = () => {
   border: 1rpx solid var(--border-light);
   box-shadow: 0 8rpx 24rpx var(--shadow-light);
 }
+
 .qr-code-label {
   font-size: 24rpx;
   color: var(--text-light);
   text-align: center;
 }
+
+/* ==================== MODIFICATION START: 快捷操作按钮样式 ==================== */
+.quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr; // 保持两列布局
+  gap: 16rpx; // 统一间距
+}
+
+// 按钮基础样式
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  height: 72rpx; // 增加一些高度
+  padding: 0 16rpx;
+ border-radius: 16rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  transition: all 0.2s ease;
+
+  // uniapp 按钮样式重置
+  margin: 0;
+  line-height: 1;
+
+  &::after {
+    border: none;
+  }
+
+  // 图标和文字的样式由具体类控制
+  .uni-icons,
+  text {
+    transition: all 0.2s ease;
+  }
+}
+
+// 1. 主操作按钮 (实心填充)
+.btn-primary {
+  background-color: #7F4515; // 主题色
+  color: #ffffff;
+  border: 1px solid #7F4515;
+
+  .uni-icons {
+    color: #ffffff !important;
+  }
+
+  &:active {
+    background-color: #6a3a12; // 点击时加深
+    border-color: #6a3a12;
+  }
+}
+
+// 2. 危险操作按钮 (线框)
+.btn-danger {
+  background-color: #fff5f5; // 浅红色底
+  color: #f56c6c; // 危险红色
+  border: 1px solid #fde2e2;
+
+  .uni-icons {
+    color: #f56c6c !important;
+  }
+
+  &:active {
+    background-color: #fef0f0;
+    border-color: #f56c6c; // 点击时边框加深
+  }
+}
+
+// 3. 次要操作按钮 (线框)
+.btn-secondary {
+  background-color: #f7f7f7; // 极浅的灰色底
+  color: #606266; // 中性文字色
+  border: 1px solid #e0e0e0;
+
+  .uni-icons {
+    color: #606266 !important;
+  }
+
+  &:active {
+    background-color: #e9e9e9;
+    border-color: #c0c0c0;
+  }
+}
+
+// 删除旧的、基于颜色的按钮样式
+// .refresh-btn, .logout-btn, .clear-cache-btn, etc. { ... }
+/* ==================== MODIFICATION END ==================== */
 </style>
