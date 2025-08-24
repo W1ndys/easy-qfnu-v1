@@ -29,20 +29,60 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
         )
 
 
+def _strip_courses_from_analysis(payload: dict) -> dict:
+    """
+    移除分析结果中的课程明细，仅保留聚合指标。
+    会处理以下路径：
+    - gpa_analysis.basic_gpa.courses
+    - gpa_analysis.no_retakes_gpa.courses
+    - semester_gpa.*.courses
+    - yearly_gpa.*.courses
+    - effective_gpa.courses
+    """
+    try:
+        ga = payload.get("gpa_analysis", {})
+        for k in ("basic_gpa", "no_retakes_gpa"):
+            if isinstance(ga.get(k), dict):
+                ga[k].pop("courses", None)
+
+        sem = payload.get("semester_gpa", {})
+        if isinstance(sem, dict):
+            for v in sem.values():
+                if isinstance(v, dict):
+                    v.pop("courses", None)
+
+        yearly = payload.get("yearly_gpa", {})
+        if isinstance(yearly, dict):
+            for v in yearly.values():
+                if isinstance(v, dict):
+                    v.pop("courses", None)
+
+        eff = payload.get("effective_gpa", {})
+        if isinstance(eff, dict):
+            eff.pop("courses", None)
+    except Exception:
+        # 忽略清理失败，不影响主流程
+        pass
+    return payload
+
+
 @router.get(
     "/grades",
     response_model=GradesResponse,
     summary="获取用户全部成绩和GPA分析",
     description="""
-获取当前登录用户的全部课程成绩，并返回详细的GPA分析结果。
+获取当前登录用户的全部课程成绩，并返回精简后的GPA分析结果。
+
+变更说明：
+- data 字段包含全部课程明细
+- 分析结果仅保留加权绩点、总学分、课程数量等聚合信息
+- 分析结果不再包含具体课程列表（不返回 courses）
 
 **功能特点：**
-- 获取用户所有学期的课程成绩明细
-- 自动计算基础GPA和去除重修后GPA
-- 提供详细的学分统计和课程数量信息
-- 支持按学期、学年维度的GPA分析
-- 计算每个学期的加权平均绩点
-- 计算每个学年的加权平均绩点  
+- 获取用户所有学期的课程成绩明细（在 data 字段）
+- 自动计算基础GPA和去除重修后GPA（仅聚合信息）
+- 提供按学期、学年维度的GPA分析（仅聚合信息）
+- 计算每个学期与学年的加权平均绩点
 - 提供总的有效加权绩点（去除重修补考，取最高绩点）
 
 **认证要求：**
@@ -51,10 +91,10 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
 
 **返回数据说明：**
 - `data`: 包含所有课程的详细成绩信息
-- `gpa_analysis`: 包含基础GPA和去重修GPA的分析结果
-- `semester_gpa`: 按学期分组的GPA分析结果
-- `yearly_gpa`: 按学年分组的GPA分析结果
-- `effective_gpa`: 总的有效加权绩点（去除重修补考，取最高绩点）
+- `gpa_analysis`: 基础GPA与去重修GPA的聚合结果（不含课程列表）
+- `semester_gpa`: 按学期分组的GPA聚合结果（不含课程列表）
+- `yearly_gpa`: 按学年分组的GPA聚合结果（不含课程列表）
+- `effective_gpa`: 总的有效加权绩点聚合结果（不含课程列表）
 - `total_courses`: 总课程数量
 
 **数据更新：**
@@ -64,7 +104,7 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
     tags=["成绩"],
     responses={
         200: {
-            "description": "成功获取成绩和GPA分析",
+            "description": "成功获取成绩和GPA分析（分析结果不含课程列表）",
             "model": GradesResponse,
             "content": {
                 "application/json": {
@@ -96,13 +136,11 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
                                 "weighted_gpa": 3.85,
                                 "total_credit": 32.0,
                                 "course_count": 10,
-                                "courses": [],
                             },
                             "no_retakes_gpa": {
                                 "weighted_gpa": 3.92,
                                 "total_credit": 28.0,
                                 "course_count": 9,
-                                "courses": [],
                             },
                         },
                         "semester_gpa": {
@@ -110,13 +148,11 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
                                 "weighted_gpa": 3.8,
                                 "total_credit": 16.0,
                                 "course_count": 5,
-                                "courses": [],
                             },
                             "2023-2024-2": {
                                 "weighted_gpa": 3.9,
                                 "total_credit": 16.0,
                                 "course_count": 5,
-                                "courses": [],
                             },
                         },
                         "yearly_gpa": {
@@ -124,14 +160,12 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
                                 "weighted_gpa": 3.85,
                                 "total_credit": 32.0,
                                 "course_count": 10,
-                                "courses": [],
                             },
                         },
                         "effective_gpa": {
                             "weighted_gpa": 3.92,
                             "total_credit": 28.0,
                             "course_count": 9,
-                            "courses": [],
                         },
                         "total_courses": 15,
                     }
@@ -189,6 +223,9 @@ async def get_user_grades_with_gpa(
         logger.info("开始获取用户成绩和GPA分析...")
         grades_result = get_grades(session=session, semester="")
         handle_scraper_error(grades_result, "获取成绩")
+
+        # 新增：精简分析结果，移除 courses 详单
+        grades_result = _strip_courses_from_analysis(grades_result)
 
         logger.info(f"成绩获取成功，共 {grades_result.get('total_courses', 0)} 门课程")
         return grades_result
@@ -267,7 +304,7 @@ async def get_user_grades_with_gpa(
                     "example": {
                         "detail": [
                             {
-                                "loc": ["body", "exclude_indices"],
+                                "loc": ["body", "include_indices"],
                                 "msg": "ensure this value is greater than or equal to 0",
                                 "type": "value_error.number.not_ge",
                             }
@@ -298,9 +335,9 @@ async def calculate_custom_gpa(
         HTTPException: 当获取成绩失败或计算出错时抛出异常
     """
     try:
-        # 说明：request.exclude_indices 在服务内部按“选中模式(include)”处理
+        # 说明：request.include_indices 在服务内部按“选中模式(include)”处理
         logger.info(
-            f"开始自定义GPA计算，选中课程(按include模式): {request.exclude_indices}, 去重修: {request.remove_retakes}"
+            f"开始自定义GPA计算，选中课程(按include模式): {request.include_indices}, 去重修: {request.remove_retakes}"
         )
 
         logger.debug("获取用户成绩数据用于GPA计算...")
@@ -313,7 +350,7 @@ async def calculate_custom_gpa(
         logger.debug("开始执行自定义GPA计算...")
         gpa_result = calculate_gpa_advanced(
             grades_data=grades_data,
-            include_indices=request.exclude_indices,  # exclude_indices 按 include 模式使用
+            include_indices=request.include_indices,  # include_indices 按 include 模式使用
             remove_retakes=request.remove_retakes,
         )
 

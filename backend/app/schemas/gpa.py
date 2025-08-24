@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any
 
 
 class GPACalculateRequest(BaseModel):
-    exclude_indices: List[int] = []  # 要排除的课程序号列表
+    include_indices: List[int] = []  # 要排除的课程序号列表
     remove_retakes: bool = False  # 是否去除重修补考，取最高绩点
 
 
@@ -30,12 +30,12 @@ class CourseGrade(BaseModel):
 
 
 class GPAAnalysis(BaseModel):
-    """GPA分析结果"""
+    """GPA分析结果（/grades 不返回 courses，/gpa/calculate 可能返回）"""
 
     weighted_gpa: float
     total_credit: float
     course_count: int
-    courses: List[Dict[str, Any]]
+    courses: Optional[List[Dict[str, Any]]] = None
 
 
 class GradesResponse(BaseModel):

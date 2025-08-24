@@ -6,14 +6,60 @@
     <!-- 内容区域 -->
     <view v-else class="page-container">
       <!-- 空状态 -->
-      <EmptyState v-if="semesters.length === 0" icon-type="info-filled" title="没有查询到任何成绩记录" description="请检查网络连接或稍后重试"
-        :show-retry="true" @retry="fetchGrades" />
+      <EmptyState
+        v-if="semesters.length === 0"
+        icon-type="info-filled"
+        title="没有查询到任何成绩记录"
+        description="请检查网络连接或稍后重试"
+        :show-retry="true"
+        @retry="fetchGrades"
+      />
 
       <!-- 有数据时显示 -->
       <view v-else>
-        <!-- GPA分析模块 -->
-        <GPAAnalysis v-if="gpaAnalysis" :gpa-analysis="gpaAnalysis" :effective-gpa="effectiveGpa"
-          :yearly-gpa="yearlyGpa" :semester-gpa="semesterGpa" :total-courses="totalCourses" />
+        <!-- GPA分析模块 (已内联) -->
+        <view v-if="gpaAnalysis" class="analysis-container">
+          <!-- 主GPA显示区域 -->
+          <view class="main-gpa-section">
+            <view class="gpa-item">
+              <text class="gpa-value">{{ gpaAnalysis?.weighted_gpa?.toFixed(2) || 'N/A' }}</text>
+              <text class="gpa-label">总加权平均GPA</text>
+            </view>
+            <view class="gpa-item">
+              <text class="gpa-value">{{ effectiveGpa?.weighted_gpa?.toFixed(2) || 'N/A' }}</text>
+              <text class="gpa-label">有效GPA (去重修)</text>
+            </view>
+            <view class="gpa-item">
+              <text class="gpa-value">{{ totalCourses || 0 }}</text>
+              <text class="gpa-label">总课程数</text>
+            </view>
+          </view>
+
+          <!-- 学年与学期GPA流式布局 -->
+          <view class="detailed-gpa-section">
+            <view class="section-header">
+              <text class="section-title">详细GPA分布</text>
+            </view>
+            <view class="details-flex-container">
+              <!-- 学年GPA -->
+              <template v-if="yearlyGpa && Object.keys(yearlyGpa).length > 0">
+                <view v-for="(gpa, year) in yearlyGpa" :key="year" class="detail-item-flex">
+                  <text class="detail-label">{{ year }}学年</text>
+                  <text class="detail-sub-info">{{ gpa.course_count }}门 / {{ gpa.total_credit.toFixed(1) }}学分</text>
+                  <text class="detail-value">{{ gpa.weighted_gpa.toFixed(2) }}</text>
+                </view>
+              </template>
+              <!-- 学期GPA -->
+              <template v-if="semesterGpa && Object.keys(semesterGpa).length > 0">
+                 <view v-for="(gpa, semester) in semesterGpa" :key="semester" class="detail-item-flex">
+                  <text class="detail-label">{{ semester }}</text>
+                  <text class="detail-sub-info">{{ gpa.course_count }}门 / {{ gpa.total_credit.toFixed(1) }}学分</text>
+                  <text class="detail-value">{{ gpa.weighted_gpa.toFixed(2) }}</text>
+                </view>
+              </template>
+            </view>
+          </view>
+        </view>
 
         <!-- 自定义GPA计算模式切换 -->
         <view class="custom-gpa-toggle-section">
@@ -21,9 +67,9 @@
             <text class="toggle-title">自定义GPA计算</text>
             <text class="toggle-desc">勾选课程以计算特定GPA</text>
           </view>
-          <switch :checked="isCustomMode" @change="toggleCustomMode" color="#667eea" />
+          <switch :checked="isCustomMode" @change="toggleCustomMode" color="#7F4515" />
         </view>
-
+        
         <!-- 提示信息 -->
         <view v-if="isCustomMode" class="custom-mode-tip">
           <view class="tip-icon">💡</view>
@@ -37,17 +83,22 @@
               <text class="semester-name">{{ semester.semesterName }}</text>
             </view>
             <view class="courses-list">
-              <view v-for="course in semester.grades" :key="course.index" class="course-card" :class="{
-                'is-custom-mode': isCustomMode,
-                'is-selected': isCourseSelected(course.index)
-              }">
+              <view
+                v-for="course in semester.grades"
+                :key="course.index"
+                class="course-card"
+                :class="{ 
+                  'is-custom-mode': isCustomMode, 
+                  'is-selected': isCourseSelected(course.index) 
+                }"
+              >
                 <!-- 卡片主区域 (用于点击) -->
                 <view class="course-main" @click="handleCourseClick(course)">
                   <!-- 复选框 -->
                   <view v-if="isCustomMode" class="course-checkbox-wrapper">
                     <view class="checkbox-inner" :class="{ 'checked': isCourseSelected(course.index) }"></view>
                   </view>
-
+                  
                   <!-- 核心信息 -->
                   <view class="course-core-info">
                     <text class="course-name">{{ course.courseName }}</text>
@@ -57,7 +108,7 @@
                       <view v-if="course.courseAttribute" class="meta-tag attribute">{{ course.courseAttribute }}</view>
                     </view>
                   </view>
-
+                  
                   <!-- 成绩与展开按钮 -->
                   <view class="course-side">
                     <view class="course-score">
@@ -91,7 +142,7 @@
                       <text class="detail-label">课程类别</text>
                       <text class="detail-value">{{ course.courseCategory }}</text>
                     </view>
-                    <view class="detail-item">
+                     <view class="detail-item">
                       <text class="detail-label">考核方式</text>
                       <text class="detail-value">{{ course.assessmentMethod }}</text>
                     </view>
@@ -116,14 +167,14 @@
         </view>
       </view>
     </view>
-
+    
     <!-- 自定义计算悬浮操作栏 -->
     <view v-if="isCustomMode" class="custom-gpa-footer">
       <!-- 计算结果展示 -->
       <view v-if="customGPAResult" class="result-display-card">
         <view class="result-header">
           <text class="result-title">自定义计算结果</text>
-          <text class="close-result-btn" @click="clearCustomResult">关闭</text>
+           <text class="close-result-btn" @click="clearCustomResult">关闭</text>
         </view>
         <view class="result-content">
           <view class="result-gpa">
@@ -142,7 +193,7 @@
           </view>
         </view>
       </view>
-
+      
       <!-- 操作按钮区域 -->
       <view class="footer-actions">
         <view class="selection-info">
@@ -152,8 +203,11 @@
             <text class="action-btn" @click="clearSelection">清空</text>
           </view>
         </view>
-        <button class="calculate-btn" @click="calculateCustomGPA"
-          :disabled="isCalculating || selectedCourses.length === 0">
+        <button
+          class="calculate-btn"
+          @click="calculateCustomGPA"
+          :disabled="isCalculating || selectedCourses.length === 0"
+        >
           {{ isCalculating ? '计算中...' : '计算自定义GPA' }}
         </button>
       </view>
@@ -167,7 +221,6 @@ import { onLoad, onShow } from "@dcloudio/uni-app";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
 import EmptyState from "../../components/EmptyState/EmptyState.vue";
-import GPAAnalysis from "../../components/GPAAnalysis/GPAAnalysis.vue";
 
 // --- 基础页面状态 ---
 const isLoading = ref(true);
@@ -218,11 +271,13 @@ const fetchGrades = async () => {
     if (statusCode === 200 && data.success) {
       allCourses.value = data.data || [];
       semesters.value = groupGradesBySemester(allCourses.value);
-      gpaAnalysis.value = data.gpa_analysis;
+      
+      gpaAnalysis.value = data.gpa_analysis?.basic_gpa;
       semesterGpa.value = data.semester_gpa;
       yearlyGpa.value = data.yearly_gpa;
       effectiveGpa.value = data.effective_gpa;
       totalCourses.value = data.total_courses;
+
     } else if (statusCode === 401) {
       uni.removeStorageSync("token");
       uni.showToast({ title: "登录已过期，请重新登录", icon: "none" });
@@ -294,7 +349,6 @@ const toggleCourseSelection = (courseIndex) => {
   } else {
     selectedCourses.value.push(courseIndex);
   }
-  // 只要选择变化，就清除旧结果
   clearCustomResult();
 };
 
@@ -318,10 +372,9 @@ const calculateCustomGPA = async () => {
     return;
   }
   isCalculating.value = true;
-
-  // 说明：后端当前使用 exclude_indices 字段接收“选中的课程索引”，内部按 include 模式处理
+  
   const payload = {
-    exclude_indices: selectedCourses.value,
+    include_indices: selectedCourses.value,
     remove_retakes: true
   };
 
@@ -354,404 +407,252 @@ const calculateCustomGPA = async () => {
 <style lang="scss" scoped>
 @import "../../styles/common.scss";
 
+// 定义主色调
+$primary-color: #7F4515;
+$primary-color-light: #F5EFE6;
+
 .page-container {
-  padding: 30rpx;
-  background-color: #f8f9fa;
+  padding: 20rpx;
+  background-color: #fdfcfa;
   min-height: 100vh;
 }
 
+// GPA分析模块样式
+.analysis-container {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 25rpx;
+  border: 1rpx solid #f0e9e4;
+}
+
+.main-gpa-section {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  padding-bottom: 20rpx;
+  margin-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0e9e4;
+
+  .gpa-item {
+    .gpa-value {
+      display: block;
+      font-size: 40rpx;
+      font-weight: bold;
+      color: $primary-color;
+      line-height: 1.2;
+    }
+    .gpa-label {
+      display: block;
+      font-size: 22rpx;
+      color: #8c7d70;
+      margin-top: 4rpx;
+    }
+  }
+}
+
+// 流式布局
+.detailed-gpa-section {
+  .section-header {
+    margin-bottom: 10rpx;
+    .section-title {
+      font-size: 26rpx;
+      font-weight: bold;
+      color: #333;
+    }
+  }
+}
+
+.details-flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15rpx;
+
+  .detail-item-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fdfcfa;
+    padding: 10rpx 15rpx;
+    border-radius: 8rpx;
+    flex-grow: 1; // 允许项目拉伸填充
+    min-width: calc(50% - 15rpx); // 最小宽度，保证一行最多两个
+    
+    .detail-label {
+      font-size: 24rpx;
+      color: #5c524a;
+      white-space: nowrap;
+    }
+    .detail-sub-info {
+      font-size: 20rpx;
+      color: #a09387;
+      margin: 0 10rpx;
+      white-space: nowrap;
+    }
+    .detail-value {
+      font-size: 26rpx;
+      font-weight: bold;
+      color: $primary-color;
+      flex-shrink: 0;
+      margin-left: auto; // 将GPA值推到最右侧
+    }
+  }
+}
+
+
 .grades-list-container {
-  padding-bottom: 250rpx; // 为底部悬浮栏留出足够空间
+  padding-bottom: 250rpx;
 }
 
 .custom-gpa-toggle-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #ffffff;
-  padding: 25rpx;
-  border-radius: 20rpx;
-  margin: 30rpx 0;
-  border: 1rpx solid #e9ecef;
-
+  display: flex; justify-content: space-between; align-items: center;
+  background-color: #ffffff; padding: 20rpx; border-radius: 16rpx;
+  margin: 25rpx 0; border: 1rpx solid #f0e9e4;
   .toggle-left {
-    .toggle-title {
-      display: block;
-      font-size: 32rpx;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 5rpx;
-    }
-
-    .toggle-desc {
-      font-size: 24rpx;
-      color: #6c757d;
-    }
+    .toggle-title { display: block; font-size: 30rpx; font-weight: bold; color: #333; margin-bottom: 4rpx; }
+    .toggle-desc { font-size: 24rpx; color: #8c7d70; }
   }
 }
-
 .custom-mode-tip {
-  display: flex;
-  align-items: center;
-  padding: 20rpx;
-  background: #e3f2fd;
-  border-radius: 12rpx;
-  margin-bottom: 30rpx;
-  border-left: 6rpx solid #2196f3;
-
-  .tip-icon {
-    font-size: 28rpx;
-    margin-right: 12rpx;
-  }
-
-  .tip-text {
-    color: #0d47a1;
-    font-size: 26rpx;
-    line-height: 1.4;
-  }
+  display: flex; align-items: center; padding: 16rpx; background: $primary-color-light;
+  border-radius: 12rpx; margin-bottom: 25rpx; border-left: 6rpx solid $primary-color;
+  .tip-icon { font-size: 26rpx; margin-right: 12rpx; }
+  .tip-text { color: $primary-color; font-size: 24rpx; line-height: 1.4; }
 }
 
-.semester-block {
-  margin-bottom: 40rpx;
-}
-
+.semester-block { margin-bottom: 30rpx; }
 .semester-header {
-  padding-left: 10rpx;
-  margin-bottom: 20rpx;
-
-  .semester-name {
-    font-size: 32rpx;
-    font-weight: bold;
-    color: #495057;
-    border-left: 8rpx solid #667eea;
-    padding-left: 20rpx;
-  }
+  padding-left: 8rpx; margin-bottom: 15rpx;
+  .semester-name { font-size: 30rpx; font-weight: bold; color: #495057; border-left: 8rpx solid $primary-color; padding-left: 15rpx;}
 }
-
-.courses-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
+.courses-list { display: flex; flex-direction: column; gap: 15rpx; }
 
 .course-card {
   background-color: #ffffff;
-  border-radius: 24rpx;
-  border: 2rpx solid #e9ecef;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.02);
+  border-radius: 16rpx;
+  border: 1rpx solid #f0e9e4;
+  box-shadow: 0 4rpx 12rpx rgba(127, 69, 21, 0.03);
   transition: all 0.2s ease-in-out;
 
   &.is-custom-mode.is-selected {
-    border-color: #667eea;
-    box-shadow: 0 8rpx 20rpx rgba(102, 126, 234, 0.15);
+    border-color: $primary-color;
+    box-shadow: 0 6rpx 18rpx rgba(127, 69, 21, 0.1);
   }
 }
 
 .course-main {
-  display: flex;
-  align-items: center;
-  padding: 25rpx;
-  cursor: pointer;
+  display: flex; align-items: center; padding: 20rpx; cursor: pointer;
 }
 
 .course-checkbox-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40rpx;
-  height: 40rpx;
-  margin-right: 25rpx;
-  flex-shrink: 0;
-
+  display: flex; align-items: center; justify-content: center;
+  width: 38rpx; height: 38rpx; margin-right: 20rpx; flex-shrink: 0;
   .checkbox-inner {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 2rpx solid #adb5bd;
-    transition: all 0.2s ease;
-    position: relative;
-
+    width: 100%; height: 100%; border-radius: 50%;
+    border: 2rpx solid #c0b8b1; transition: all 0.2s ease; position: relative;
     &.checked {
-      background-color: #667eea;
-      border-color: #667eea;
-
+      background-color: $primary-color; border-color: $primary-color;
       &::after {
-        content: '';
-        position: absolute;
-        top: 8rpx;
-        left: 14rpx;
-        width: 10rpx;
-        height: 20rpx;
-        border: solid white;
-        border-width: 0 4rpx 4rpx 0;
-        transform: rotate(45deg);
+        content: ''; position: absolute; top: 7rpx; left: 13rpx;
+        width: 8rpx; height: 16rpx; border: solid white;
+        border-width: 0 4rpx 4rpx 0; transform: rotate(45deg);
       }
     }
   }
 }
 
 .course-core-info {
-  flex-grow: 1;
-  min-width: 0;
-
-  .course-name {
-    font-size: 30rpx;
-    font-weight: bold;
-    color: #343a40;
-    margin-bottom: 12rpx;
-  }
-
+  flex-grow: 1; min-width: 0;
+  .course-name { font-size: 28rpx; font-weight: bold; color: #343a40; margin-bottom: 10rpx; }
   .course-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10rpx;
-
+    display: flex; flex-wrap: wrap; gap: 10rpx;
     .meta-tag {
-      font-size: 22rpx;
-      padding: 4rpx 12rpx;
-      border-radius: 8rpx;
-
-      &.credit {
-        background-color: #e3f2fd;
-        color: #0d47a1;
-      }
-
-      &.gpa {
-        background-color: #e8f5e9;
-        color: #1b5e20;
-      }
-
-      &.attribute {
-        background-color: #fff3e0;
-        color: #e65100;
-      }
+      font-size: 20rpx; padding: 2rpx 10rpx; border-radius: 6rpx;
+      &.credit { background-color: #e3f2fd; color: #0d47a1; }
+      &.gpa { background-color: #e8f5e9; color: #1b5e20; }
+      &.attribute { background-color: #fff3e0; color: #e65100; }
     }
   }
 }
 
-.course-side {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  margin-left: 20rpx;
-}
-
+.course-side { display: flex; align-items: center; flex-shrink: 0; margin-left: 15rpx; }
 .course-score {
-  text-align: right;
-  margin-right: 15rpx;
-
+  text-align: right; margin-right: 10rpx;
   .score-text {
-    font-size: 38rpx;
-    font-weight: bold;
-
-    &.score-high {
-      color: #28a745;
-    }
-
-    &.score-mid {
-      color: #17a2b8;
-    }
-
-    &.score-low {
-      color: #ffc107;
-    }
-
-    &.score-fail {
-      color: #dc3545;
-    }
-
-    &.score-text-grade {
-      color: #667eea;
-    }
+    font-size: 36rpx; font-weight: bold;
+    &.score-high { color: #28a745; } &.score-mid { color: #17a2b8; }
+    &.score-low { color: #ffc107; } &.score-fail { color: #dc3545; }
+    &.score-text-grade { color: $primary-color; }
   }
-
-  .score-tag {
-    font-size: 22rpx;
-    color: #adb5bd;
-  }
+  .score-tag { font-size: 20rpx; color: #adb5bd; }
 }
-
-.expand-icon {
-  transition: transform 0.3s ease;
-
-  &.expanded {
-    transform: rotate(180deg);
-  }
-}
+.expand-icon { transition: transform 0.3s ease; &.expanded { transform: rotate(180deg); } }
 
 .course-details {
-  padding: 0 30rpx 30rpx 30rpx;
-  background-color: #fafbff;
-  border-top: 1rpx solid #e9ecef;
-
+  padding: 0 25rpx 25rpx 25rpx; background-color: #fffbf7; border-top: 1rpx solid #f0e9e4;
   .detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20rpx 30rpx;
-
+    display: grid; grid-template-columns: 1fr 1fr; gap: 15rpx 25rpx;
     .detail-item {
-      .detail-label {
-        display: block;
-        font-size: 22rpx;
-        color: #868e96;
-        margin-bottom: 4rpx;
-      }
-
-      .detail-value {
-        display: block;
-        font-size: 26rpx;
-        color: #343a40;
-      }
+      .detail-label { display: block; font-size: 22rpx; color: #8c7d70; margin-bottom: 2rpx;}
+      .detail-value { display: block; font-size: 24rpx; color: #343a40;}
     }
   }
 }
 
 .custom-gpa-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: #ffffff;
-  box-shadow: 0 -10rpx 40rpx rgba(0, 0, 0, 0.08);
-  padding: 20rpx 30rpx;
-  padding-bottom: calc(20rpx + constant(safe-area-inset-bottom));
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  border-top-left-radius: 40rpx;
-  border-top-right-radius: 40rpx;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background-color: #ffffff; box-shadow: 0 -10rpx 40rpx rgba(0, 0, 0, 0.06);
+  padding: 15rpx 25rpx;
+  padding-bottom: calc(15rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(15rpx + env(safe-area-inset-bottom));
+  border-top-left-radius: 30rpx; border-top-right-radius: 30rpx;
   z-index: 100;
 }
 
 .result-display-card {
-  background: #ffffff;
-  border: 1rpx solid #e9ecef;
-  border-radius: 20rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-
+  background: #ffffff; border: 1rpx solid #f0e9e4; border-radius: 16rpx;
+  margin-bottom: 15rpx; box-shadow: 0 8rpx 25rpx rgba(127, 69, 21, 0.05); overflow: hidden;
   .result-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20rpx 25rpx;
-    background-color: #f8f9fa;
-
-    .result-title {
-      font-size: 30rpx;
-      font-weight: bold;
-      color: #333;
-    }
-
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15rpx 20rpx; background-color: #fdfcfa;
+    .result-title { font-size: 28rpx; font-weight: bold; color: #333; }
     .close-result-btn {
-      font-size: 26rpx;
-      color: #6c757d;
-      padding: 5rpx 15rpx;
-      border-radius: 10rpx;
-
-      &:active {
-        background-color: #e9ecef;
-      }
+      font-size: 24rpx; color: #8c7d70; padding: 5rpx 15rpx; border-radius: 10rpx;
+      &:active { background-color: #f0e9e4; }
     }
   }
-
-  .result-content {
-    display: flex;
-    align-items: center;
-    padding: 30rpx 25rpx;
-  }
-
+  .result-content { display: flex; align-items: center; padding: 25rpx 20rpx; }
   .result-gpa {
-    flex-shrink: 0;
-    text-align: center;
-    padding-right: 40rpx;
-    margin-right: 40rpx;
-    border-right: 1rpx solid #dee2e6;
-
+    flex-shrink: 0; text-align: center; padding-right: 30rpx;
+    margin-right: 30rpx; border-right: 1rpx solid #f0e9e4;
     .gpa-value {
-      display: block;
-      font-size: 64rpx;
-      font-weight: bold;
-      color: #667eea;
-      line-height: 1;
+      display: block; font-size: 60rpx; font-weight: bold; color: $primary-color; line-height: 1;
     }
-
-    .gpa-label {
-      display: block;
-      font-size: 24rpx;
-      color: #6c757d;
-      margin-top: 10rpx;
-    }
+    .gpa-label { display: block; font-size: 22rpx; color: #8c7d70; margin-top: 8rpx; }
   }
-
   .result-stats {
-    flex-grow: 1;
-    display: flex;
-    justify-content: space-around;
-
+    flex-grow: 1; display: flex; justify-content: space-around;
     .stat-item {
       text-align: center;
-
-      .stat-value {
-        display: block;
-        font-size: 36rpx;
-        font-weight: bold;
-        color: #333;
-      }
-
-      .stat-label {
-        display: block;
-        font-size: 22rpx;
-        color: #6c757d;
-        margin-top: 5rpx;
-      }
+      .stat-value { display: block; font-size: 34rpx; font-weight: bold; color: #333; }
+      .stat-label { display: block; font-size: 22rpx; color: #8c7d70; margin-top: 4rpx; }
     }
   }
 }
 
-.footer-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-
+.footer-actions { display: flex; flex-direction: column; gap: 15rpx; }
 .selection-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 10rpx;
-
-  .info-text {
-    font-size: 28rpx;
-    color: #333;
-  }
-
+  display: flex; justify-content: space-between; align-items: center; padding: 0 10rpx;
+  .info-text { font-size: 26rpx; color: #333; }
   .actions {
-    display: flex;
-    gap: 20rpx;
-
-    .action-btn {
-      font-size: 26rpx;
-      color: #667eea;
-      padding: 8rpx 16rpx;
-      background: #f0f2ff;
-      border-radius: 15rpx;
-    }
+    display: flex; gap: 20rpx;
+    .action-btn { font-size: 24rpx; color: $primary-color; padding: 8rpx 16rpx; background: $primary-color-light; border-radius: 12rpx; }
   }
 }
-
 .calculate-btn {
-  width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 20rpx;
-  padding: 28rpx;
-  font-size: 32rpx;
-  font-weight: bold;
-
-  &:disabled {
-    background: #ced4da;
-    opacity: 0.7;
-  }
+  width: 100%; background: $primary-color;
+  color: #ffffff; border: none; border-radius: 16rpx; padding: 24rpx;
+  font-size: 30rpx; font-weight: bold;
+  &:disabled { background: #c0b8b1; opacity: 0.7; }
 }
 </style>
