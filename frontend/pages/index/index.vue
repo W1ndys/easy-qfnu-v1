@@ -802,7 +802,7 @@ const handleMarqueeClick = () => {
   width: 100%;
   height: 72rpx;
   line-height: 72rpx;
-  border-radius: 9999rpx;
+  border-radius: 24rpx;
   background: linear-gradient(135deg, #7f4515 0%, #8c5527 100%);
   color: #ffffff;
   font-size: 28rpx;
