@@ -533,7 +533,7 @@ const handleMarqueeClick = () => {
   width: 100%;
   height: 100vh;
   background: #f7f8fa;
-  padding-top: 80rpx; /* 调整为新的弹幕高度 */
+  padding-top: 4rpx; /* 调整为新的弹幕高度 */
 }
 
 // 背景装饰圆圈
