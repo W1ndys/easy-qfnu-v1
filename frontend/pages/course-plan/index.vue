@@ -139,9 +139,8 @@
                 incomplete: isIncomplete(m),
                 expanded: expanded[getOriginalIndex(m)],
               }"
-              @click="toggleModule(getOriginalIndex(m))"
             >
-              <view class="module-header">
+              <view class="module-header" @click="toggleModule(getOriginalIndex(m))">
                 <view class="header-info">
                   <view class="header-top">
                     <text class="module-title">{{ m.module_name }}</text>
@@ -719,12 +718,14 @@ const closeModal = () => {
   border: 1rpx solid #e8e8e8;
   margin: 6rpx;
 }
+
 /* ... 其他基础样式保持不变 ... */
 .settings-card,
 .data-status-card,
 .total-progress-card {
   margin-bottom: 12rpx;
 }
+
 .setting-item {
   display: flex;
   align-items: center;
@@ -732,10 +733,12 @@ const closeModal = () => {
   padding: 8rpx 0;
   font-size: 26rpx;
 }
+
 .setting-label {
   color: var(--text-secondary);
   font-weight: 500;
 }
+
 .picker-value {
   display: flex;
   align-items: center;
@@ -746,10 +749,12 @@ const closeModal = () => {
   background-color: #fafafa;
   color: var(--text-primary);
 }
+
 .setting-value {
   color: var(--text-primary);
   font-weight: 600;
 }
+
 .data-status-container {
   display: flex;
   justify-content: space-between;
@@ -757,42 +762,50 @@ const closeModal = () => {
   gap: 12rpx;
   flex-wrap: wrap;
 }
+
 .status-info {
   display: flex;
   flex-direction: column;
   gap: 8rpx;
   flex: 1;
 }
+
 .status-item {
   display: flex;
   align-items: center;
   gap: 6rpx;
   flex-wrap: wrap;
 }
+
 .status-label {
   font-size: 24rpx;
   color: var(--text-secondary);
   font-weight: 500;
 }
+
 .status-value {
   font-size: 24rpx;
   font-weight: 600;
   padding: 4rpx 8rpx;
   border-radius: 8rpx;
 }
+
 .status-live {
   color: #389e0d;
   background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
   border: 1rpx solid #95de64;
 }
+
 .status-cache {
   color: #1890ff;
   background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
   border: 1rpx solid #91d5ff;
 }
+
 .refresh-actions {
   flex-shrink: 0;
 }
+
 .refresh-btn {
   display: flex;
   align-items: center;
@@ -807,76 +820,92 @@ const closeModal = () => {
   transition: all 0.3s ease;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
 }
+
 .refresh-btn:not(.loading):active {
   transform: translateY(2rpx);
   box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
 }
+
 .spinning {
   animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
+
 .modules-list {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
 }
+
 .total-progress-card {
   margin-bottom: 12rpx;
 }
+
 .total-progress-container {
   padding: 0;
 }
+
 .total-header {
   display: flex;
   flex-direction: column;
   gap: 12rpx;
 }
+
 .total-title-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
 .total-title {
   font-size: 32rpx;
   color: var(--text-primary);
   font-weight: 700;
   line-height: 1.4;
 }
+
 .total-credits-info {
   display: flex;
   flex-direction: column;
   gap: 6rpx;
   align-items: center;
 }
+
 .total-credits-text {
   font-size: 36rpx;
   color: var(--text-primary);
   font-weight: 600;
   text-align: center;
 }
+
 .total-shortage-text {
   font-size: 28rpx;
   color: #e74c3c;
   font-weight: 600;
   text-align: center;
 }
+
 .total-progress-bar-container {
   display: flex;
   align-items: center;
   gap: 16rpx;
 }
+
 .total-progress-bar {
   height: 24rpx;
   border-radius: 12rpx;
   box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.12);
 }
+
 .total-progress-text {
   font-size: 28rpx;
   color: var(--text-primary);
@@ -901,30 +930,36 @@ const closeModal = () => {
 
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
 }
+
 .module-card.expanded {
   /* 4. 展开时，第二行的高度变为 1fr，占据所有可用空间 */
   grid-template-rows: auto 1fr;
   box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.12);
   transform: translateY(-4rpx);
 }
+
 .module-card.incomplete {
   border-color: #ffaaa5;
   background: linear-gradient(135deg, #fff7f7 0%, #ffffff 100%);
 }
+
 .module-header {
-  /* cursor: pointer; 已移动到父级 .module-card */
+  cursor: pointer;
   padding: 16rpx 14rpx;
   transition: background-color 0.2s ease;
 }
+
 .module-header:active {
   background: rgba(127, 69, 21, 0.08);
 }
+
 .course-details {
   /* 5. 必须设置为 overflow: hidden，否则内容会在 0fr 时溢出 */
   overflow: hidden;
   background: linear-gradient(180deg, #fafbfc 0%, #f5f6fa 100%);
   border-top: 1rpx solid #e8e8e8;
-  min-height: 0; /* 兼容性设置 */
+  min-height: 0;
+  /* 兼容性设置 */
 }
 
 /* 因为点击事件放到了 .module-card，所以移除这里的 pointer-events */
@@ -940,38 +975,45 @@ const closeModal = () => {
   justify-content: space-between;
   margin-bottom: 12rpx;
 }
+
 .module-title {
   font-size: 30rpx;
   font-weight: 600;
   flex: 1;
   margin-right: 16rpx;
 }
+
 .header-middle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16rpx;
 }
+
 .credits-info {
   display: flex;
   flex-direction: column;
   gap: 8rpx;
 }
+
 .credits-text {
   font-size: 28rpx;
   color: var(--text-secondary);
   font-weight: 500;
 }
+
 .course-count-text {
   font-size: 22rpx;
   color: #595959;
   font-weight: 400;
 }
+
 .shortage-text {
   font-size: 24rpx;
   color: #e74c3c;
   font-weight: 500;
 }
+
 .expand-action {
   display: flex;
   align-items: center;
@@ -980,21 +1022,26 @@ const closeModal = () => {
   background: rgba(127, 69, 21, 0.08);
   border-radius: 16rpx;
 }
+
 .hint-text {
   font-size: 22rpx;
   color: var(--text-light);
 }
+
 .chevron-icon {
   transition: transform 0.35s ease;
 }
+
 .chevron-icon.expanded {
   transform: rotate(180deg);
 }
+
 .progress-container {
   display: flex;
   align-items: center;
   gap: 12rpx;
 }
+
 .progress-bar {
   flex: 1;
   height: 20rpx;
@@ -1003,21 +1050,25 @@ const closeModal = () => {
   overflow: hidden;
   box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
 }
+
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #52c41a 0%, #73d13d 100%);
   border-radius: 10rpx;
   transition: width 0.6s ease;
 }
+
 .progress-fill.danger {
   background: linear-gradient(90deg, #ff4d4f 0%, #ff7875 100%);
 }
+
 .progress-text {
   font-size: 24rpx;
   font-weight: 500;
   min-width: 60rpx;
   text-align: right;
 }
+
 .status-chip {
   padding: 6rpx 12rpx;
   border-radius: 16rpx;
@@ -1025,27 +1076,32 @@ const closeModal = () => {
   font-weight: 500;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
+
 .chip-module-complete,
 .chip-completed {
   background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
   color: #389e0d;
   border: 1rpx solid #95de64;
 }
+
 .chip-module-incomplete,
 .chip-incomplete {
   background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%);
   color: #cf1322;
   border: 1rpx solid #ff7875;
 }
+
 .chip-neutral {
   background: linear-gradient(135deg, #f0f0f0 0%, #d9d9d9 100%);
   color: #595959;
   border: 1rpx solid #bfbfbf;
 }
+
 .course-sort-hint {
   padding: 8rpx 12rpx 4rpx;
   text-align: center;
 }
+
 .sort-hint-text {
   font-size: 20rpx;
   color: #8c8c8c;
@@ -1054,12 +1110,14 @@ const closeModal = () => {
   justify-content: center;
   gap: 6rpx;
 }
+
 .course-list {
   display: flex;
   flex-direction: column;
   gap: 8rpx;
   padding: 12rpx;
 }
+
 /* 移除了 ::after 伪元素方案，因为 Grid 方案不需要它 */
 .course-item {
   border: 1rpx solid #e8e8e8;
@@ -1073,10 +1131,12 @@ const closeModal = () => {
   transition: all 0.3s ease;
   position: relative;
 }
+
 .course-item.completed {
   border-color: #87d068;
   background: linear-gradient(135deg, #f6ffed 0%, #ffffff 100%);
 }
+
 .course-item.completed::before {
   content: "";
   position: absolute;
@@ -1088,10 +1148,12 @@ const closeModal = () => {
   border-radius: 12rpx 0 0 12rpx;
   transition: opacity 0.3s ease;
 }
+
 .course-item:not(.completed) {
   border-color: #ffb3ba;
   background: linear-gradient(135deg, #fff2f0 0%, #ffffff 100%);
 }
+
 .course-item:not(.completed)::before {
   content: "";
   position: absolute;
@@ -1103,10 +1165,12 @@ const closeModal = () => {
   border-radius: 12rpx 0 0 12rpx;
   transition: opacity 0.3s ease;
 }
+
 .course-name {
   font-size: 26rpx;
   font-weight: 600;
 }
+
 .current-semester-tag {
   font-size: 18rpx;
   color: #1890ff;
@@ -1118,6 +1182,7 @@ const closeModal = () => {
   white-space: nowrap;
   align-self: center;
 }
+
 .course-code {
   font-size: 20rpx;
   color: #8c8c8c;
@@ -1126,16 +1191,19 @@ const closeModal = () => {
   border-radius: 6rpx;
   align-self: flex-start;
 }
+
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6rpx;
 }
+
 .chip {
   padding: 3rpx 8rpx;
   border-radius: 10rpx;
   font-size: 18rpx;
 }
+
 .course-meta {
   display: flex;
   flex-wrap: wrap;
@@ -1143,6 +1211,7 @@ const closeModal = () => {
   padding-top: 6rpx;
   border-top: 1rpx solid #f5f5f5;
 }
+
 .meta {
   font-size: 20rpx;
   color: #595959;
@@ -1151,6 +1220,7 @@ const closeModal = () => {
   border-radius: 6rpx;
   border: 1rpx solid #e8e8e8;
 }
+
 .module-subtotal {
   margin: 8rpx 12rpx;
   padding: 10rpx;
@@ -1163,6 +1233,7 @@ const closeModal = () => {
   font-size: 22rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 }
+
 .subtotal-title {
   font-weight: 600;
   color: var(--text-primary);
@@ -1171,12 +1242,14 @@ const closeModal = () => {
   text-align: center;
   margin-bottom: 2rpx;
 }
+
 .subtotal-divider {
   width: 100%;
   height: 1rpx;
   background-color: #e8e8e8;
   margin: 6rpx 0;
 }
+
 .subtotal-credits,
 .subtotal-hours {
   color: var(--text-secondary);
@@ -1187,15 +1260,18 @@ const closeModal = () => {
   min-width: 80rpx;
   flex: 1;
 }
+
 .subtotal-completed-group {
   width: 100%;
   display: flex;
   flex-wrap: wrap;
   gap: 8rpx;
 }
+
 .subtotal-completed-group .subtotal-hours {
   flex: initial;
 }
+
 .subtotal-meta {
   font-size: 20rpx;
   color: var(--text-secondary);
@@ -1204,6 +1280,7 @@ const closeModal = () => {
   border: 1rpx solid #e8e8e8;
   border-radius: 6rpx;
 }
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1218,6 +1295,7 @@ const closeModal = () => {
   padding: 32rpx;
   animation: fadeIn 0.3s ease-out;
 }
+
 .modal-container {
   background: #ffffff;
   border-radius: 20rpx;
@@ -1226,24 +1304,29 @@ const closeModal = () => {
   box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease-out;
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
+
 @keyframes slideUp {
   from {
     transform: translateY(100rpx);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
   }
 }
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -1251,18 +1334,22 @@ const closeModal = () => {
   padding: 24rpx 24rpx 16rpx;
   border-bottom: 1rpx solid #f0f0f0;
 }
+
 .modal-title {
   font-size: 32rpx;
   font-weight: 600;
 }
+
 .modal-content {
   padding: 24rpx;
 }
+
 .notice-text {
   font-size: 28rpx;
   line-height: 1.6;
   color: var(--text-secondary);
 }
+
 .modal-actions {
   display: flex;
   padding: 16rpx 24rpx 24rpx;
