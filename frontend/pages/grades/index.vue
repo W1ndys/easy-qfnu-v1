@@ -415,6 +415,13 @@ $primary-color-light: #F5EFE6;
   padding: 20rpx;
   background-color: #fdfcfa;
   min-height: 100vh;
+  // 居中与外层圆角
+  width: 92%;
+  max-width: 980rpx;
+  margin: 20rpx auto;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.04);
 }
 
 // GPA分析模块样式
@@ -605,8 +612,15 @@ $primary-color-light: #F5EFE6;
   padding: 15rpx 25rpx;
   padding-bottom: calc(15rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(15rpx + env(safe-area-inset-bottom));
-  border-top-left-radius: 30rpx; border-top-right-radius: 30rpx;
+  border-top-left-radius: 20rpx;
+  border-top-right-radius: 20rpx;
   z-index: 100;
+  // 与内容容器同宽并水平居中 + 圆角
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: 92%;
+  max-width: 980rpx;
 }
 
 .result-display-card {
