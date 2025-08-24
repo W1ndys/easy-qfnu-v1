@@ -497,7 +497,7 @@ const handleMarqueeClick = () => {
 
 .marquee-content {
   white-space: nowrap; // 确保不换行
-  animation: marquee 30s linear infinite; // 稍微放慢速度
+  animation: marquee 15s linear infinite; // 稍微放慢速度
   cursor: pointer;
   line-height: 80rpx; // 与容器高度保持一致
   height: 80rpx; // 明确设置高度
@@ -533,7 +533,7 @@ const handleMarqueeClick = () => {
   width: 100%;
   height: 100vh;
   background: #f7f8fa;
-  padding-top: 4rpx; /* 调整为新的弹幕高度 */
+  padding-top: 30rpx; /* 调整为新的弹幕高度 */
 }
 
 // 背景装饰圆圈
