@@ -8,7 +8,7 @@ from loguru import logger
 import sys
 import os
 from contextlib import asynccontextmanager
-from app.middleware.origin_validation import OriginValidationMiddleware  # 临时注释掉
+from app.middleware.origin_validation import OriginValidationMiddleware
 
 # 日志系统完善
 from datetime import datetime
@@ -17,7 +17,8 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
 # 以启动时间命名日志文件
 LOG_DIR = os.getenv("LOG_DIR", "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
-LOG_PATH = os.path.join(LOG_DIR, f"app_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+# 使用 Loguru 时间占位符，日志轮转命名为 YYYY-MM-DD_hh:mm:ss
+LOG_PATH = os.path.join(LOG_DIR, "{time:YYYY-MM-DD_hh:mm:ss}.log")
 
 # 移除默认的logger
 logger.remove()
