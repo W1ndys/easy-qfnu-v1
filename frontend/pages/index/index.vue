@@ -4,7 +4,8 @@
     <view class="announcement-marquee" @click="handleMarqueeClick">
       <view class="marquee-content">
         <text class="marquee-text">
-          📢 该程序正在测试阶段，功能可能不稳定 | 加入QQ群获取最新消息：1053432087 | 开发策划交流群：1057327742 | 欢迎提出建议和意见
+          📢 该程序正在测试阶段，功能可能不稳定 | 加入QQ群获取最新消息：1053432087 |
+          开发策划交流群：1057327742 | 欢迎提出建议和意见
         </text>
       </view>
     </view>
@@ -20,10 +21,14 @@
     <view class="content-wrapper">
       <!-- Logo区域 -->
       <view class="logo-section">
-        <image class="logo" src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png" mode="aspectFit"></image>
+        <image
+          class="logo"
+          src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png"
+          mode="aspectFit"
+        ></image>
         <view class="app-title">曲奇教务</view>
         <view class="app-subtitle">让你的QFNU更简单</view>
-        
+
         <!-- 新生搜索小入口 -->
         <view class="freshman-entry" @click="goToFreshmanSearch">
           <uni-icons type="help" size="14" color="#7f4515"></uni-icons>
@@ -45,7 +50,8 @@
               prefixIcon="person"
               v-model="formData.studentId"
               placeholder="学号"
-              class="custom-input" />
+              class="custom-input"
+            />
           </uni-forms-item>
           <uni-forms-item class="form-item">
             <uni-easyinput
@@ -53,7 +59,8 @@
               type="password"
               v-model="formData.password"
               placeholder="密码"
-              class="custom-input" />
+              class="custom-input"
+            />
           </uni-forms-item>
         </uni-forms>
 
@@ -65,7 +72,12 @@
               <text class="remember-text">记住账号密码</text>
             </label>
           </checkbox-group>
-          <text class="clear-cache" @click="clearCachedCredentials" v-if="hasCachedCredentials">清除缓存</text>
+          <text
+            class="clear-cache"
+            @click="clearCachedCredentials"
+            v-if="hasCachedCredentials"
+            >清除缓存</text
+          >
         </view>
 
         <view class="agreement">
@@ -73,9 +85,7 @@
             <label class="agree-label">
               <checkbox value="agree" :checked="agreed" />
               <text class="agree-text">我已阅读并同意</text>
-              <text class="agreement-link" @click="openAgreement"
-                >《用户协议》</text
-              >
+              <text class="agreement-link" @click="openAgreement">《用户协议》</text>
             </label>
           </checkbox-group>
         </view>
@@ -120,15 +130,14 @@ const agreed = ref(false);
 // 新增：跳转到新生搜索页面
 const goToFreshmanSearch = () => {
   uni.navigateTo({
-    url: "/pages/freshman-questions-search/index"
+    url: "/pages/freshman-questions-search/index",
   });
 };
 
 // 记住密码相关
 const onAgreeChange = (e) => {
   try {
-    agreed.value =
-      Array.isArray(e.detail.value) && e.detail.value.includes("agree");
+    agreed.value = Array.isArray(e.detail.value) && e.detail.value.includes("agree");
   } catch (err) {
     agreed.value = false;
   }
@@ -202,11 +211,11 @@ const loadCachedCredentials = () => {
       formData.value.password = password || "";
       rememberPassword.value = remember || false;
       hasCachedCredentials.value = !!(studentId || password);
-      
-      console.log("已加载缓存的账号信息", { 
+
+      console.log("已加载缓存的账号信息", {
         studentId: studentId ? "***" + studentId.slice(-4) : "",
         hasPassword: !!password,
-        remember 
+        remember,
       });
     }
   } catch (error) {
@@ -222,7 +231,7 @@ const saveCachedCredentials = () => {
         studentId: formData.value.studentId,
         password: formData.value.password,
         remember: true,
-        saveTime: new Date().getTime()
+        saveTime: new Date().getTime(),
       };
       uni.setStorageSync("cached_credentials", JSON.stringify(credentials));
       console.log("账号密码已保存到缓存");
@@ -256,7 +265,7 @@ const clearCachedCredentials = () => {
           uni.showToast({ title: "清除缓存失败", icon: "none" });
         }
       }
-    }
+    },
   });
 };
 
@@ -289,10 +298,10 @@ const handleLogin = async () => {
     // uni.request 返回的是一个数组 [error, response]
     if (res.statusCode === 200 && res.data.access_token) {
       console.log("登录成功, Token:", res.data.access_token);
-      
+
       // 保存账号密码到缓存（在登录成功后）
       saveCachedCredentials();
-      
+
       uni.showToast({ title: "登录成功", icon: "success" });
       uni.setStorageSync("token", res.data.access_token);
 
@@ -317,8 +326,7 @@ const handleLogin = async () => {
   }
 };
 
-const AGREEMENT_URL =
-  "https://cq4hqujcxu3.feishu.cn/docx/EYE6d5ufAoQt5Axx7MFc4XMrnAf";
+const AGREEMENT_URL = "https://cq4hqujcxu3.feishu.cn/docx/EYE6d5ufAoQt5Axx7MFc4XMrnAf";
 const openAgreement = () => {
   uni.showModal({
     title: "用户协议",
@@ -336,10 +344,10 @@ const openAgreement = () => {
           uni.setClipboardData({
             data: AGREEMENT_URL,
             success() {
-              uni.showToast({ 
-                title: "链接已复制，请在浏览器中打开", 
+              uni.showToast({
+                title: "链接已复制，请在浏览器中打开",
                 icon: "success",
-                duration: 3000
+                duration: 3000,
               });
             },
           });
@@ -354,10 +362,10 @@ const openAgreement = () => {
         uni.setClipboardData({
           data: AGREEMENT_URL,
           success() {
-            uni.showToast({ 
-              title: "链接已复制，请在浏览器中打开", 
+            uni.showToast({
+              title: "链接已复制，请在浏览器中打开",
               icon: "success",
-              duration: 3000
+              duration: 3000,
             });
           },
         });
@@ -367,10 +375,10 @@ const openAgreement = () => {
         uni.setClipboardData({
           data: AGREEMENT_URL,
           success() {
-            uni.showToast({ 
-              title: "协议链接已复制到剪贴板", 
+            uni.showToast({
+              title: "协议链接已复制到剪贴板",
               icon: "success",
-              duration: 2000
+              duration: 2000,
             });
           },
         });
@@ -394,12 +402,16 @@ const copyDevQQGroup = () => {
   uni.setClipboardData({
     data: "1057327742",
     success() {
-      uni.showToast({ title: "开发交流群号已复制到剪贴板，请自行搜索加群", icon: "success" });
+      uni.showToast({
+        title: "开发交流群号已复制到剪贴板，请自行搜索加群",
+        icon: "success",
+      });
     },
   });
 };
 
-const ACTIVATION_URL = "http://ids.qfnu.edu.cn/retrieve-password/activationMobile/index.html";
+const ACTIVATION_URL =
+  "http://ids.qfnu.edu.cn/retrieve-password/activationMobile/index.html";
 
 // 打开账号激活页面
 const openActivationPage = () => {
@@ -419,10 +431,10 @@ const openActivationPage = () => {
           uni.setClipboardData({
             data: ACTIVATION_URL,
             success() {
-              uni.showToast({ 
-                title: "链接已复制，请在浏览器中打开", 
+              uni.showToast({
+                title: "链接已复制，请在浏览器中打开",
                 icon: "success",
-                duration: 3000
+                duration: 3000,
               });
             },
           });
@@ -437,10 +449,10 @@ const openActivationPage = () => {
         uni.setClipboardData({
           data: ACTIVATION_URL,
           success() {
-            uni.showToast({ 
-              title: "链接已复制，请在浏览器中打开", 
+            uni.showToast({
+              title: "链接已复制，请在浏览器中打开",
               icon: "success",
-              duration: 3000
+              duration: 3000,
             });
           },
         });
@@ -450,10 +462,10 @@ const openActivationPage = () => {
         uni.setClipboardData({
           data: ACTIVATION_URL,
           success() {
-            uni.showToast({ 
-              title: "激活链接已复制到剪贴板", 
+            uni.showToast({
+              title: "激活链接已复制到剪贴板",
               icon: "success",
-              duration: 2000
+              duration: 2000,
             });
           },
         });
@@ -465,14 +477,14 @@ const openActivationPage = () => {
 // 新增：点击弹幕处理QQ群复制
 const handleMarqueeClick = () => {
   uni.showActionSheet({
-    itemList: ['复制用户群号 1053432087', '复制开发群号 1057327742'],
+    itemList: ["复制用户群号 1053432087", "复制开发群号 1057327742"],
     success: (res) => {
       if (res.tapIndex === 0) {
         copyQQGroup();
       } else if (res.tapIndex === 1) {
         copyDevQQGroup();
       }
-    }
+    },
   });
 };
 </script>
@@ -497,13 +509,13 @@ const handleMarqueeClick = () => {
 
 .marquee-content {
   white-space: nowrap; // 确保不换行
-  animation: marquee 15s linear infinite; // 稍微放慢速度
+  animation: marquee 20s linear infinite; // 稍微放慢速度
   cursor: pointer;
   line-height: 80rpx; // 与容器高度保持一致
   height: 80rpx; // 明确设置高度
   display: flex;
   align-items: center;
-  
+
   &:hover {
     animation-play-state: paused;
   }
@@ -845,7 +857,7 @@ const handleMarqueeClick = () => {
   margin-top: 20rpx;
   padding-top: 20rpx;
   border-top: 1rpx solid #e2e8f0;
-  
+
   text {
     font-size: 22rpx;
     color: #9ca3af;
@@ -883,16 +895,16 @@ const handleMarqueeClick = () => {
   .login-card {
     padding: 40rpx 40rpx 30rpx;
   }
-  
+
   .announcement-marquee {
     height: 60rpx; // 小屏幕稍微减小高度
   }
-  
+
   .marquee-content {
     line-height: 60rpx;
     height: 60rpx;
   }
-  
+
   .marquee-text {
     font-size: 20rpx; // 小屏幕减小字体
     padding: 0 30rpx; // 减小间距
@@ -906,7 +918,7 @@ const handleMarqueeClick = () => {
     max-width: 1200rpx;
     margin: 0 auto;
   }
-  
+
   .login-card {
     max-width: 600rpx;
   }
