@@ -444,11 +444,14 @@ def calculate_gpa_advanced(
         if exclude_indices is None:
             exclude_indices = []
 
+        # 保存原始数据用于生成完整课程列表
+        original_data = grades_data.copy()
+
         # 过滤数据
         filtered_data = []
         for grade_item in grades_data:
             # 排除指定序号的课程
-            sequence = grade_item.get("序号", "")
+            sequence = grade_item.get("index", "")
             if sequence and str(sequence) in [str(idx) for idx in exclude_indices]:
                 logger.debug(
                     f"排除课程: {grade_item.get('courseName', 'Unknown')} (序号: {sequence})"
@@ -464,9 +467,9 @@ def calculate_gpa_advanced(
             filtered_data = _process_retakes(filtered_data)
             logger.debug(f"去重修后数据量: {len(filtered_data)}")
 
-        # 计算总体GPA
+        # 计算总体GPA，传入原始数据以生成完整课程列表
         logger.debug("开始计算总体GPA...")
-        total_gpa = _calculate_total_gpa(filtered_data)
+        total_gpa = _calculate_total_gpa(filtered_data, exclude_indices, original_data)
 
         # 计算详细的GPA分析（按学年、学期）
         logger.debug("开始计算详细GPA分析...")
@@ -543,6 +546,11 @@ def _process_retakes(grades_data: list):
                 except ValueError:
                     continue
 
+            # 为被去除的重修记录添加标记
+            for record in course_list:
+                if record != best_record:
+                    record["exclude_reason"] = "重修/补考记录（已取最高分）"
+
             processed_data.append(best_record)
             logger.debug(
                 f"选择记录: {best_record.get('courseName')} - 绩点: {best_gpa}"
@@ -567,7 +575,7 @@ def _calculate_detailed_gpa(grades_data: list):
     semester_data = {}
 
     for grade_item in grades_data:
-        semester = grade_item.get("semester", "")
+        semester = grade_item.get("semester", "")  # 使用英文字段名
         if not semester:
             continue
 
@@ -614,50 +622,113 @@ def _calculate_detailed_gpa(grades_data: list):
     }
 
 
-def _calculate_total_gpa(grades_data: list):
+def _calculate_total_gpa(
+    grades_data: list,
+    exclude_indices: Optional[List[int]] = None,
+    original_data: Optional[list] = None,
+):
     """
     计算总体加权GPA。
 
     Args:
-        grades_data: 成绩数据列表
+        grades_data: 成绩数据列表（已过滤）
+        exclude_indices: 排除的课程序号列表
+        original_data: 原始成绩数据列表（用于标记排除状态）
 
     Returns:
         dict: GPA计算结果
     """
     logger.debug(f"开始计算总体GPA，数据量: {len(grades_data)}")
+
+    if exclude_indices is None:
+        exclude_indices = []
+
     total_credit = 0.0
     total_grade_point = 0.0
     course_count = 0
     valid_courses = []
 
-    for grade_item in grades_data:
-        credit_str = grade_item.get("credit", "0")
-        grade_point_str = grade_item.get("gpa", "0")
+    # 如果有原始数据，生成包含排除状态的完整课程列表
+    if original_data:
+        excluded_indices_str = [str(idx) for idx in exclude_indices]
+        for grade_item in original_data:
+            credit_str = grade_item.get("credit", "0")
+            grade_point_str = grade_item.get("gpa", "0")
+            index_str = grade_item.get("index", "")
 
-        try:
-            credit = float(credit_str) if credit_str and credit_str != "" else 0.0
-            grade_point = (
-                float(grade_point_str)
-                if grade_point_str and grade_point_str != ""
-                else 0.0
-            )
-
-            if credit > 0 and grade_point >= 0:  # 绩点可以为0
-                total_credit += credit
-                total_grade_point += credit * grade_point
-                course_count += 1
-                valid_courses.append(
-                    {
-                        "course_name": grade_item.get("courseName", ""),
-                        "credit": credit,
-                        "grade_point": grade_point,
-                        "semester": grade_item.get("semester", ""),
-                    }
+            try:
+                credit = float(credit_str) if credit_str and credit_str != "" else 0.0
+                grade_point = (
+                    float(grade_point_str)
+                    if grade_point_str and grade_point_str != ""
+                    else 0.0
                 )
 
-        except ValueError:
-            logger.warning(f"跳过无效数据: credit={credit_str}, gpa={grade_point_str}")
-            continue
+                # 判断是否被排除
+                is_excluded = index_str in excluded_indices_str
+
+                course_info = {
+                    "index": index_str,
+                    "course_name": grade_item.get("courseName", ""),
+                    "course_code": grade_item.get("courseCode", ""),
+                    "credit": credit,
+                    "grade_point": grade_point,
+                    "score": grade_item.get("score", ""),
+                    "semester": grade_item.get("semester", ""),
+                    "is_excluded": is_excluded,
+                    "exclude_reason": "用户排除" if is_excluded else None,
+                }
+
+                # 如果没有被排除且有效，计入GPA计算
+                if not is_excluded and credit > 0 and grade_point >= 0:
+                    total_credit += credit
+                    total_grade_point += credit * grade_point
+                    course_count += 1
+
+                valid_courses.append(course_info)
+
+            except ValueError:
+                logger.warning(
+                    f"跳过无效数据: credit={credit_str}, gpa={grade_point_str}"
+                )
+                continue
+    else:
+        # 原有逻辑，兼容性处理
+        for grade_item in grades_data:
+            credit_str = grade_item.get("credit", "0")
+            grade_point_str = grade_item.get("gpa", "0")
+
+            try:
+                credit = float(credit_str) if credit_str and credit_str != "" else 0.0
+                grade_point = (
+                    float(grade_point_str)
+                    if grade_point_str and grade_point_str != ""
+                    else 0.0
+                )
+
+                if credit > 0 and grade_point >= 0:
+                    total_credit += credit
+                    total_grade_point += credit * grade_point
+                    course_count += 1
+                    valid_courses.append(
+                        {
+                            "index": grade_item.get("index", ""),
+                            "course_name": grade_item.get("courseName", ""),
+                            "course_code": grade_item.get("courseCode", ""),
+                            "credit": credit,
+                            "grade_point": grade_point,
+                            "score": grade_item.get("score", ""),
+                            "semester": grade_item.get("semester", ""),
+                            "is_excluded": False,
+                            "exclude_reason": None,
+                        }
+                    )
+
+            except ValueError:
+                logger.warning(
+                    f"跳过无效数据: credit={credit_str}, gpa={grade_point_str}"
+                )
+                continue
 
     if total_credit > 0:
         weighted_gpa = total_grade_point / total_credit
@@ -677,7 +748,7 @@ def _calculate_total_gpa(grades_data: list):
             "weighted_gpa": 0.0,
             "total_credit": 0.0,
             "course_count": 0,
-            "courses": [],
+            "courses": valid_courses if original_data else [],
         }
 
 
