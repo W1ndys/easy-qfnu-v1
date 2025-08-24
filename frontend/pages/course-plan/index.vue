@@ -116,7 +116,7 @@
                 </view>
               </view>
                 <!-- 课程详情，展开时显示 -->
-                <view v-show="expanded[getOriginalIndex(m)]" class="course-details">
+                <view class="course-details" :class="{ expanded: expanded[getOriginalIndex(m)] }">
                 <view
                   v-if="m.subtotal"
                   class="module-subtotal">
@@ -809,7 +809,17 @@ const closeModal = () => {
 
 /* 展开动画 */
 .course-details {
-  animation: slideDown 0.3s ease-out;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, padding-top 0.4s ease-in-out, padding-bottom 0.4s ease-in-out;
+  border-top: 1rpx solid transparent;
+}
+
+.course-details.expanded {
+  max-height: 2000rpx; /* 足够大的值以容纳内容 */
+  opacity: 1;
+  border-top-color: #e8e8e8;
 }
 
 .module-card {
@@ -889,7 +899,7 @@ const closeModal = () => {
 
 /* 课程详情区域 */
 .course-details {
-  border-top: 1rpx solid #e8e8e8;
+  /* border-top: 1rpx solid #e8e8e8; */ /* 已移动到展开动画样式中 */
   background: linear-gradient(180deg, #fafbfc 0%, #f5f6fa 100%);
 }
 
