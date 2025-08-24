@@ -50,11 +50,11 @@ router = APIRouter()
                         "success": True,
                         "message": "个人信息获取成功",
                         "data": {
-                            "student_name": "张三",
-                            "student_id": "2022416246",
-                            "college": "计算机科学与技术学院",
-                            "major": "计算机科学与技术",
-                            "class_name": "22计科1班",
+                            "student_name": "***",
+                            "student_id": "2022******",
+                            "college": "***学院",
+                            "major": "***专业",
+                            "class_name": "***班",
                         },
                     }
                 }
