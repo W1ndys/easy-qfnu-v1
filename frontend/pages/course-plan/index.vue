@@ -407,7 +407,7 @@ onPullDownRefresh(async () => {
     uni.stopPullDownRefresh();
     return;
   }
-  await fetchCoursePlan();
+  await refreshCache(true); // 下拉刷新时强制刷新
   uni.stopPullDownRefresh();
 });
 
@@ -448,7 +448,7 @@ const fetchCoursePlan = async () => {
         updatedAt.value = res.data.updated_at || "";
 
         // 显示数据来源信息
-        if (dataSource.value === "live") {
+        if (dataSource.value === "live" && !isRefreshing.value) {
           uni.showToast({
             title: "已获取最新数据",
             icon: "success",
@@ -514,7 +514,7 @@ const fetchCoursePlan = async () => {
 };
 
 // 新增：刷新缓存功能
-const refreshCache = async () => {
+const refreshCache = async (isPullDown = false) => {
   const token = uni.getStorageSync("token");
   if (!token) {
     uni.showToast({ title: "请先登录", icon: "none" });
@@ -523,6 +523,9 @@ const refreshCache = async () => {
   }
 
   isRefreshing.value = true;
+  if (!isPullDown) {
+    isLoading.value = true; // 非下拉刷新时显示全局 loading
+  }
 
   try {
     // 先调用刷新接口清除缓存
@@ -534,7 +537,7 @@ const refreshCache = async () => {
       },
     });
 
-    if (refreshRes.statusCode === 200) {
+    if (refreshRes.statusCode === 200 && refreshRes.data?.success) {
       console.log("缓存刷新成功", refreshRes.data);
 
       // 然后重新获取数据
@@ -566,6 +569,9 @@ const refreshCache = async () => {
     });
   } finally {
     isRefreshing.value = false;
+    if (!isPullDown) {
+      isLoading.value = false;
+    }
   }
 };
 
@@ -831,12 +837,12 @@ const closeModal = () => {
   font-size: 24rpx;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 2rpx 8rpx rgba(24, 144, 255, 0.15);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
 }
 
 .refresh-btn:not(.loading):active {
   transform: translateY(2rpx);
-  box-shadow: 0 1rpx 4rpx rgba(24, 144, 255, 0.2);
+  box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
 }
 
 .refresh-btn.loading {
