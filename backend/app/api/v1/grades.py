@@ -210,20 +210,21 @@ async def get_user_grades_with_gpa(
 根据用户指定的条件计算定制化的GPA结果。
 
 **功能特点：**
-- 支持排除指定课程（通过课程序号）
+- 支持选择指定课程进行GPA计算（通过课程序号）
 - 支持去除重修补考记录，只保留最高成绩
 - 灵活的GPA计算策略，满足不同评估需求
 - 基于实时成绩数据进行计算
 
 **使用场景：**
-- 申请研究生时需要排除某些课程的GPA计算
 - 计算专业核心课程的GPA
-- 分析学术表现时去除重修影响
+- 申请研究生时计算特定课程的GPA
+- 分析学术表现时专注于某些重要课程
 - 生成各种奖学金申请所需的GPA数据
 
 **计算规则：**
 - 使用学分加权平均方法计算GPA
-- 排除的课程不参与GPA计算
+- 如果指定了课程列表，只计算选中的课程
+- 如果没有指定课程列表，计算所有课程
 - 开启去重修模式时，同一门课程只取最高成绩记录
 """,
     tags=["成绩"],
@@ -242,10 +243,15 @@ async def get_user_grades_with_gpa(
                             "course_count": 8,
                             "courses": [
                                 {
+                                    "index": "1",
                                     "course_name": "数据结构",
+                                    "course_code": "CS001",
                                     "credit": 4.0,
                                     "grade_point": 4.0,
+                                    "score": "90",
                                     "semester": "2023-2024-1",
+                                    "is_excluded": False,
+                                    "exclude_reason": None,
                                 }
                             ],
                         },
@@ -279,10 +285,10 @@ async def calculate_custom_gpa(
     """
     自定义GPA计算
 
-    根据用户提供的参数（排除课程、去除重修等）计算定制化的GPA结果。
+    根据用户提供的参数（选中课程、去除重修等）计算定制化的GPA结果。
 
     Args:
-        request: GPA计算请求，包含排除课程列表和是否去除重修的配置
+        request: GPA计算请求，包含选中课程列表和是否去除重修的配置
         session: 当前用户的教务系统会话（通过依赖注入获取）
 
     Returns:
@@ -293,7 +299,7 @@ async def calculate_custom_gpa(
     """
     try:
         logger.info(
-            f"开始自定义GPA计算，排除课程: {request.exclude_indices}, 去重修: {request.remove_retakes}"
+            f"开始自定义GPA计算，选中课程: {request.exclude_indices}, 去重修: {request.remove_retakes}"
         )
 
         logger.debug("获取用户成绩数据用于GPA计算...")

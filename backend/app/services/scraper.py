@@ -430,7 +430,7 @@ def calculate_gpa_advanced(
 
     Args:
         grades_data: 成绩数据列表
-        exclude_indices: 要排除的课程序号列表
+        exclude_indices: 要包含计算的课程序号列表（如果为空或None，则包含所有课程）
         remove_retakes: 是否去除重修补考，取最高绩点
 
     Returns:
@@ -438,7 +438,7 @@ def calculate_gpa_advanced(
     """
     try:
         logger.info(
-            f"开始高级GPA计算，数据量: {len(grades_data)}, 排除课程: {exclude_indices}, 去重修: {remove_retakes}"
+            f"开始高级GPA计算，数据量: {len(grades_data)}, 选中课程: {exclude_indices}, 去重修: {remove_retakes}"
         )
 
         if exclude_indices is None:
@@ -447,17 +447,26 @@ def calculate_gpa_advanced(
         # 保存原始数据用于生成完整课程列表
         original_data = grades_data.copy()
 
-        # 过滤数据
+        # 过滤数据 - 修改逻辑：如果指定了课程列表，则只包含这些课程
         filtered_data = []
         for grade_item in grades_data:
-            # 排除指定序号的课程
             sequence = grade_item.get("index", "")
+
+            # 如果没有指定课程列表，包含所有课程
+            if not exclude_indices:
+                filtered_data.append(grade_item)
+                continue
+
+            # 如果指定了课程列表，只包含列表中的课程
             if sequence and str(sequence) in [str(idx) for idx in exclude_indices]:
+                logger.debug(
+                    f"包含课程: {grade_item.get('courseName', 'Unknown')} (序号: {sequence})"
+                )
+                filtered_data.append(grade_item)
+            else:
                 logger.debug(
                     f"排除课程: {grade_item.get('courseName', 'Unknown')} (序号: {sequence})"
                 )
-                continue
-            filtered_data.append(grade_item)
 
         logger.debug(f"过滤后数据量: {len(filtered_data)}")
 
@@ -483,7 +492,7 @@ def calculate_gpa_advanced(
             "semester_gpa": detailed_gpa["semester_gpa"],
             "available_years": detailed_gpa["available_years"],
             "available_semesters": detailed_gpa["available_semesters"],
-            "excluded_count": len(exclude_indices),
+            "excluded_count": len(exclude_indices) if exclude_indices else 0,
             "retakes_processed": remove_retakes,
             "message": "GPA计算完成",
         }
@@ -575,7 +584,7 @@ def _calculate_detailed_gpa(grades_data: list):
     semester_data = {}
 
     for grade_item in grades_data:
-        semester = grade_item.get("semester", "")  # 使用英文字段名
+        semester = grade_item.get("semester", "")
         if not semester:
             continue
 
@@ -632,8 +641,8 @@ def _calculate_total_gpa(
 
     Args:
         grades_data: 成绩数据列表（已过滤）
-        exclude_indices: 排除的课程序号列表
-        original_data: 原始成绩数据列表（用于标记排除状态）
+        exclude_indices: 包含计算的课程序号列表
+        original_data: 原始成绩数据列表（用于标记包含/排除状态）
 
     Returns:
         dict: GPA计算结果
@@ -650,7 +659,7 @@ def _calculate_total_gpa(
 
     # 如果有原始数据，生成包含排除状态的完整课程列表
     if original_data:
-        excluded_indices_str = [str(idx) for idx in exclude_indices]
+        selected_indices_str = [str(idx) for idx in exclude_indices]
         for grade_item in original_data:
             credit_str = grade_item.get("credit", "0")
             grade_point_str = grade_item.get("gpa", "0")
@@ -664,8 +673,15 @@ def _calculate_total_gpa(
                     else 0.0
                 )
 
-                # 判断是否被排除
-                is_excluded = index_str in excluded_indices_str
+                # 判断是否被包含在计算中
+                # 如果没有指定课程列表，则包含所有课程
+                # 如果指定了课程列表，只包含列表中的课程
+                if not exclude_indices:
+                    is_included = True
+                    exclude_reason = None
+                else:
+                    is_included = index_str in selected_indices_str
+                    exclude_reason = None if is_included else "未选中"
 
                 course_info = {
                     "index": index_str,
@@ -675,12 +691,12 @@ def _calculate_total_gpa(
                     "grade_point": grade_point,
                     "score": grade_item.get("score", ""),
                     "semester": grade_item.get("semester", ""),
-                    "is_excluded": is_excluded,
-                    "exclude_reason": "用户排除" if is_excluded else None,
+                    "is_excluded": not is_included,
+                    "exclude_reason": exclude_reason,
                 }
 
-                # 如果没有被排除且有效，计入GPA计算
-                if not is_excluded and credit > 0 and grade_point >= 0:
+                # 如果被包含且有效，计入GPA计算
+                if is_included and credit > 0 and grade_point >= 0:
                     total_credit += credit
                     total_grade_point += credit * grade_point
                     course_count += 1
