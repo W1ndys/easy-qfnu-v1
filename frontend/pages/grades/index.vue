@@ -4,163 +4,173 @@
     <LoadingScreen v-if="isLoading" text="正在从教务系统同步成绩..." />
 
     <!-- 内容区域 -->
-    <view v-else class="page-container">
-      <!-- 空状态 -->
-      <EmptyState
-        v-if="semesters.length === 0"
-        icon-type="info-filled"
-        title="没有查询到任何成绩记录"
-        description="请检查网络连接或稍后重试"
-        :show-retry="true"
-        @retry="fetchGrades"
-      />
+    <view v-else class="page-container page-rounded-container">
+      <!-- 背景装饰（与其它页面一致） -->
+      <view class="background-decoration">
+        <view class="circle circle-1"></view>
+        <view class="circle circle-2"></view>
+        <view class="circle circle-3"></view>
+      </view>
 
-      <!-- 有数据时显示 -->
-      <view v-else>
-        <!-- GPA分析模块 (已内联) -->
-        <view v-if="gpaAnalysis" class="analysis-container">
-          <!-- 主GPA显示区域 -->
-          <view class="main-gpa-section">
-            <view class="gpa-item">
-              <text class="gpa-value">{{ gpaAnalysis?.weighted_gpa?.toFixed(2) || 'N/A' }}</text>
-              <text class="gpa-label">总加权平均GPA</text>
+      <!-- 次外层内容容器，避免装饰遮挡 -->
+      <view class="content-wrapper">
+        <!-- 空状态 -->
+        <EmptyState
+          v-if="semesters.length === 0"
+          icon-type="info-filled"
+          title="没有查询到任何成绩记录"
+          description="请检查网络连接或稍后重试"
+          :show-retry="true"
+          @retry="fetchGrades"
+        />
+
+        <!-- 有数据时显示 -->
+        <view v-else>
+          <!-- GPA分析模块 (已内联) -->
+          <view v-if="gpaAnalysis" class="analysis-container">
+            <!-- 主GPA显示区域 -->
+            <view class="main-gpa-section">
+              <view class="gpa-item">
+                <text class="gpa-value">{{ gpaAnalysis?.weighted_gpa?.toFixed(2) || 'N/A' }}</text>
+                <text class="gpa-label">总加权平均GPA</text>
+              </view>
+              <view class="gpa-item">
+                <text class="gpa-value">{{ effectiveGpa?.weighted_gpa?.toFixed(2) || 'N/A' }}</text>
+                <text class="gpa-label">有效GPA (去重修)</text>
+              </view>
+              <view class="gpa-item">
+                <text class="gpa-value">{{ totalCourses || 0 }}</text>
+                <text class="gpa-label">总课程数</text>
+              </view>
             </view>
-            <view class="gpa-item">
-              <text class="gpa-value">{{ effectiveGpa?.weighted_gpa?.toFixed(2) || 'N/A' }}</text>
-              <text class="gpa-label">有效GPA (去重修)</text>
-            </view>
-            <view class="gpa-item">
-              <text class="gpa-value">{{ totalCourses || 0 }}</text>
-              <text class="gpa-label">总课程数</text>
+
+            <!-- 学年与学期GPA流式布局 -->
+            <view class="detailed-gpa-section">
+              <view class="section-header">
+                <text class="section-title">详细GPA分布</text>
+              </view>
+              <view class="details-flex-container">
+                <!-- 学年GPA -->
+                <template v-if="yearlyGpa && Object.keys(yearlyGpa).length > 0">
+                  <view v-for="(gpa, year) in yearlyGpa" :key="year" class="detail-item-flex">
+                    <text class="detail-label">{{ year }}学年</text>
+                    <text class="detail-sub-info">{{ gpa.course_count }}门 / {{ gpa.total_credit.toFixed(1) }}学分</text>
+                    <text class="detail-value">{{ gpa.weighted_gpa.toFixed(2) }}</text>
+                  </view>
+                </template>
+                <!-- 学期GPA -->
+                <template v-if="semesterGpa && Object.keys(semesterGpa).length > 0">
+                   <view v-for="(gpa, semester) in semesterGpa" :key="semester" class="detail-item-flex">
+                    <text class="detail-label">{{ semester }}</text>
+                    <text class="detail-sub-info">{{ gpa.course_count }}门 / {{ gpa.total_credit.toFixed(1) }}学分</text>
+                    <text class="detail-value">{{ gpa.weighted_gpa.toFixed(2) }}</text>
+                  </view>
+                </template>
+              </view>
             </view>
           </view>
 
-          <!-- 学年与学期GPA流式布局 -->
-          <view class="detailed-gpa-section">
-            <view class="section-header">
-              <text class="section-title">详细GPA分布</text>
+          <!-- 自定义GPA计算模式切换 -->
+          <view class="custom-gpa-toggle-section">
+            <view class="toggle-left">
+              <text class="toggle-title">自定义GPA计算</text>
+              <text class="toggle-desc">勾选课程以计算特定GPA</text>
             </view>
-            <view class="details-flex-container">
-              <!-- 学年GPA -->
-              <template v-if="yearlyGpa && Object.keys(yearlyGpa).length > 0">
-                <view v-for="(gpa, year) in yearlyGpa" :key="year" class="detail-item-flex">
-                  <text class="detail-label">{{ year }}学年</text>
-                  <text class="detail-sub-info">{{ gpa.course_count }}门 / {{ gpa.total_credit.toFixed(1) }}学分</text>
-                  <text class="detail-value">{{ gpa.weighted_gpa.toFixed(2) }}</text>
-                </view>
-              </template>
-              <!-- 学期GPA -->
-              <template v-if="semesterGpa && Object.keys(semesterGpa).length > 0">
-                 <view v-for="(gpa, semester) in semesterGpa" :key="semester" class="detail-item-flex">
-                  <text class="detail-label">{{ semester }}</text>
-                  <text class="detail-sub-info">{{ gpa.course_count }}门 / {{ gpa.total_credit.toFixed(1) }}学分</text>
-                  <text class="detail-value">{{ gpa.weighted_gpa.toFixed(2) }}</text>
-                </view>
-              </template>
-            </view>
+            <switch :checked="isCustomMode" @change="toggleCustomMode" color="#7F4515" />
           </view>
-        </view>
-
-        <!-- 自定义GPA计算模式切换 -->
-        <view class="custom-gpa-toggle-section">
-          <view class="toggle-left">
-            <text class="toggle-title">自定义GPA计算</text>
-            <text class="toggle-desc">勾选课程以计算特定GPA</text>
+          
+          <!-- 提示信息 -->
+          <view v-if="isCustomMode" class="custom-mode-tip">
+            <view class="tip-icon">💡</view>
+            <text class="tip-text">请勾选 **需要计入** GPA的课程</text>
           </view>
-          <switch :checked="isCustomMode" @change="toggleCustomMode" color="#7F4515" />
-        </view>
-        
-        <!-- 提示信息 -->
-        <view v-if="isCustomMode" class="custom-mode-tip">
-          <view class="tip-icon">💡</view>
-          <text class="tip-text">请勾选 **需要计入** GPA的课程</text>
-        </view>
 
-        <!-- 成绩列表 -->
-        <view class="grades-list-container">
-          <view v-for="semester in semesters" :key="semester.semesterName" class="semester-block">
-            <view class="semester-header">
-              <text class="semester-name">{{ semester.semesterName }}</text>
-            </view>
-            <view class="courses-list">
-              <view
-                v-for="course in semester.grades"
-                :key="course.index"
-                class="course-card"
-                :class="{ 
-                  'is-custom-mode': isCustomMode, 
-                  'is-selected': isCourseSelected(course.index) 
-                }"
-              >
-                <!-- 卡片主区域 (用于点击) -->
-                <view class="course-main" @click="handleCourseClick(course)">
-                  <!-- 复选框 -->
-                  <view v-if="isCustomMode" class="course-checkbox-wrapper">
-                    <view class="checkbox-inner" :class="{ 'checked': isCourseSelected(course.index) }"></view>
-                  </view>
-                  
-                  <!-- 核心信息 -->
-                  <view class="course-core-info">
-                    <text class="course-name">{{ course.courseName }}</text>
-                    <view class="course-meta">
-                      <view class="meta-tag credit">学分: {{ course.credit }}</view>
-                      <view class="meta-tag gpa">绩点: {{ course.gpa }}</view>
-                      <view v-if="course.courseAttribute" class="meta-tag attribute">{{ course.courseAttribute }}</view>
+          <!-- 成绩列表 -->
+          <view class="grades-list-container">
+            <view v-for="semester in semesters" :key="semester.semesterName" class="semester-block">
+              <view class="semester-header">
+                <text class="semester-name">{{ semester.semesterName }}</text>
+              </view>
+              <view class="courses-list">
+                <view
+                  v-for="course in semester.grades"
+                  :key="course.index"
+                  class="course-card"
+                  :class="{ 
+                    'is-custom-mode': isCustomMode, 
+                    'is-selected': isCourseSelected(course.index) 
+                  }"
+                >
+                  <!-- 卡片主区域 (用于点击) -->
+                  <view class="course-main" @click="handleCourseClick(course)">
+                    <!-- 复选框 -->
+                    <view v-if="isCustomMode" class="course-checkbox-wrapper">
+                      <view class="checkbox-inner" :class="{ 'checked': isCourseSelected(course.index) }"></view>
+                    </view>
+                    
+                    <!-- 核心信息 -->
+                    <view class="course-core-info">
+                      <text class="course-name">{{ course.courseName }}</text>
+                      <view class="course-meta">
+                        <view class="meta-tag credit">学分: {{ course.credit }}</view>
+                        <view class="meta-tag gpa">绩点: {{ course.gpa }}</view>
+                        <view v-if="course.courseAttribute" class="meta-tag attribute">{{ course.courseAttribute }}</view>
+                      </view>
+                    </view>
+                    
+                    <!-- 成绩与展开按钮 -->
+                    <view class="course-side">
+                      <view class="course-score">
+                        <text class="score-text" :class="getScoreClass(course.score)">
+                          {{ course.score }}
+                        </text>
+                        <text v-if="course.scoreTag" class="score-tag">{{ course.scoreTag }}</text>
+                      </view>
+                      <view class="expand-icon" :class="{ 'expanded': isCourseExpanded(course.index) }">
+                        <uni-icons type="down" size="16" color="#868e96"></uni-icons>
+                      </view>
                     </view>
                   </view>
-                  
-                  <!-- 成绩与展开按钮 -->
-                  <view class="course-side">
-                    <view class="course-score">
-                      <text class="score-text" :class="getScoreClass(course.score)">
-                        {{ course.score }}
-                      </text>
-                      <text v-if="course.scoreTag" class="score-tag">{{ course.scoreTag }}</text>
-                    </view>
-                    <view class="expand-icon" :class="{ 'expanded': isCourseExpanded(course.index) }">
-                      <uni-icons type="down" size="16" color="#868e96"></uni-icons>
+
+                  <!-- 可展开的详细信息 -->
+                  <view v-show="isCourseExpanded(course.index)" class="course-details">
+                    <view class="detail-grid">
+                      <view class="detail-item">
+                        <text class="detail-label">课程代码</text>
+                        <text class="detail-value">{{ course.courseCode }}</text>
+                      </view>
+                      <view class="detail-item">
+                        <text class="detail-label">总学时</text>
+                        <text class="detail-value">{{ course.totalHours }}</text>
+                      </view>
+                      <view class="detail-item">
+                        <text class="detail-label">课程性质</text>
+                        <text class="detail-value">{{ course.courseNature }}</text>
+                      </view>
+                      <view class="detail-item">
+                        <text class="detail-label">课程类别</text>
+                        <text class="detail-value">{{ course.courseCategory }}</text>
+                      </view>
+                       <view class="detail-item">
+                        <text class="detail-label">考核方式</text>
+                        <text class="detail-value">{{ course.assessmentMethod }}</text>
+                      </view>
+                      <view class="detail-item">
+                        <text class="detail-label">考试类型</text>
+                        <text class="detail-value">{{ course.examType }}</text>
+                      </view>
+                      <view v-if="course.groupName" class="detail-item">
+                        <text class="detail-label">课程分组</text>
+                        <text class="detail-value">{{ course.groupName }}</text>
+                      </view>
+                      <view v-if="course.retakeSemester" class="detail-item">
+                        <text class="detail-label">重修学期</text>
+                        <text class="detail-value">{{ course.retakeSemester }}</text>
+                      </view>
                     </view>
                   </view>
+
                 </view>
-
-                <!-- 可展开的详细信息 -->
-                <view v-show="isCourseExpanded(course.index)" class="course-details">
-                  <view class="detail-grid">
-                    <view class="detail-item">
-                      <text class="detail-label">课程代码</text>
-                      <text class="detail-value">{{ course.courseCode }}</text>
-                    </view>
-                    <view class="detail-item">
-                      <text class="detail-label">总学时</text>
-                      <text class="detail-value">{{ course.totalHours }}</text>
-                    </view>
-                    <view class="detail-item">
-                      <text class="detail-label">课程性质</text>
-                      <text class="detail-value">{{ course.courseNature }}</text>
-                    </view>
-                    <view class="detail-item">
-                      <text class="detail-label">课程类别</text>
-                      <text class="detail-value">{{ course.courseCategory }}</text>
-                    </view>
-                     <view class="detail-item">
-                      <text class="detail-label">考核方式</text>
-                      <text class="detail-value">{{ course.assessmentMethod }}</text>
-                    </view>
-                    <view class="detail-item">
-                      <text class="detail-label">考试类型</text>
-                      <text class="detail-value">{{ course.examType }}</text>
-                    </view>
-                    <view v-if="course.groupName" class="detail-item">
-                      <text class="detail-label">课程分组</text>
-                      <text class="detail-value">{{ course.groupName }}</text>
-                    </view>
-                    <view v-if="course.retakeSemester" class="detail-item">
-                      <text class="detail-label">重修学期</text>
-                      <text class="detail-value">{{ course.retakeSemester }}</text>
-                    </view>
-                  </view>
-                </view>
-
               </view>
             </view>
           </view>
@@ -411,20 +421,51 @@ const calculateCustomGPA = async () => {
 $primary-color: #7F4515;
 $primary-color-light: #F5EFE6;
 
+/* 最外层背景（与其它页面统一） */
 .page-container {
-  padding: 20rpx;
-  background-color: #fdfcfa;
   min-height: 100vh;
-  // 居中与外层圆角
-  width: 92%;
-  max-width: 980rpx;
-  margin: 20rpx auto;
-  border-radius: 20rpx;
+  background: #f7f8fa;
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.04);
 }
 
-// GPA分析模块样式
+/* 次外层圆角容器（与其它页面统一） */
+.page-rounded-container {
+  background: #ffffff;
+  border-radius: 40rpx;
+  padding: 20rpx 20rpx 30rpx;
+  box-shadow: 0 20rpx 60rpx var(--shadow-light);
+  border: 1rpx solid var(--border-light);
+}
+
+/* 内容主体容器，避免装饰覆盖 */
+.content-wrapper {
+  position: relative;
+  z-index: 1;
+  padding: 0; // 保持原有子模块的内边距与间距
+}
+
+/* 背景装饰（与其它页面统一） */
+.background-decoration {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(127, 69, 21, 0.06);
+  &.circle-1 { width: 200rpx; height: 200rpx; top: 10%; right: -50rpx; animation: float 6s ease-in-out infinite; }
+  &.circle-2 { width: 150rpx; height: 150rpx; bottom: 20%; left: -30rpx; animation: float 8s ease-in-out infinite reverse; }
+  &.circle-3 { width: 100rpx; height: 100rpx; top: 30%; left: 20%; animation: float 4s ease-in-out infinite; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20rpx) rotate(180deg); }
+}
+
+/* 下方为原有样式，去除 page-container 上的宽度/居中/圆角，保持模块间距 */
 .analysis-container {
   background-color: #ffffff;
   border-radius: 16rpx;
@@ -606,8 +647,9 @@ $primary-color-light: #F5EFE6;
   }
 }
 
+/* 悬浮操作栏与容器左右边距对齐 */
 .custom-gpa-footer {
-  position: fixed; bottom: 0; left: 0; right: 0;
+  position: fixed; bottom: 0; left: 20rpx; right: 20rpx;
   background-color: #ffffff; box-shadow: 0 -10rpx 40rpx rgba(0, 0, 0, 0.06);
   padding: 15rpx 25rpx;
   padding-bottom: calc(15rpx + constant(safe-area-inset-bottom));
@@ -615,12 +657,8 @@ $primary-color-light: #F5EFE6;
   border-top-left-radius: 20rpx;
   border-top-right-radius: 20rpx;
   z-index: 100;
-  // 与内容容器同宽并水平居中 + 圆角
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
-  width: 92%;
-  max-width: 980rpx;
+  // 删除此前的水平居中 transform/固定宽度，改为与页面内边距对齐
+  // width/transform/left:50% 均不再需要
 }
 
 .result-display-card {
