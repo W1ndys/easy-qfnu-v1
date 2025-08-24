@@ -3,31 +3,33 @@
     <view class="page-rounded-container">
       <ModernCard class="profile-card" highlight>
         <view class="profile-content">
-          <view class="avatar-section">
+          <!-- 身份展示区域 -->
+          <view class="identity-section">
             <view class="avatar-wrapper">
               <image class="avatar" src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png"
                 mode="aspectFit"></image>
               <view class="status-indicator"></view>
             </view>
-          </view>
-          <view class="user-info">
-            <view class="main-info">
+            <view class="identity-info">
+              <text class="welcome-text">欢迎回来~</text>
               <text class="user-name">{{ profile.student_name }}</text>
-              <text class="user-id">学号: {{ profile.student_id }}</text>
+              <text class="user-id">{{ profile.student_id }}</text>
             </view>
-            <view class="details-info">
-              <view class="detail-item">
-                <text class="detail-label">学院</text>
-                <text class="detail-value">{{ profile.college }}</text>
-              </view>
-              <view class="detail-item">
-                <text class="detail-label">专业</text>
-                <text class="detail-value">{{ profile.major }}</text>
-              </view>
-              <view class="detail-item">
-                <text class="detail-label">班级</text>
-                <text class="detail-value">{{ profile.class_name }}</text>
-              </view>
+          </view>
+          
+          <!-- 详细信息区域 -->
+          <view class="details-section">
+            <view class="detail-item">
+              <text class="detail-label">学院</text>
+              <text class="detail-value">{{ profile.college }}</text>
+            </view>
+            <view class="detail-item">
+              <text class="detail-label">专业</text>
+              <text class="detail-value">{{ profile.major }}</text>
+            </view>
+            <view class="detail-item">
+              <text class="detail-label">班级</text>
+              <text class="detail-value">{{ profile.class_name }}</text>
             </view>
           </view>
         </view>
@@ -516,8 +518,8 @@ const handleImageLoad = () => {
 // 页外层统一圆角白卡容器
 .page-rounded-container {
   background: #fff;
-  border-radius: 32rpx; // 缩小圆角
-  padding: 18rpx 12rpx; // 减少整体 padding
+  border-radius: 32rpx;
+  padding: 18rpx 12rpx;
   box-shadow: 0 8rpx 24rpx var(--shadow-light);
   border: 1rpx solid var(--border-light);
 }
@@ -527,18 +529,23 @@ const handleImageLoad = () => {
   margin-bottom: 24rpx;
 
   :deep(.card-content) {
-    padding: 24rpx 18rpx !important; // 调整内边距
+    padding: 20rpx 16rpx !important;
   }
 }
 
 .profile-content {
   display: flex;
-  align-items: center;
-  gap: 30rpx;
+  flex-direction: column;
+  gap: 20rpx;
 }
 
-.avatar-section {
-  position: relative;
+// 身份展示区域
+.identity-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+  padding: 8rpx 0;
 }
 
 .avatar-wrapper {
@@ -547,80 +554,89 @@ const handleImageLoad = () => {
 }
 
 .avatar {
-  width: 120rpx;
-  height: 120rpx;
+  width: 110rpx;
+  height: 110rpx;
   border-radius: 50%;
-  border: 4rpx solid rgba(155, 4, 0, 0.1);
-  box-shadow: 0 8rpx 24rpx rgba(155, 4, 0, 0.15);
+  border: 3rpx solid rgba(155, 4, 0, 0.1);
+  box-shadow: 0 8rpx 20rpx rgba(155, 4, 0, 0.15);
 }
 
 .status-indicator {
   position: absolute;
   bottom: 8rpx;
   right: 8rpx;
-  width: 24rpx;
-  height: 24rpx;
+  width: 22rpx;
+  height: 22rpx;
   background: #52c41a;
   border-radius: 50%;
-  border: 3rpx solid #ffffff;
+  border: 2rpx solid #ffffff;
 }
 
-.user-info {
-  flex: 1;
+.identity-info {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
-  /* 增加主区域和详情区域的间距 */
-}
-
-.main-info {
-  display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: 4rpx;
 }
 
+.welcome-text {
+  font-size: 22rpx;
+  color: var(--text-light);
+  font-weight: 400;
+  margin-bottom: 2rpx;
+}
+
 .user-name {
-  font-size: 40rpx;
-  /* 突出姓名 */
+  font-size: 38rpx;
   font-weight: 700;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .user-id {
   font-size: 28rpx;
-  /* 学号字体稍小 */
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 1rpx;
 }
 
-.details-info {
+// 详细信息区域
+.details-section {
+  border-top: 1rpx solid var(--border-light);
+  padding-top: 16rpx;
   display: flex;
   flex-direction: column;
   gap: 12rpx;
-  margin-top: 10rpx;
-  padding-top: 10rpx;
-  border-top: 1rpx solid var(--border-light);
-  /* 添加分割线 */
 }
 
 .detail-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* 标签和值两端对齐 */
-  font-size: 26rpx;
+  padding: 8rpx 12rpx;
+  background: rgba(127, 69, 21, 0.03);
+  border: 1rpx solid rgba(127, 69, 21, 0.08);
+  border-radius: 8rpx;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(127, 69, 21, 0.05);
+  }
 }
 
 .detail-label {
+  font-size: 24rpx;
   color: var(--text-light);
-  margin-right: 16rpx;
+  font-weight: 500;
+  min-width: 60rpx;
 }
 
 .detail-value {
+  font-size: 26rpx;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 600;
   text-align: right;
+  flex: 1;
 }
 
 
