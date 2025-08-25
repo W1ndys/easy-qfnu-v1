@@ -154,7 +154,9 @@ def _parse_course_item(item: Dict[str, Any]) -> Dict[str, Any]:
         # 剩余量
         "remain_count": _to_int(item.get("syrs")),
         # 时间冲突（根据备注是否包含“冲突”判断）
-        "time_conflict": ("冲突" in ctsm_raw) if isinstance(ctsm_raw, str) else False,
+        "time_conflict": (
+            ctsm_raw if (isinstance(ctsm_raw, str) and "冲突" in ctsm_raw) else ""
+        ),
     }
 
     # 其余字段暂不返回：
