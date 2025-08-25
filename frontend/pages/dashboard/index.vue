@@ -190,7 +190,7 @@ const features = ref([
   { text: "平均分查询", description: "查看课程平均分数据", icon: "bars", url: "/pages/average-scores/index" },
   { text: "选课推荐", description: "智能推荐选课方案", icon: "star", url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/", external: true },
   { text: "培养方案", description: "查看模块完成进度", icon: "list", url: "/pages/course-plan/index" },
-  { text: "预选课查询", description: "夫子校园提供技术支持", icon: "checkmarkempty", url: "http://xk.s.fz.z-xin.net/", external: true },
+  { text: "预选课查询", description: "支持选课模块探测", icon: "checkmarkempty", url: "/pages/pre-select-course/index" },
   { text: "课表查询", description: "即将推出", icon: "calendar", url: "" },
   { text: "排名查询", description: "即将推出", icon: "medal", url: "" },
   { text: "更多功能", description: "敬请期待", icon: "gear", url: "" },
@@ -826,7 +826,7 @@ const handleImageLoad = () => { console.log("赞赏码加载成功"); };
   gap: 8rpx;
   height: 72rpx; // 增加一些高度
   padding: 0 16rpx;
- border-radius: 16rpx;
+  border-radius: 16rpx;
   font-size: 26rpx;
   font-weight: 500;
   transition: all 0.2s ease;
