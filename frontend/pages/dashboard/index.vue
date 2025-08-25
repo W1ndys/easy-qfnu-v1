@@ -86,6 +86,11 @@
               <uni-icons type="chatbubble" size="20"></uni-icons>
               <text>联系作者</text>
             </button>
+
+            <button class="action-btn btn-secondary" @click="handleFeedback">
+              <uni-icons type="compose" size="20"></uni-icons>
+              <text>意见建议</text>
+            </button>
           </view>
         </ModernCard>
 
@@ -319,14 +324,13 @@ const handleChangelog = () => {
 };
 
 const handleContact = () => {
-  const qq = "2769731875";
-  uni.showModal({
-    title: "联系作者", content: `作者QQ号：${qq}\n\n选择操作：`,
-    confirmText: "复制QQ号", cancelText: "取消", confirmColor: "#7F4515",
-    success: (res) => {
-      if (res.confirm) uni.setClipboardData({ data: qq, success: () => uni.showToast({ title: "QQ号已复制", icon: "success" }) });
-    },
-  });
+  const qqAddUrl = "https://qm.qq.com/q/WBCJEU82A2";
+  handleExternalLink("添加QQ好友", qqAddUrl);
+};
+
+const handleFeedback = () => {
+  const feedbackUrl = "https://cq4hqujcxu3.feishu.cn/share/base/form/shrcnojLq3xgJ5m5Gzn5V87poHZ";
+  handleExternalLink("意见建议反馈", feedbackUrl);
 };
 
 const handleExternalLink = (title, url) => {
