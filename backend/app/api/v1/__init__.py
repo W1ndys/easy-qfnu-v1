@@ -58,6 +58,14 @@ except ImportError as e:
     logger.error(f"导入个人信息路由模块失败: {e}")
     profile_router = None
 
+try:
+    from .pre_select_course_query import router as pre_select_course_query_router
+
+    logger.debug("预选课查询路由模块导入成功")
+except ImportError as e:
+    logger.error(f"导入预选课查询路由模块失败: {e}")
+    pre_select_course_query_router = None
+
 
 # 创建主API路由器
 api_router = APIRouter()
@@ -71,6 +79,7 @@ ROUTER_CONFIGS = [
     (freshman_questions_search_router, "/question", "题库搜索"),
     (semester_router, "", "学期工具"),
     (profile_router, "", "个人信息"),
+    (pre_select_course_query_router, "", "预选课查询"),
 ]
 
 

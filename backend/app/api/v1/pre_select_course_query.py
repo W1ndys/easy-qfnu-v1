@@ -3,7 +3,7 @@ from typing import Optional, Any, List, Dict
 
 from fastapi import APIRouter, Depends
 import requests
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.services.base import get_user_session, BaseEducationService
 from app.services.pre_select_course_query import pre_select_course_query
@@ -12,16 +12,25 @@ router = APIRouter(tags=["预选课查询"])
 
 
 class PreSelectCourseQueryRequest(BaseModel):
-    course_id_or_name: str = Field(..., description="课程名称或课程ID")
+    course_id_or_name: Optional[str] = Field(None, description="课程名称或课程ID")
     teacher_name: Optional[str] = Field(None, description="教师姓名")
     week_day: Optional[str] = Field(None, description="上课星期(1-7)")
     class_period: Optional[str] = Field(None, description="上课节次(起止或单节)")
 
+    @model_validator(mode="after")
+    def _at_least_one_filter(self):
+        cid = (self.course_id_or_name or "").strip()
+        tname = (self.teacher_name or "").strip()
+        if not cid and not tname:
+            raise ValueError("course_id_or_name 与 teacher_name 至少提供一个")
+        return self
+
     class Config:
         json_schema_extra = {
             "example": {
+                # 二选一示例：只填课程名/号或只填教师名均可
                 "course_id_or_name": "大学英语A",
-                "teacher_name": "李四",
+                # "teacher_name": "李四",
                 "week_day": "2",
                 "class_period": "1-2",
             }
@@ -142,7 +151,7 @@ class ErrorResponse(BaseModel):
     "/pre-select-course/query",
     response_model=PreSelectCourseQueryResponse,
     summary="预选课查询",
-    description="根据课程名称或课程ID(必填)，可选的教师、上课星期、上课节次进行查询。会遍历多个选课模块并返回结果与模块来源。",
+    description="课程号或名称、教师至少填写一项；可选：上课星期、节次。系统会遍历多个选课模块并返回结果与模块来源。",
     responses={
         401: {"model": ErrorResponse, "description": "未授权或Session失效"},
         403: {"model": ErrorResponse, "description": "无权限"},
