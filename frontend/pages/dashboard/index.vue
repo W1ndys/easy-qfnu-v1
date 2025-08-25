@@ -193,6 +193,7 @@ const features = ref([
   { text: "预选课查询", description: "支持选课模块探测", icon: "checkmarkempty", url: "/pages/pre-select-course/index" },
   { text: "课表查询", description: "即将推出", icon: "calendar", url: "" },
   { text: "排名查询", description: "即将推出", icon: "medal", url: "" },
+  { text: "赞赏名单", description: "查看赞赏名单", icon: "heart", url: "https://cq4hqujcxu3.feishu.cn/docx/DE9Ed1l5iofB0exEYZncwMeenvd", external: true },
   { text: "更多功能", description: "敬请期待", icon: "gear", url: "" },
 ]);
 
