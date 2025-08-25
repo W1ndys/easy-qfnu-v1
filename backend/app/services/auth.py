@@ -1,6 +1,5 @@
 # app/services/auth_service.py
-import requests
-from typing import Optional, Tuple
+from typing import Tuple
 from app.services.scraper import login_to_university
 from app.db.database import save_session
 from app.core.security import (
@@ -10,6 +9,7 @@ from app.core.security import (
     logout_user as core_logout_user,
 )
 from loguru import logger
+from requests.exceptions import RequestException, HTTPError, Timeout, ConnectionError
 
 
 class AuthService:
@@ -33,6 +33,11 @@ class AuthService:
         Raises:
             Exception: 当认证失败时抛出异常
         """
+        # 新增：基础参数校验
+        if not student_id or not password:
+            logger.warning("学号或密码为空")
+            raise Exception("学号或密码不能为空")
+
         logger.info(f"开始用户认证，学号: {student_id}, 客户端IP: {client_ip}")
 
         try:
@@ -54,7 +59,11 @@ class AuthService:
                 logger.error(f"保存会话到数据库失败: {e}")
                 # 即使保存失败，也不影响登录流程
             finally:
-                session.close()
+                # 安全释放本地会话对象（持久化已完成）
+                try:
+                    session.close()
+                except Exception as _:
+                    pass
                 logger.debug("教务系统session已关闭")
 
             # 创建Token对
@@ -67,6 +76,16 @@ class AuthService:
 
             return access_token, refresh_token
 
+        except (Timeout, ConnectionError) as e:
+            logger.error(f"用户认证失败(网络/超时): {e}")
+            raise Exception("教务系统连接超时，请稍后重试")
+        except HTTPError as e:
+            status = e.response.status_code if e.response is not None else -1
+            logger.error(f"用户认证失败(HTTP {status}): {e}")
+            raise Exception("教务系统访问失败，请稍后重试")
+        except RequestException as e:
+            logger.error(f"用户认证失败(请求异常): {e}")
+            raise Exception("教务系统请求失败，请稍后重试")
         except Exception as e:
             logger.error(f"用户认证失败: {e}")
             raise
