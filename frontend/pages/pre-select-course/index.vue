@@ -128,7 +128,7 @@
                                             <text class="pill pill-ghost" v-if="c.credits">{{ c.credits }} 学分</text>
                                             <text class="pill" :class="c.remain_count > 0 ? 'pill-success' : 'pill-danger'
                                                 ">
-                                                余量 {{ c.remain_count ?? "—" }}
+                                                余量 {{ c.remain_count ?? "未知" }}
                                             </text>
                                         </view>
                                     </view>
