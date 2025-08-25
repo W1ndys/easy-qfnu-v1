@@ -1,6 +1,6 @@
 <template>
     <PageLayout>
-        <LoadingScreen v-if="isLoading" text="正在加载数据..." />
+        <LoadingScreen v-if="isLoading" text="正在加载数据，加载完成后会在下方显示..." />
 
         <!-- 使用提示弹窗 -->
         <view v-if="showTipModal" class="tip-modal-overlay" :class="{ closing: isClosing }" @click="closeTipModal">
