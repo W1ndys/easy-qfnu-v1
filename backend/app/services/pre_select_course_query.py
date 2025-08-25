@@ -90,7 +90,7 @@ def _post_json(
 
 
 def _build_common_params(
-    course_id_or_name: str,
+    course_id_or_name: Optional[str],
     teacher_name: Optional[str],
     week_day: Optional[str],
     class_period: Optional[str],
@@ -183,7 +183,7 @@ def _parse_course_item(item: Dict[str, Any]) -> Dict[str, Any]:
 def _query_module(
     session: Session,
     module_key: str,
-    course_id_or_name: str,
+    course_id_or_name: Optional[str],
     teacher_name: Optional[str],
     week_day: Optional[str],
     class_period: Optional[str],
@@ -269,7 +269,7 @@ def _query_module(
 
 def pre_select_course_query(
     session: Session,  # 改为显式接收 session（从 API 的依赖注入传入）
-    course_id_or_name: str,
+    course_id_or_name: Optional[str],
     teacher_name: Optional[str] = None,
     week_day: Optional[str] = None,
     class_period: Optional[str] = None,
@@ -277,12 +277,12 @@ def pre_select_course_query(
     """
     预选课查询：按模块依次查询，返回各模块结果
 
-    Returns:
-        dict: {
-            "jx0502zbid": str,
-            "modules": [ { "module": str, "module_name": str, "count": int, "courses": list } ],
-            "errors": [ { "module": str, "status": int, "message": str } ]
-        }
+    Args:
+        session: 已登录的教务系统Session（由依赖注入提供）
+        course_id_or_name: 课程名称或课程ID(可选)
+        teacher_name: 教师姓名(可选)
+        week_day: 上课星期(可选)
+        class_period: 上课节次(可选)
     """
     # 1) 获取选课轮次编号
     jx0502zbid = get_jx0502zbid(session)
