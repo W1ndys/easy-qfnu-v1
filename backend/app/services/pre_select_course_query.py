@@ -18,7 +18,7 @@ class HttpStatusError(Exception):
         self.url = url
 
 
-def get_jx0502zbid(session: Session, select_semester: Optional[str]) -> Optional[str]:
+def get_jx0502zbid(session: Session) -> Optional[str]:
     """
     获取教务系统中的选课轮次编号(jx0502zbid)
     """
@@ -31,37 +31,18 @@ def get_jx0502zbid(session: Session, select_semester: Optional[str]) -> Optional
         soup = BeautifulSoup(resp.text, "html.parser")
         rows = soup.find_all("tr")
 
-        if not select_semester:
-            for row in rows[1:]:
-                try:
-                    link = row.find("a", href=True)
-                    if link and "jx0502zbid" in link["href"]:
-                        m = jx0502zbid_pattern.search(link["href"])
-                        if m:
-                            return m.group(1)
-                except (AttributeError, IndexError) as e:
-                    logging.warning(f"解析行数据时出错: {str(e)}")
-                    continue
-            return None
-
-        first_valid_id = None
+        # 忽略学期筛选，直接返回第一个有效的 jx0502zbid
         for row in rows[1:]:
             try:
-                cells = row.find_all("td")
-                if not cells or len(cells) < 2:
-                    continue
-                link = row.find("a", href=True)
-                if link and "jx0502zbid" in link["href"]:
-                    m = jx0502zbid_pattern.search(link["href"])
+                link = row.find("a", href=True)  # type: ignore
+                if link and "jx0502zbid" in link["href"]:  # type: ignore
+                    m = jx0502zbid_pattern.search(link["href"])  # type: ignore
                     if m:
-                        if first_valid_id is None:
-                            first_valid_id = m.group(1)
-                        if select_semester in cells[1].text.strip():
-                            return m.group(1)
+                        return m.group(1)
             except (AttributeError, IndexError) as e:
                 logging.warning(f"解析行数据时出错: {str(e)}")
                 continue
-        return first_valid_id
+        return None
     except HTTPError as e:
         status = e.response.status_code if e.response is not None else -1
         logging.error(f"请求选课页面失败: {status} {str(e)}")
@@ -126,51 +107,77 @@ def _build_common_params(
 
 
 def _build_common_table_payload(
-    cols: int, extra: Optional[Dict[str, Any]] = None
+    extra: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    # 固定起始位置与返回条数
     payload = {
-        "sEcho": "1",
-        "iColumns": str(cols),
-        "sColumns": "",
         "iDisplayStart": "0",
-        "iDisplayLength": "15",
+        "iDisplayLength": "1000",
     }
-    # 复用最常见的列表字段映射
-    base = {
-        12: {
-            "mDataProp_0": "kch",
-            "mDataProp_1": "kcmc",
-            "mDataProp_2": "fzmc",
-            "mDataProp_3": "xf",
-            "mDataProp_4": "skls",
-            "mDataProp_5": "sksj",
-            "mDataProp_6": "skdd",
-            "mDataProp_7": "xqmc",
-            "mDataProp_8": "xkrs",
-            "mDataProp_9": "syrs",
-            "mDataProp_10": "ctsm",
-            "mDataProp_11": "czOper",
-        },
-        13: {
-            "mDataProp_0": "kch",
-            "mDataProp_1": "kcmc",
-            "mDataProp_2": "xf",
-            "mDataProp_3": "skls",
-            "mDataProp_4": "sksj",
-            "mDataProp_5": "skdd",
-            "mDataProp_6": "xqmc",
-            "mDataProp_7": "xxrs",
-            "mDataProp_8": "xkrs",
-            "mDataProp_9": "syrs",
-            "mDataProp_10": "ctsm",
-            "mDataProp_11": "szkcflmc",
-            "mDataProp_12": "czOper",
-        },
-    }
-    payload.update(base.get(cols, {}))
     if extra:
         payload.update(extra)
     return payload
+
+
+def _to_int(val: Any) -> Optional[int]:
+    try:
+        if val is None:
+            return None
+        if isinstance(val, int):
+            return val
+        s = str(val).strip()
+        if s == "":
+            return None
+        return int(s)
+    except Exception:
+        return None
+
+
+def _parse_course_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    将教务系统返回的一条课程记录解析为前端所需字段
+    """
+    time_raw = item.get("sksj")
+    ctsm_raw = item.get("ctsm") or ""
+
+    parsed: Dict[str, Any] = {
+        # 课程编号/课程名/分组名/学分
+        "course_id": item.get("kch"),
+        "course_name": item.get("kcmc"),
+        "group_name": item.get("fzmc") or item.get("ktmc"),
+        "credits": _to_int(item.get("xf")),
+        # 上课老师/上课时间/上课地点/上课校区
+        "teacher_name": item.get("skls"),
+        "time_text": time_raw.strip() if isinstance(time_raw, str) else time_raw,
+        "location": item.get("skdd"),
+        "campus_name": item.get("xqmc"),
+        # 剩余量
+        "remain_count": _to_int(item.get("syrs")),
+        # 时间冲突（根据备注是否包含“冲突”判断）
+        "time_conflict": ("冲突" in ctsm_raw) if isinstance(ctsm_raw, str) else False,
+    }
+
+    # 其余字段暂不返回：
+    # parsed["teacher_id"] = item.get("sklsid")
+    # parsed["plan_capacity"] = _to_int(item.get("pkrs"))
+    # parsed["selected_count"] = _to_int(item.get("xkrs"))
+    # parsed["max_capacity"] = _to_int(item.get("xxrs"))
+    # parsed["remark"] = item.get("ctsm")
+    # parsed["term_id"] = item.get("xnxq01id")
+    # parsed["jxb_id"] = item.get("jx0404id")
+    # parsed["jx0504id"] = item.get("jx0504id")
+    # parsed["teaching_unit_id"] = item.get("jx02id")
+    # parsed["course_property_code"] = item.get("kcsx")
+    # parsed["course_property_name"] = item.get("kcxzmc")
+    # parsed["course_property_subcode"] = item.get("kcxzm")
+    # parsed["operation_html"] = item.get("czOper")
+    # parsed["course_intro"] = item.get("kcjj")
+    # parsed["teaching_class_name"] = item.get("ktmc")
+
+    # 留作扩展：周次与排课明细（zcxqjcList/kkapList）
+    # ...（不解析，以减少返回体体积与处理时延）...
+
+    return parsed
 
 
 def _query_module(
@@ -194,7 +201,7 @@ def _query_module(
             "params": _build_common_params(
                 course_id_or_name, teacher_name, week_day, class_period
             ),
-            "data": _build_common_table_payload(12),
+            "data": _build_common_table_payload(),
         },
         "bxqjhxk": {
             "name": "本学期计划选课",
@@ -203,7 +210,7 @@ def _query_module(
             "params": _build_common_params(
                 course_id_or_name, teacher_name, week_day, class_period
             ),
-            "data": _build_common_table_payload(12),
+            "data": _build_common_table_payload(),
         },
         "xxxk": {
             "name": "选修选课",
@@ -212,7 +219,7 @@ def _query_module(
             "params": _build_common_params(
                 course_id_or_name, teacher_name, week_day, class_period
             ),
-            "data": _build_common_table_payload(12),
+            "data": _build_common_table_payload(),
         },
         "ggxxkxk": {
             "name": "公选课选课",
@@ -228,7 +235,7 @@ def _query_module(
                 "sfct": "true",
                 "sfxx": "true",
             },
-            "data": _build_common_table_payload(13),
+            "data": _build_common_table_payload(),
         },
         "fawxk": {
             "name": "计划外选课",
@@ -237,23 +244,26 @@ def _query_module(
             "params": _build_common_params(
                 course_id_or_name, teacher_name, week_day, class_period
             ),
-            "data": _build_common_table_payload(12),
+            "data": _build_common_table_payload(),
         },
     }
 
     cfg = modules[module_key]
-    # 先进入模块，刷新相关上下文
     _safe_get(session, cfg["come_in"])
-    # 再发起数据请求
     data = _post_json(session, cfg["api"], cfg["params"], cfg["data"])
     if not data or not data.get("aaData"):
         logging.info(f"{cfg['name']} 未查询到数据")
         return None
+
+    courses = [
+        _parse_course_item(x) for x in data.get("aaData", []) if isinstance(x, dict)
+    ]
+
     return {
         "module": module_key,
         "module_name": cfg["name"],
-        "count": len(data.get("aaData", [])),
-        "aaData": data.get("aaData", []),
+        "count": len(courses),
+        "courses": courses,
     }
 
 
@@ -263,30 +273,21 @@ def pre_select_course_query(
     teacher_name: Optional[str] = None,
     week_day: Optional[str] = None,
     class_period: Optional[str] = None,
-    select_semester: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     预选课查询：按模块依次查询，返回各模块结果
 
-    Args:
-        session: 已登录的教务系统Session（由依赖注入提供）
-        course_id_or_name: 课程名称或课程ID(必填)
-        teacher_name: 教师姓名(可选)
-        week_day: 上课星期(可选)
-        class_period: 上课节次(可选)
-        select_semester: 选课学期(可选)
-
     Returns:
         dict: {
             "jx0502zbid": str,
-            "modules": [ { "module": str, "module_name": str, "count": int, "aaData": list } ],
+            "modules": [ { "module": str, "module_name": str, "count": int, "courses": list } ],
             "errors": [ { "module": str, "status": int, "message": str } ]
         }
     """
     # 1) 获取选课轮次编号
-    jx0502zbid = get_jx0502zbid(session, select_semester)
+    jx0502zbid = get_jx0502zbid(session)
     if not jx0502zbid:
-        raise RuntimeError("未获取到有效的选课轮次编号(jx0502zbid)")
+        raise RuntimeError("未获取到有效的选课轮次编号，可能是当前未开放任何轮次的选课")
 
     # 2) 刷新选课上下文session
     _safe_get(

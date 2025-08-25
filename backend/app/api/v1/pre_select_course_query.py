@@ -12,19 +12,10 @@ router = APIRouter(tags=["预选课查询"])
 
 
 class PreSelectCourseQueryRequest(BaseModel):
-    course_id_or_name: str = Field(
-        ..., description="课程名称或课程ID", example="大学物理B 或 PHY1001"
-    )
-    teacher_name: Optional[str] = Field(None, description="教师姓名", example="张三")
-    week_day: Optional[str] = Field(
-        None, description="上课星期(1-7 或 中文周几)", example="3"
-    )
-    class_period: Optional[str] = Field(
-        None, description="上课节次(起止或单节)", example="3-4"
-    )
-    select_semester: Optional[str] = Field(
-        None, description="选课学期(可选)", example="2024-2025-1"
-    )
+    course_id_or_name: str = Field(..., description="课程名称或课程ID")
+    teacher_name: Optional[str] = Field(None, description="教师姓名")
+    week_day: Optional[str] = Field(None, description="上课星期(1-7)")
+    class_period: Optional[str] = Field(None, description="上课节次(起止或单节)")
 
     class Config:
         json_schema_extra = {
@@ -33,9 +24,44 @@ class PreSelectCourseQueryRequest(BaseModel):
                 "teacher_name": "李四",
                 "week_day": "2",
                 "class_period": "1-2",
-                "select_semester": "2024-2025-1",
             }
         }
+
+
+# class CourseScheduleItem(BaseModel):
+#     ...（暂不需要）
+
+# class CourseArrangement(BaseModel):
+#     ...（暂不需要）
+
+
+class CourseItem(BaseModel):
+    # 必需字段（前端显示用）
+    course_id: Optional[str] = Field(None, description="课程编号")
+    course_name: Optional[str] = Field(None, description="课程名")
+    group_name: Optional[str] = Field(None, description="分组名")
+    credits: Optional[int] = Field(None, description="学分")
+    teacher_name: Optional[str] = Field(None, description="上课老师")
+    time_text: Optional[str] = Field(None, description="上课时间")
+    location: Optional[str] = Field(None, description="上课地点")
+    campus_name: Optional[str] = Field(None, description="上课校区")
+    remain_count: Optional[int] = Field(None, description="剩余量")
+    time_conflict: Optional[bool] = Field(None, description="时间冲突")
+    # 其余字段暂不返回
+    # teacher_id: Optional[str] = Field(None, description="教师ID")
+    # plan_capacity: Optional[int] = Field(None, description="排课容量")
+    # selected_count: Optional[int] = Field(None, description="已选人数")
+    # max_capacity: Optional[int] = Field(None, description="最大容量")
+    # conflict_text: Optional[str] = Field(None, description="时间冲突文本")
+    # remark: Optional[str] = Field(None, description="备注")
+    # operation_html: Optional[str] = Field(None, description="操作HTML片段")
+    # course_intro: Optional[str] = Field(None, description="课程简介")
+    # term_id: Optional[str] = Field(None, description="学期ID")
+    # jxb_id: Optional[str] = Field(None, description="教学班ID")
+    # jx0504id: Optional[int] = Field(None, description="教学安排ID")
+    # teaching_unit_id: Optional[str] = Field(None, description="教学单位ID")
+    # schedule_zc_xq_jc: List[CourseScheduleItem] = Field(default_factory=list, description="周-星期-节次列表")
+    # arrangements: List[CourseArrangement] = Field(default_factory=list, description="排课安排")
 
 
 class ModuleResult(BaseModel):
@@ -44,7 +70,7 @@ class ModuleResult(BaseModel):
     )
     module_name: str = Field(..., description="模块名称")
     count: int = Field(..., description="该模块返回的课程条目数")
-    aaData: List[Dict[str, Any]] = Field(..., description="原始课程数据数组")
+    courses: List[CourseItem] = Field(..., description="解析后的课程数组")
 
 
 class QueryErrorItem(BaseModel):
@@ -68,23 +94,36 @@ class PreSelectCourseQueryData(BaseModel):
                     {
                         "module": "bxqjhxk",
                         "module_name": "本学期计划选课",
-                        "count": 1,
-                        "aaData": [
+                        "count": 2,
+                        "courses": [
                             {
-                                "kch": "PHY1001",
-                                "kcmc": "大学物理B",
-                                "skls": "张三",
-                                "sksj": "1-16周 周三 3-4节",
-                                "xkrs": "60",
-                                "syrs": "10",
-                                "czOper": "...",
-                            }
+                                "course_id": "015067",
+                                "course_name": "戏剧影视评论",
+                                "group_name": "01中文影视23级班",
+                                "credits": 3,
+                                "teacher_name": "徐立虹",
+                                "time_text": "1-18周 星期一 5-7节",
+                                "location": "西联2",
+                                "campus_name": "曲阜校区",
+                                "remain_count": 13,
+                                "time_conflict": False,
+                            },
+                            {
+                                "course_id": "045111",
+                                "course_name": "美国文学",
+                                "group_name": "23级英语（师范）2班",
+                                "credits": 2,
+                                "teacher_name": "兰海英",
+                                "time_text": "1-18周 星期一 3-4节",
+                                "location": "老文史楼213",
+                                "campus_name": "曲阜校区",
+                                "remain_count": 3,
+                                "time_conflict": True,
+                            },
                         ],
                     }
                 ],
-                "errors": [
-                    {"module": "ggxxkxk", "status": 404, "message": "接口未开放/不存在"}
-                ],
+                "errors": [],
             }
         }
 
@@ -129,7 +168,6 @@ def pre_select_course_query_api(
             teacher_name=payload.teacher_name,
             week_day=payload.week_day,
             class_period=payload.class_period,
-            select_semester=payload.select_semester,
         )
         return {
             "ok": True,
