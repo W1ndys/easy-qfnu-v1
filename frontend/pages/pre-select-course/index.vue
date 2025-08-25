@@ -718,32 +718,39 @@ function closeTipModal() {
 }
 
 /* 使用提示弹窗样式 */
+/* 覆盖 tip-modal-overlay，确保严格铺满并栅格居中 */
 .tip-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    inset: 0;
+    /* 等价于 top/right/bottom/left: 0，更稳 */
+    box-sizing: border-box;
+    /* 含 padding 也不会影响居中 */
+    padding: 40rpx env(safe-area-inset-right) 40rpx env(safe-area-inset-left);
+    display: grid;
+    /* 栅格居中，不受子元素尺寸波动影响 */
+    place-items: center;
     z-index: 9999;
-    padding: 40rpx;
+    background: rgba(0, 0, 0, 0);
     animation: fadeIn 0.3s ease-out forwards;
 }
 
+/* 弹窗本体：移除最终位置的位移，只保留缩放淡入；并限制最大高，避免撑开导致看着偏移 */
 .tip-modal {
     background: #fff;
     border-radius: 20rpx;
     width: 100%;
     max-width: 600rpx;
+    max-height: 80vh;
+    /* 高度保护，避免高度过大影响居中 */
+    overflow: auto;
+    /* 内容多时内部滚动 */
     box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    transform: scale(0.8) translateY(40rpx);
+    transform: scale(0.92);
+    /* 初始仅缩放，不做 Y 位移 */
     opacity: 0;
-    animation: slideIn 0.3s ease-out 0.1s forwards;
+    animation: slideIn 0.28s ease-out 0.08s forwards;
 }
+
 
 .tip-header {
     display: flex;
@@ -831,17 +838,16 @@ function closeTipModal() {
 
 @keyframes slideIn {
     from {
-        transform: scale(0.8) translateY(40rpx);
+        transform: scale(0.92);
         opacity: 0;
     }
 
     to {
-        transform: scale(1) translateY(0);
+        transform: scale(1);
         opacity: 1;
     }
 }
 
-/* 弹窗关闭动画 */
 .tip-modal-overlay.closing {
     animation: fadeOut 0.2s ease-in forwards;
 }
@@ -850,13 +856,15 @@ function closeTipModal() {
     animation: slideOut 0.2s ease-in forwards;
 }
 
-@keyframes fadeOut {
+@keyframes slideOut {
     from {
-        background: rgba(0, 0, 0, 0.5);
+        transform: scale(1);
+        opacity: 1;
     }
 
     to {
-        background: rgba(0, 0, 0, 0);
+        transform: scale(0.92);
+        opacity: 0;
     }
 }
 
