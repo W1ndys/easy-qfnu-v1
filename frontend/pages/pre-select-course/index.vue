@@ -73,8 +73,11 @@
                         </view>
                     </view>
 
-                    <view class="search-tip" style="margin: 12rpx 0 0 0; color: #868e96; font-size: 24rpx;">
-                        支持模糊搜索，建议使用课程代码，速度更快，结果更精准
+                    <view class="search-tip"
+                        style="margin: 12rpx 0 0 0; color: #868e96; font-size: 24rpx; line-height: 1.7;">
+                        <view>支持模糊搜索，建议使用课程代码，速度更快，结果更精准。</view>
+                        <view>如果搜不到，说明教务系统没有对你开放这个课程的搜索权限。</view>
+                        <view>如果课余量显示-，大概率是选修课，原因是选修课模块教务系统后端没有提供课余量数据，请使用夫子校园替代。</view>
                     </view>
 
                     <view class="card-actions-wrapper">
