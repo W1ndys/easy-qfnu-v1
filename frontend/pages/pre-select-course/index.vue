@@ -3,7 +3,7 @@
         <LoadingScreen v-if="isLoading" text="正在加载数据..." />
 
         <!-- 使用提示弹窗 -->
-        <view v-if="showTipModal" class="tip-modal-overlay" @click="closeTipModal">
+        <view v-if="showTipModal" class="tip-modal-overlay" :class="{ closing: isClosing }" @click="closeTipModal">
             <view class="tip-modal" @click.stop>
                 <view class="tip-header">
                     <text class="tip-title">使用提示</text>
@@ -13,7 +13,7 @@
                 </view>
                 <view class="tip-content" style="flex-direction: row; flex-wrap: wrap; justify-content: center;">
                     <text class="tip-text">
-                        本数据基于你的学生身份进行搜索，如果搜索没有结果，但你从夫子校园或其他地方搜到了开课数据，说明教务系统没有对你开放这个课程的搜索权限
+                        本数据基于你的学生身份进行搜索，如果搜索没有结果，但你从夫子校园或其他地方搜到了开课数据，说明教务系统没有对你开放这个课程的搜索权限，可能是教务系统的后端限制，不代表一直搜不到，建议选课前一天再看看。
                     </text>
                 </view>
                 <view class="tip-footer">
@@ -76,7 +76,6 @@
                     <view class="search-tip"
                         style="margin: 12rpx 0 0 0; color: #868e96; font-size: 24rpx; line-height: 1.7;">
                         <view>支持模糊搜索，建议使用课程代码，速度更快，结果更精准。</view>
-                        <view>如果搜不到，说明教务系统没有对你开放这个课程的搜索权限。</view>
                         <view>如果课余量显示-，大概率是选修课，原因是选修课模块教务系统后端没有提供课余量数据，请使用 <a href="http://xk.s.fz.z-xin.net"
                                 target="_blank" rel="noopener" style="color:#007aff;text-decoration:underline;">夫子校园</a>
                             替代。</view>
@@ -355,16 +354,15 @@ function handleSecondary() {
     activeCollapseItems.value = [];
 }
 
+const isClosing = ref(false);
+
 function closeTipModal() {
-    const overlay = document.querySelector('.tip-modal-overlay');
-    if (overlay) {
-        overlay.classList.add('closing');
-        setTimeout(() => {
-            showTipModal.value = false;
-        }, 200);
-    } else {
+    if (isClosing.value) return;
+    isClosing.value = true;
+    setTimeout(() => {
         showTipModal.value = false;
-    }
+        isClosing.value = false;
+    }, 200);
 }
 </script>
 
