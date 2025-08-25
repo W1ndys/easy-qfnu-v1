@@ -29,10 +29,10 @@ class PreSelectCourseQueryRequest(BaseModel):
         json_schema_extra = {
             "example": {
                 # 二选一示例：只填课程名/号或只填教师名均可
-                "course_id_or_name": "大学英语A",
-                # "teacher_name": "李四",
-                "week_day": "2",
-                "class_period": "1-2",
+                "course_id_or_name": "Python",
+                "teacher_name": "",
+                "week_day": "",
+                "class_period": "",
             }
         }
 
@@ -55,7 +55,7 @@ class CourseItem(BaseModel):
     location: Optional[str] = Field(None, description="上课地点")
     campus_name: Optional[str] = Field(None, description="上课校区")
     remain_count: Optional[int] = Field(None, description="剩余量")
-    time_conflict: Optional[bool] = Field(None, description="时间冲突")
+    time_conflict: Optional[str] = Field(None, description="时间冲突")
     # 其余字段暂不返回
     # teacher_id: Optional[str] = Field(None, description="教师ID")
     # plan_capacity: Optional[int] = Field(None, description="排课容量")
@@ -95,46 +95,47 @@ class PreSelectCourseQueryData(BaseModel):
         default_factory=list, description="查询过程中产生的错误列表"
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "jx0502zbid": "a1b2c3d4e5",
-                "modules": [
-                    {
-                        "module": "bxqjhxk",
-                        "module_name": "本学期计划选课",
-                        "count": 2,
-                        "courses": [
-                            {
-                                "course_id": "015067",
-                                "course_name": "戏剧影视评论",
-                                "group_name": "01中文影视23级班",
-                                "credits": 3,
-                                "teacher_name": "徐立虹",
-                                "time_text": "1-18周 星期一 5-7节",
-                                "location": "西联2",
-                                "campus_name": "曲阜校区",
-                                "remain_count": 13,
-                                "time_conflict": False,
-                            },
-                            {
-                                "course_id": "045111",
-                                "course_name": "美国文学",
-                                "group_name": "23级英语（师范）2班",
-                                "credits": 2,
-                                "teacher_name": "兰海英",
-                                "time_text": "1-18周 星期一 3-4节",
-                                "location": "老文史楼213",
-                                "campus_name": "曲阜校区",
-                                "remain_count": 3,
-                                "time_conflict": True,
-                            },
-                        ],
-                    }
-                ],
-                "errors": [],
-            }
+
+class Config:
+    json_schema_extra = {
+        "example": {
+            "jx0502zbid": "XXXXXX",  # 脱敏后的标识符
+            "modules": [
+                {
+                    "module": "XXXXXX",  # 脱敏后的模块代码
+                    "module_name": "本学期计划选课",
+                    "count": 2,
+                    "courses": [
+                        {
+                            "course_id": "XXXXXX",  # 脱敏后的课程ID
+                            "course_name": "戏剧影视评论",
+                            "group_name": "XXXXXX",  # 脱敏后的班级名称
+                            "credits": 3,
+                            "teacher_name": "XXXXXX",  # 脱敏后的教师姓名
+                            "time_text": "1-18周 星期一 5-7节",
+                            "location": "XXXXXX",  # 脱敏后的教室位置
+                            "campus_name": "XXXXXX",  # 脱敏后的校区名称
+                            "remain_count": 13,
+                            "time_conflict": "无时间冲突",
+                        },
+                        {
+                            "course_id": "XXXXXX",  # 脱敏后的课程ID
+                            "course_name": "美国文学",
+                            "group_name": "XXXXXX",  # 脱敏后的班级名称
+                            "credits": 2,
+                            "teacher_name": "XXXXXX",  # 脱敏后的教师姓名
+                            "time_text": "1-18周 星期一 3-4节",
+                            "location": "XXXXXX",  # 脱敏后的教室位置
+                            "campus_name": "XXXXXX",  # 脱敏后的校区名称
+                            "remain_count": 3,
+                            "time_conflict": "与“XXXXXX”冲突",  # 脱敏后的冲突信息
+                        },
+                    ],
+                }
+            ],
+            "errors": [],
         }
+    }
 
 
 class PreSelectCourseQueryResponse(BaseModel):
