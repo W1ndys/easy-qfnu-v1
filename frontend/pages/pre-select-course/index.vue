@@ -2,6 +2,26 @@
     <PageLayout>
         <LoadingScreen v-if="isLoading" text="正在加载数据..." />
 
+        <!-- 使用提示弹窗 -->
+        <view v-if="showTipModal" class="tip-modal-overlay" @click="closeTipModal">
+            <view class="tip-modal" @click.stop>
+                <view class="tip-header">
+                    <text class="tip-title">使用提示</text>
+                    <view class="tip-close" @click="closeTipModal">
+                        <uni-icons type="close" size="20" color="#868e96" />
+                    </view>
+                </view>
+                <view class="tip-content" style="flex-direction: row; flex-wrap: wrap; justify-content: center;">
+                    <text class="tip-text">
+                        本数据基于你的学生身份进行搜索，如果搜索没有结果，但你从夫子校园或其他地方搜到了开课数据，说明教务系统没有对你开放这个课程的搜索权限
+                    </text>
+                </view>
+                <view class="tip-footer">
+                    <button class="tip-btn" @click="closeTipModal">我已知晓</button>
+                </view>
+            </view>
+        </view>
+
         <view v-else class="page-container">
             <view class="background-decoration">
                 <view class="circle circle-1"></view>
@@ -155,6 +175,7 @@ const isLoading = ref(true);
 const data = ref(null);
 const debugInfo = ref(null);
 const activeCollapseItems = ref([]); // 控制手风琴展开项
+const showTipModal = ref(true); // 控制提示弹窗显示
 
 const query = ref({
     course_id_or_name: "",
@@ -184,6 +205,8 @@ onLoad(() => {
     if (!ensureLogin()) return;
     uni.setNavigationBarTitle({ title: "预选课查询" });
     isLoading.value = false;
+    // 显示使用提示弹窗
+    showTipModal.value = true;
 });
 
 onShow(() => {
@@ -325,6 +348,18 @@ function handleSecondary() {
     };
     data.value = null;
     activeCollapseItems.value = [];
+}
+
+function closeTipModal() {
+    const overlay = document.querySelector('.tip-modal-overlay');
+    if (overlay) {
+        overlay.classList.add('closing');
+        setTimeout(() => {
+            showTipModal.value = false;
+        }, 200);
+    } else {
+        showTipModal.value = false;
+    }
 }
 </script>
 
@@ -679,6 +714,161 @@ function handleSecondary() {
         margin-bottom: 8rpx;
         font-size: 26rpx;
         color: var(--text-primary);
+    }
+}
+
+/* 使用提示弹窗样式 */
+.tip-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 40rpx;
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.tip-modal {
+    background: #fff;
+    border-radius: 20rpx;
+    width: 100%;
+    max-width: 600rpx;
+    box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    transform: scale(0.8) translateY(40rpx);
+    opacity: 0;
+    animation: slideIn 0.3s ease-out 0.1s forwards;
+}
+
+.tip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30rpx 30rpx 20rpx;
+    border-bottom: 1rpx solid #f1f3f5;
+}
+
+.tip-title {
+    font-size: 32rpx;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.tip-close {
+    width: 60rpx;
+    height: 60rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:active {
+        background: #e9ecef;
+        transform: scale(0.95);
+    }
+}
+
+.tip-content {
+    padding: 30rpx;
+    min-height: 200rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tip-text {
+    font-size: 28rpx;
+    color: var(--text-primary);
+    line-height: 1.6;
+    text-align: center;
+}
+
+.tip-footer {
+    padding: 20rpx 30rpx 30rpx;
+    border-top: 1rpx solid #f1f3f5;
+}
+
+.tip-btn {
+    width: 100%;
+    height: 80rpx;
+    background: linear-gradient(135deg, #7f4515, #8c5527);
+    color: #fff;
+    border: none;
+    border-radius: 12rpx;
+    font-size: 28rpx;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    transform: translateY(0);
+
+    &::after {
+        border: none;
+    }
+
+    &:active {
+        transform: translateY(2rpx) scale(0.98);
+        box-shadow: 0 4rpx 12rpx rgba(127, 69, 21, 0.3);
+    }
+}
+
+/* 弹窗动画关键帧 */
+@keyframes fadeIn {
+    from {
+        background: rgba(0, 0, 0, 0);
+    }
+
+    to {
+        background: rgba(0, 0, 0, 0.5);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: scale(0.8) translateY(40rpx);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 弹窗关闭动画 */
+.tip-modal-overlay.closing {
+    animation: fadeOut 0.2s ease-in forwards;
+}
+
+.tip-modal-overlay.closing .tip-modal {
+    animation: slideOut 0.2s ease-in forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    to {
+        background: rgba(0, 0, 0, 0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(0.8) translateY(40rpx);
+        opacity: 0;
     }
 }
 </style>
