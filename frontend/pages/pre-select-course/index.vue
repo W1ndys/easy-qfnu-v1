@@ -97,6 +97,12 @@
                     <view class="card-section">
                         <text class="section-desc">抱歉，查询时遇到问题，请稍后重试。</text>
                         <text class="section-desc muted-text">状态码：{{ debugInfo.statusCode }}</text>
+
+                        <!-- 显示具体错误信息 -->
+                        <view v-if="debugInfo.message" class="error-details">
+                            <text class="error-label">错误详情：</text>
+                            <text class="error-message">{{ debugInfo.message }}</text>
+                        </view>
                     </view>
                     <view class="button-group" style="margin-top: 20rpx">
                         <button class="action-btn secondary-btn" @click="copyDebug">
@@ -718,6 +724,32 @@ function closeTipModal() {
         font-size: 26rpx;
         color: var(--text-primary);
     }
+}
+
+/* 错误详情样式 */
+.error-details {
+    margin-top: 16rpx;
+    padding: 16rpx;
+    background: #f8f9fa;
+    border-radius: 8rpx;
+    border-left: 4rpx solid #dc3545;
+}
+
+.error-label {
+    display: block;
+    font-size: 24rpx;
+    font-weight: 600;
+    color: #dc3545;
+    margin-bottom: 8rpx;
+}
+
+.error-message {
+    display: block;
+    font-size: 24rpx;
+    color: #495057;
+    line-height: 1.5;
+    word-break: break-all;
+    white-space: pre-wrap;
 }
 
 /* 使用提示弹窗样式 */
