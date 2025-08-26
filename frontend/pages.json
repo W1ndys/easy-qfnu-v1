@@ -50,6 +50,13 @@
 				"navigationBarTitleText": "预选课查询",
 				"enablePullDownRefresh": false
 			}
+		},
+		{
+			"path" : "pages/classtable/classtable",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
 		}
 	],
 	"easycom": {
