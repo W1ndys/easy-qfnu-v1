@@ -186,7 +186,7 @@
           </view>
         </view>
         <view class="popup-body">
-          <image class="calendar-image" src="https://pic1.zhimg.com/80/v2-495ef4f801960eb4dcbedb73d4514507.jpeg"
+          <image class="calendar-image" src="https://picx.zhimg.com/80/v2-1c7d66141af0cd26e90ab42dda86acee.png"
             mode="widthFix" @error="handleCalendarImageError" @load="handleCalendarImageLoad">
           </image>
         </view>
