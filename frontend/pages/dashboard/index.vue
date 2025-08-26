@@ -55,7 +55,7 @@
           </view>
         </ModernCard>
 
-        <ModernCard title="快捷操作">
+        <ModernCard title="系统操作">
           <view class="quick-actions">
             <button class="action-btn btn-primary" @click="handleRefresh">
               <uni-icons type="refresh" size="20"></uni-icons>
@@ -91,6 +91,11 @@
               <uni-icons type="compose" size="20"></uni-icons>
               <text>意见建议</text>
             </button>
+
+            <button class="action-btn btn-secondary" @click="handleSponsorList">
+              <uni-icons type="heart" size="20"></uni-icons>
+              <text>赞助名单</text>
+            </button>
           </view>
         </ModernCard>
 
@@ -98,14 +103,14 @@
           <view class="support-content">
             <view class="support-text">
               <text class="support-title">助力项目发展</text>
-              <text class="support-desc">本服务完全免费使用，服务器每日支出约为7元左右，以及前期服务器设备等支出几百依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞赏~</text>
+              <text class="support-desc">本服务完全免费使用，服务器每日支出约为7元左右，以及前期服务器设备等支出几百依赖作者个人支出。如果想支持作者助力开发维护，欢迎赞助~</text>
             </view>
             <view class="qr-code-container">
               <image class="qr-code"
                 src="https://picx.zhimg.com/80/v2-076422270c197b0031c609e47be2e36c_720w.png?source=d16d100b"
                 mode="aspectFit" @error="handleImageError" @load="handleImageLoad">
               </image>
-              <text class="qr-code-label">微信赞赏</text>
+              <text class="qr-code-label">微信赞助</text>
             </view>
           </view>
         </ModernCard>
@@ -217,7 +222,6 @@ const features = ref([
   { text: "查看校历", description: "查看最新校历", icon: "calendar", url: "calendar", external: false },
   { text: "课表查询", description: "即将推出", icon: "calendar", url: "" },
   { text: "排名查询", description: "即将推出", icon: "medal", url: "" },
-  { text: "赞赏名单", description: "查看赞赏名单", icon: "heart", url: "https://cq4hqujcxu3.feishu.cn/docx/DE9Ed1l5iofB0exEYZncwMeenvd", external: true },
   { text: "更多功能", description: "敬请期待", icon: "gear", url: "" },
 ]);
 
@@ -358,14 +362,19 @@ const handleFeedback = () => {
   handleExternalLink("意见建议反馈", feedbackUrl);
 };
 
+const handleSponsorList = () => {
+  const sponsorUrl = "https://cq4hqujcxu3.feishu.cn/docx/DE9Ed1l5iofB0exEYZncwMeenvd";
+  handleExternalLink("赞助名单", sponsorUrl);
+};
+
 const handleExternalLink = (title, url) => {
   if (typeof window !== 'undefined') window.open(url, "_blank");
   else if (typeof plus !== 'undefined') plus.runtime.openURL(url);
   else uni.setClipboardData({ data: url, success: () => uni.showToast({ title: "外链已复制,请在浏览器中打开", icon: "success", duration: 3000 }) });
 };
 
-const handleImageError = () => { uni.showToast({ title: "赞赏码加载失败", icon: "none" }); };
-const handleImageLoad = () => { console.log("赞赏码加载成功"); };
+const handleImageError = () => { uni.showToast({ title: "赞助码加载失败", icon: "none" }); };
+const handleImageLoad = () => { console.log("赞助码加载成功"); };
 
 const handleCalendarImageError = () => { uni.showToast({ title: "校历图片加载失败", icon: "none" }); };
 const handleCalendarImageLoad = () => { console.log("校历图片加载成功"); };
@@ -855,7 +864,7 @@ const handleCalendarImageLoad = () => { console.log("校历图片加载成功");
   box-shadow: 0 8rpx 24rpx var(--shadow-light);
 }
 
-/* ==================== MODIFICATION START: 快捷操作按钮样式 ==================== */
+/* ==================== MODIFICATION START: 系统操作按钮样式 ==================== */
 .quick-actions {
   display: grid;
   grid-template-columns: 1fr 1fr; // 保持两列布局
