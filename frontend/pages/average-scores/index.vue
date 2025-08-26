@@ -36,21 +36,12 @@
               <text>课程名称/代码</text>
             </view>
             <view class="input-wrapper">
-              <input
-                class="modern-input"
-                :class="{
-                  'input-error': courseError,
-                  'input-focus': courseFocused,
-                }"
-                v-model="searchForm.course"
-                placeholder="请输入课程名称或课程代码（至少3个字符）"
-                @confirm="handleSearch"
-                @input="validateCourse"
-                @focus="courseFocused = true"
-                @blur="courseFocused = false" />
-              <view
-                class="input-line"
-                :class="{ active: courseFocused }"></view>
+              <input class="modern-input" :class="{
+                'input-error': courseError,
+                'input-focus': courseFocused,
+              }" v-model="searchForm.course" placeholder="请输入课程名称或课程代码（至少3个字符）" @confirm="handleSearch"
+                @input="validateCourse" @focus="onCourseFocus" @blur="onCourseBlur" />
+              <view class="input-line" :class="{ active: courseFocused }"></view>
             </view>
             <text class="input-hint" :class="{ 'hint-error': courseError }">
               {{ courseHint }}
@@ -63,41 +54,21 @@
               <text>教师姓名（选填）</text>
             </view>
             <view class="input-wrapper">
-              <input
-                class="modern-input"
-                :class="{
-                  'input-error': teacherError,
-                  'input-focus': teacherFocused,
-                }"
-                v-model="searchForm.teacher"
-                placeholder="不填则查询所有老师（至少2个字符）"
-                @confirm="handleSearch"
-                @input="validateTeacher"
-                @focus="teacherFocused = true"
-                @blur="teacherFocused = false" />
-              <view
-                class="input-line"
-                :class="{ active: teacherFocused }"></view>
+              <input class="modern-input" :class="{
+                'input-error': teacherError,
+                'input-focus': teacherFocused,
+              }" v-model="searchForm.teacher" placeholder="不填则查询所有老师（至少2个字符）" @confirm="handleSearch"
+                @input="validateTeacher" @focus="onTeacherFocus" @blur="onTeacherBlur" />
+              <view class="input-line" :class="{ active: teacherFocused }"></view>
             </view>
-            <text
-              class="input-hint"
-              :class="{ 'hint-error': teacherError }"
-              v-if="searchForm.teacher.trim()">
+            <text class="input-hint" :class="{ 'hint-error': teacherError }" v-if="searchForm.teacher.trim()">
               {{ teacherHint }}
             </text>
           </view>
 
           <view class="button-group">
-            <button
-              class="action-btn primary-btn"
-              @click="handleSearch"
-              :loading="loading"
-              :disabled="!canSearch">
-              <uni-icons
-                type="search"
-                size="20"
-                color="#ffffff"
-                v-if="!loading"></uni-icons>
+            <button class="action-btn primary-btn" @click="handleSearch" :loading="loading" :disabled="!canSearch">
+              <uni-icons type="search" size="20" color="#ffffff" v-if="!loading"></uni-icons>
               <text>{{ loading ? "查询中..." : "开始查询" }}</text>
             </button>
             <button class="action-btn secondary-btn" @click="handleReset">
@@ -113,16 +84,13 @@
         <view class="results-header">
           <view class="results-info">
             <text class="results-title">查询结果</text>
-            <text class="results-count"
-              >共找到 {{ Object.keys(resultData).length }} 门课程</text
-            >
+            <text class="results-count">
+              共找到 {{ Object.keys(resultData).length }} 门课程
+            </text>
           </view>
         </view>
 
-        <view
-          class="course-card modern-card"
-          v-for="(teachers, courseName) in resultData"
-          :key="courseName">
+        <view class="course-card modern-card" v-for="(teachers, courseName) in resultData" :key="courseName">
           <view class="course-header">
             <view class="course-info">
               <view class="course-icon">
@@ -133,27 +101,19 @@
           </view>
 
           <view class="course-content">
-            <view
-              class="teacher-section"
-              v-for="(teacherName, teacherIndex) in Object.keys(teachers)"
+            <view class="teacher-section" v-for="(teacherName, teacherIndex) in Object.keys(teachers)"
               :key="teacherName">
               <view class="teacher-header">
                 <view class="teacher-info">
                   <view class="teacher-avatar">
-                    <uni-icons
-                      type="person"
-                      size="16"
-                      color="#7f4515"></uni-icons>
+                    <uni-icons type="person" size="16" color="#7f4515"></uni-icons>
                   </view>
                   <text class="teacher-name">{{ teacherName }}</text>
                 </view>
               </view>
 
               <view class="semester-list">
-                <view
-                  class="semester-item"
-                  v-for="(data, semester) in teachers[teacherName]"
-                  :key="semester">
+                <view class="semester-item" v-for="(data, semester) in teachers[teacherName]" :key="semester">
                   <view class="semester-info">
                     <text class="semester-name">{{ semester }}</text>
                     <text class="update-time" v-if="data.update_time">
@@ -207,10 +167,7 @@
       <view class="loading-state modern-card" v-else-if="loading">
         <view class="loading-content">
           <view class="loading-spinner">
-            <uni-icons
-              type="spinner-cycle"
-              size="60"
-              color="#7f4515"></uni-icons>
+            <uni-icons type="spinner-cycle" size="60" color="#7f4515"></uni-icons>
           </view>
           <text class="loading-text">正在查询数据...</text>
         </view>
@@ -219,256 +176,182 @@
   </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      searchForm: {
-        course: "",
-        teacher: "",
+<script setup>
+import { ref, reactive, computed, onMounted } from "vue";
+
+// 状态
+const searchForm = reactive({ course: "", teacher: "" });
+const resultData = ref({});
+const loading = ref(false);
+const searched = ref(false);
+const emptyMessage = ref("未找到相关数据");
+const courseError = ref(false);
+const teacherError = ref(false);
+const courseFocused = ref(false);
+const teacherFocused = ref(false);
+
+// 计算属性
+const hasResults = computed(() => Object.keys(resultData.value).length > 0);
+const courseHint = computed(() => {
+  const length = searchForm.course.trim().length;
+  if (length === 0) return "请输入课程名称或代码";
+  if (length < 3) return `至少需要3个字符，当前${length}个字符`;
+  return `已输入${length}个字符`;
+});
+const teacherHint = computed(() => {
+  const length = searchForm.teacher.trim().length;
+  if (length === 0) return "";
+  if (length < 2) return `至少需要2个字符，当前${length}个字符`;
+  return `已输入${length}个字符`;
+});
+const canSearch = computed(() => {
+  const courseLength = searchForm.course.trim().length;
+  const teacherLength = searchForm.teacher.trim().length;
+  return courseLength >= 3 && (teacherLength === 0 || teacherLength >= 2);
+});
+
+// 方法
+function onCourseFocus() {
+  courseFocused.value = true;
+}
+function onCourseBlur() {
+  courseFocused.value = false;
+}
+function onTeacherFocus() {
+  teacherFocused.value = true;
+}
+function onTeacherBlur() {
+  teacherFocused.value = false;
+}
+
+function checkLoginStatus() {
+  const token = uni.getStorageSync("token");
+  if (!token) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
+    return false;
+  }
+  return true;
+}
+
+function validateCourse() {
+  const length = searchForm.course.trim().length;
+  courseError.value = length > 0 && length < 3;
+}
+function validateTeacher() {
+  const length = searchForm.teacher.trim().length;
+  teacherError.value = length > 0 && length < 2;
+}
+
+async function handleSearch() {
+  if (!checkLoginStatus()) return;
+
+  if (!searchForm.course.trim()) {
+    uni.showToast({ title: "请输入课程名称或代码", icon: "none" });
+    return;
+  }
+  if (searchForm.course.trim().length < 3) {
+    uni.showToast({ title: "课程名称至少需要3个字符", icon: "none" });
+    return;
+  }
+  if (searchForm.teacher.trim() && searchForm.teacher.trim().length < 2) {
+    uni.showToast({ title: "教师姓名至少需要2个字符", icon: "none" });
+    return;
+  }
+
+  loading.value = true;
+  searched.value = true;
+
+  try {
+    const params = { course: searchForm.course.trim() };
+    if (searchForm.teacher.trim()) params.teacher = searchForm.teacher.trim();
+
+    const response = await queryAverageScores(params);
+    if (response.code === 200) {
+      resultData.value = response.data;
+      if (!hasResults.value) emptyMessage.value = "未找到相关数据";
+    } else {
+      resultData.value = {};
+      emptyMessage.value = response.message || "查询失败";
+      uni.showToast({ title: emptyMessage.value, icon: "none" });
+    }
+  } catch (error) {
+    console.error("查询平均分失败:", error);
+    resultData.value = {};
+    let errorMessage = "网络错误，请重试";
+    if (error.message) {
+      if (error.message.includes("HTTP 422")) errorMessage = "输入参数格式错误，请检查输入内容";
+      else if (error.message.includes("HTTP 400")) errorMessage = "请求参数错误，请检查输入内容";
+      else if (error.message.includes("HTTP 500")) errorMessage = "服务器内部错误，请稍后重试";
+      else if (error.message.includes("HTTP")) errorMessage = `请求失败: ${error.message}`;
+    }
+    emptyMessage.value = errorMessage;
+    uni.showToast({ title: errorMessage, icon: "none", duration: 3000 });
+  } finally {
+    loading.value = false;
+  }
+}
+
+function handleReset() {
+  searchForm.course = "";
+  searchForm.teacher = "";
+  resultData.value = {};
+  searched.value = false;
+  courseError.value = false;
+  teacherError.value = false;
+}
+
+function queryAverageScores(params) {
+  const baseURL = getApp().globalData.apiBaseURL;
+  const token = uni.getStorageSync("token");
+
+  if (!token) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: `${baseURL}/api/v1/average-scores`,
+      method: "GET",
+      data: params,
+      header: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
-      resultData: {},
-      loading: false,
-      searched: false,
-      emptyMessage: "未找到相关数据",
-      courseError: false,
-      teacherError: false,
-      courseFocused: false,
-      teacherFocused: false,
-    };
-  },
-
-  computed: {
-    hasResults() {
-      return Object.keys(this.resultData).length > 0;
-    },
-
-    courseHint() {
-      const length = this.searchForm.course.trim().length;
-      if (length === 0) {
-        return "请输入课程名称或代码";
-      } else if (length < 3) {
-        return `至少需要3个字符，当前${length}个字符`;
-      } else {
-        return `已输入${length}个字符`;
-      }
-    },
-
-    teacherHint() {
-      const length = this.searchForm.teacher.trim().length;
-      if (length === 0) {
-        return "";
-      } else if (length < 2) {
-        return `至少需要2个字符，当前${length}个字符`;
-      } else {
-        return `已输入${length}个字符`;
-      }
-    },
-
-    canSearch() {
-      const courseLength = this.searchForm.course.trim().length;
-      const teacherLength = this.searchForm.teacher.trim().length;
-
-      return courseLength >= 3 && (teacherLength === 0 || teacherLength >= 2);
-    },
-  },
-
-  onLoad() {
-    uni.setNavigationBarTitle({
-      title: "平均分查询",
+      success: (res) => {
+        if (res.statusCode === 401) {
+          uni.removeStorageSync("token");
+          uni.showToast({ title: "登录已过期，请重新登录", icon: "none" });
+          setTimeout(() => {
+            uni.reLaunch({ url: "/pages/index/index" });
+          }, 1500);
+          return;
+        }
+        if (res.statusCode !== 200) {
+          reject(new Error(`HTTP ${res.statusCode}: ${res.data?.message || "请求失败"}`));
+          return;
+        }
+        resolve(res.data);
+      },
+      fail: (err) => reject(err),
     });
-    this.checkLoginStatus();
-  },
+  });
+}
 
-  onShow() {
-    // 页面显示时检查登录状态
-    this.checkLoginStatus();
-  },
+function formatTime(timeStr) {
+  if (!timeStr) return "";
+  return timeStr.replace("T", " ").split(".")[0];
+}
 
-  methods: {
-    checkLoginStatus() {
-      const token = uni.getStorageSync("token");
-      if (!token) {
-        uni.showToast({ title: "请先登录", icon: "none" });
-        uni.reLaunch({ url: "/pages/index/index" });
-        return false;
-      }
-      return true;
-    },
-
-    validateCourse() {
-      const length = this.searchForm.course.trim().length;
-      this.courseError = length > 0 && length < 3;
-    },
-
-    validateTeacher() {
-      const length = this.searchForm.teacher.trim().length;
-      this.teacherError = length > 0 && length < 2;
-    },
-
-    async handleSearch() {
-      // 先检查登录状态
-      if (!this.checkLoginStatus()) {
-        return;
-      }
-
-      if (!this.searchForm.course.trim()) {
-        uni.showToast({
-          title: "请输入课程名称或代码",
-          icon: "none",
-        });
-        return;
-      }
-
-      if (this.searchForm.course.trim().length < 3) {
-        uni.showToast({
-          title: "课程名称至少需要3个字符",
-          icon: "none",
-        });
-        return;
-      }
-
-      if (
-        this.searchForm.teacher.trim() &&
-        this.searchForm.teacher.trim().length < 2
-      ) {
-        uni.showToast({
-          title: "教师姓名至少需要2个字符",
-          icon: "none",
-        });
-        return;
-      }
-
-      this.loading = true;
-      this.searched = true;
-
-      try {
-        const params = {
-          course: this.searchForm.course.trim(),
-        };
-
-        if (this.searchForm.teacher.trim()) {
-          params.teacher = this.searchForm.teacher.trim();
-        }
-
-        const response = await this.queryAverageScores(params);
-
-        if (response.code === 200) {
-          this.resultData = response.data;
-          if (!this.hasResults) {
-            this.emptyMessage = "未找到相关数据";
-          }
-        } else {
-          this.resultData = {};
-          this.emptyMessage = response.message || "查询失败";
-          uni.showToast({
-            title: this.emptyMessage,
-            icon: "none",
-          });
-        }
-      } catch (error) {
-        console.error("查询平均分失败:", error);
-        this.resultData = {};
-
-        // 显示更详细的错误信息
-        let errorMessage = "网络错误，请重试";
-        if (error.message) {
-          if (error.message.includes("HTTP 422")) {
-            errorMessage = "输入参数格式错误，请检查输入内容";
-          } else if (error.message.includes("HTTP 400")) {
-            errorMessage = "请求参数错误，请检查输入内容";
-          } else if (error.message.includes("HTTP 500")) {
-            errorMessage = "服务器内部错误，请稍后重试";
-          } else if (error.message.includes("HTTP")) {
-            errorMessage = `请求失败: ${error.message}`;
-          }
-        }
-
-        this.emptyMessage = errorMessage;
-        uni.showToast({
-          title: errorMessage,
-          icon: "none",
-          duration: 3000,
-        });
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    handleReset() {
-      this.searchForm = {
-        course: "",
-        teacher: "",
-      };
-      this.resultData = {};
-      this.searched = false;
-      this.courseError = false;
-      this.teacherError = false;
-    },
-
-    async queryAverageScores(params) {
-      const baseURL = getApp().globalData.apiBaseURL;
-      const token = uni.getStorageSync("token");
-
-      if (!token) {
-        uni.showToast({
-          title: "请先登录",
-          icon: "none",
-        });
-        uni.reLaunch({ url: "/pages/index/index" });
-        return;
-      }
-
-      return new Promise((resolve, reject) => {
-        uni.request({
-          url: `${baseURL}/api/v1/average-scores`,
-          method: "GET",
-          data: params,
-          header: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          success: (res) => {
-            if (res.statusCode === 401) {
-              uni.removeStorageSync("token");
-              uni.showToast({
-                title: "登录已过期，请重新登录",
-                icon: "none",
-              });
-              setTimeout(() => {
-                uni.reLaunch({ url: "/pages/index/index" });
-              }, 1500);
-              return;
-            }
-
-            // 处理其他非200状态码
-            if (res.statusCode !== 200) {
-              console.error("API请求失败:", res);
-              reject(
-                new Error(
-                  `HTTP ${res.statusCode}: ${res.data?.message || "请求失败"}`
-                )
-              );
-              return;
-            }
-
-            resolve(res.data);
-          },
-          fail: (err) => {
-            reject(err);
-          },
-        });
-      });
-    },
-
-    formatTime(timeStr) {
-      if (!timeStr) return "";
-      // 简单的时间格式化，您可以根据实际格式调整
-      return timeStr.replace("T", " ").split(".")[0];
-    },
-  },
-};
+// 生命周期
+onMounted(() => {
+  uni.setNavigationBarTitle({ title: "平均分查询" });
+  checkLoginStatus();
+});
 </script>
+
 
 <style lang="scss" scoped>
 @import "../../styles/common.scss";
@@ -532,10 +415,12 @@ export default {
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20rpx) rotate(180deg);
   }
@@ -929,11 +814,11 @@ export default {
 .score-value {
   font-size: 22rpx;
   font-weight: 600;
-  
+
   &.primary {
     color: #7f4515;
   }
-  
+
   &.secondary {
     color: #6c757d;
   }
@@ -988,6 +873,7 @@ export default {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -1019,15 +905,15 @@ export default {
   .page-title {
     font-size: 36rpx;
   }
-  
+
   .course-card {
     margin-bottom: 20rpx;
   }
-  
+
   .course-header {
     padding: 20rpx 24rpx;
   }
-  
+
   .course-content {
     padding: 16rpx 24rpx 24rpx;
   }
