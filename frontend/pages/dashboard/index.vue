@@ -33,9 +33,10 @@
           </view>
         </ModernCard>
 
+        <!-- MODIFICATION: 公告栏文本与公告数据进行绑定 -->
         <view class="notice-bar" @click="openNoticeModal">
           <uni-icons class="notice-icon" type="sound" size="20" color="#FF6B35"></uni-icons>
-          <text class="notice-text">系统正在测试阶段，点击查看QQ群信息</text>
+          <text class="notice-text">{{ noticeData.title }}</text>
           <uni-icons type="right" size="16" color="#C0C4CC"></uni-icons>
         </view>
 
@@ -118,7 +119,8 @@
       </view>
     </PageLayout>
 
-    <uni-popup ref="noticePopup" type="center">
+    <!-- MODIFICATION: 添加 @change 事件监听器 -->
+    <uni-popup ref="noticePopup" type="center" @change="handleNoticePopupChange">
       <view class="popup-content">
         <view class="popup-header">
           <text class="popup-title">公告详情</text>
@@ -134,7 +136,8 @@
               </view>
               <text class="status-title">系统状态</text>
             </view>
-            <text class="status-text">该程序正在测试阶段，功能可能不稳定</text>
+            <!-- MODIFICATION: 公告弹窗内容与公告数据进行绑定 -->
+            <text class="status-text">{{ noticeData.content }}</text>
           </view>
           <view class="community-content-wrapper">
             <view class="community-header">
@@ -196,8 +199,8 @@
 </template>
 
 <script setup>
-// Script 部分无需任何改动
-import { ref } from "vue";
+// MODIFICATION: 引入 nextTick
+import { ref, nextTick } from "vue";
 import { onLoad, onShow } from "@dcloudio/uni-app";
 import { decode } from "../../utils/jwt-decode.js";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
@@ -205,6 +208,58 @@ import ModernCard from "../../components/ModernCard/ModernCard.vue";
 
 const noticePopup = ref(null);
 const calendarPopup = ref(null);
+
+// ==================== MODIFICATION START: 公告机制 ====================
+// 公告数据结构 (在真实应用中，这部分数据应该从服务器获取)
+const noticeData = ref({
+  version: "1.0.2", // 公告版本号，每次更新公告时递增或修改
+  title: "重要通知：新功能上线！",
+  content: "选课推荐功能已上线，快去体验吧！同时，我们新增了开发交流QQ群，欢迎加入。",
+  timestamp: Date.now(),
+  forceShow: false // 是否强制显示（即使已读过，只要版本号更新就会再次弹出）
+});
+
+// 公告已读版本的本地缓存键名
+const NOTICE_READ_KEY = "notice_read_version";
+
+/**
+ * @description: 检查公告更新并决定是否弹出
+ */
+const checkNoticeUpdate = () => {
+  const remoteNotice = noticeData.value;
+  const lastReadVersion = uni.getStorageSync(NOTICE_READ_KEY);
+  console.log(`当前公告版本: ${remoteNotice.version}, 已读版本: ${lastReadVersion}`);
+
+  if (remoteNotice.version !== lastReadVersion || remoteNotice.forceShow) {
+    console.log("检测到新公告或强制公告，准备弹窗。");
+    nextTick(() => {
+      openNoticeModal();
+    });
+  }
+};
+
+/**
+ * @description: 关闭公告弹窗的按钮点击事件
+ */
+const closeNoticeModal = () => {
+  if (noticePopup.value) {
+    noticePopup.value.close();
+  }
+};
+
+/**
+ * @description: MODIFICATION: 监听弹窗状态变化，统一处理关闭逻辑
+ * @param {object} e - 事件对象，包含 show 属性 (true/false)
+ */
+const handleNoticePopupChange = (e) => {
+  // 只要弹窗关闭（无论是点击遮罩还是关闭按钮），就执行标记已读
+  if (!e.show) {
+    uni.setStorageSync(NOTICE_READ_KEY, noticeData.value.version);
+    console.log(`公告版本 ${noticeData.value.version} 已通过关闭操作标记为已读。`);
+  }
+};
+// ==================== MODIFICATION END: 公告机制 ====================
+
 
 const profile = ref({
   student_name: "W1ndys",
@@ -226,9 +281,12 @@ const features = ref([
   { text: "更多功能", description: "敬请期待", icon: "gear", url: "" },
 ]);
 
-onLoad(() => { checkLoginStatus(); });
+onLoad(() => {
+  checkLoginStatus();
+  checkNoticeUpdate();
+});
+
 onShow(() => {
-  // 只在需要时检查登录状态，避免重复请求
   const token = uni.getStorageSync("token");
   if (token && (!profile.value.student_id || profile.value.student_id === "加载中...")) {
     checkLoginStatus();
@@ -245,9 +303,7 @@ const fetchProfile = async () => {
     header: { Authorization: `Bearer ${token}` },
     success: (res) => {
       if (res.statusCode === 200 && res.data.success) {
-        // 合并服务器数据，保持默认值作为后备
         const serverData = res.data.data;
-        // 如果服务器返回了学号，则使用服务器数据；否则从token中获取
         const studentId = serverData.student_id || (() => {
           try {
             const payload = decode(token);
@@ -288,9 +344,6 @@ const checkLoginStatus = () => {
   } else {
     try {
       const payload = decode(token);
-      // 不立即显示哈希值，保持默认的"加载中..."状态
-      // profile.value.student_id = payload.sub;
-      // 只在需要时才获取完整资料
       if (!profile.value.student_name || profile.value.student_name === "W1ndys") {
         fetchProfile();
       }
@@ -304,8 +357,14 @@ const checkLoginStatus = () => {
   }
 };
 
-const openNoticeModal = () => { if (noticePopup.value) noticePopup.value.open(); };
-const closeNoticeModal = () => { if (noticePopup.value) noticePopup.value.close(); };
+const openNoticeModal = () => {
+  if (noticePopup.value) {
+    console.log("Popup instance found, opening...");
+    noticePopup.value.open();
+  } else {
+    console.error("Popup instance is null. Cannot open.");
+  }
+};
 
 const openCalendarModal = () => { if (calendarPopup.value) calendarPopup.value.open(); };
 const closeCalendarModal = () => { if (calendarPopup.value) calendarPopup.value.close(); };
@@ -314,7 +373,6 @@ const handleNavigate = (index) => {
   const targetPage = features.value[index];
   if (targetPage.url) {
     if (targetPage.url === "calendar") {
-      // 特殊处理校历功能
       openCalendarModal();
     } else if (targetPage.external) {
       if (typeof window !== 'undefined') window.open(targetPage.url, "_blank");
@@ -976,8 +1034,4 @@ const handleCalendarImageLoad = () => { console.log("校历图片加载成功");
     border-color: #c0c0c0;
   }
 }
-
-// 删除旧的、基于颜色的按钮样式
-// .refresh-btn, .logout-btn, .clear-cache-btn, etc. { ... }
-/* ==================== MODIFICATION END ==================== */
 </style>
