@@ -100,8 +100,8 @@
                   <view class="header-top">
                     <text class="module-title">{{ m.module_name }}</text>
                     <view class="status-chip" :class="isIncomplete(m)
-                        ? 'chip-module-incomplete'
-                        : 'chip-module-complete'
+                      ? 'chip-module-incomplete'
+                      : 'chip-module-complete'
                       ">
                       <text>{{ isIncomplete(m) ? "未修满" : "已修满" }}</text>
                     </view>
@@ -211,31 +211,33 @@
       </view>
     </view>
 
-    <view v-if="showNoticeModal" class="modal-overlay" @click="closeModal">
-      <view class="modal-container" @click.stop>
-        <view class="modal-header">
-          <uni-icons type="info-filled" size="24" color="#1890ff" />
-          <text class="modal-title">培养方案说明</text>
-        </view>
+    <transition name="modal" appear>
+      <view v-if="showNoticeModal" class="modal-overlay" @click="closeModal">
+        <view class="modal-container" @click.stop>
+          <view class="modal-header">
+            <uni-icons type="info-filled" size="24" color="#1890ff" />
+            <text class="modal-title">培养方案说明</text>
+          </view>
 
-        <view class="modal-content">
-          <text class="notice-text">
-            本页面由教务系统培养方案表格直接生成，大部分专业的应修是160或170或175，该培养方案总和大部分都不足够（22级是），少的那些分就是你应该选的公选课的分。如果不够，请及时与对应负责老师沟通。
-          </text>
-          <text class="notice-text" style="margin-top: 24rpx">
-            根据教务处官方规定：培养方案毕业学分原则上145-170学分，其中人文社会科学类专业毕业学分≤160学分，理科类专业毕业学分≤165学分，工科类专业毕业学分≤170学分，辅修学士学位专业毕业学分70学分左右。
-          </text>
-          <text class="notice-text" style="margin-top: 16rpx; font-size: 24rpx; color: #8c8c8c">
-            来源：https://jwc.qfnu.edu.cn/info/1068/7039.htm
-          </text>
-        </view>
+          <view class="modal-content">
+            <text class="notice-text">
+              本页面由教务系统培养方案表格直接生成，大部分专业的应修是160或170或175，该培养方案总和大部分都不足够（22级是），少的那些分就是你应该选的公选课的分。如果不够，请及时与对应负责老师沟通。
+            </text>
+            <text class="notice-text" style="margin-top: 24rpx">
+              根据教务处官方规定：培养方案毕业学分原则上145-170学分，其中人文社会科学类专业毕业学分≤160学分，理科类专业毕业学分≤165学分，工科类专业毕业学分≤170学分，辅修学士学位专业毕业学分70学分左右。
+            </text>
+            <text class="notice-text" style="margin-top: 16rpx; font-size: 24rpx; color: #8c8c8c">
+              来源：https://jwc.qfnu.edu.cn/info/1068/7039.htm
+            </text>
+          </view>
 
-        <view class="modal-actions">
-          <button class="action-btn primary-btn" @click="handleConfirm"
-            style="background-color: #834A1A; color: white;">我已阅读</button>
+          <view class="modal-actions">
+            <button class="action-btn primary-btn" @click="handleConfirm"
+              style="background-color: #834A1A; color: white;">我已阅读</button>
+          </view>
         </view>
       </view>
-    </view>
+    </transition>
   </PageLayout>
 </template>
 
@@ -1234,6 +1236,39 @@ const closeModal = () => {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* 退出动画关键帧 */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(100rpx);
+    opacity: 0;
+  }
+}
+
+/* overlay 的离场动画 */
+.modal-leave-active {
+  animation: fadeOut 0.25s ease-in forwards;
+}
+
+/* 弹窗容器的离场动画（配合 overlay 一起） */
+.modal-leave-active .modal-container {
+  animation: slideDown 0.25s ease-in forwards;
 }
 
 .modal-header {

@@ -199,7 +199,7 @@ const calendarPopup = ref(null);
 const noticeData = ref({
   version: "3", // 公告版本号，每次更新公告时递增或修改
   title: "重要通知：请加用户群防走丢！",
-  content: "我们新增了用户QQ群，欢迎加入\n后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限\n你在哪看到本网站的？下方问卷可填写",
+  content: "我们新增了用户QQ群，欢迎加入\n后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限",
   timestamp: Date.now(),
   forceShow: false // 是否强制显示（即使已读过，只要版本号更新就会再次弹出）
 });
