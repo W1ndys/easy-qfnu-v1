@@ -134,7 +134,7 @@
               <view class="status-icon warning">
                 <uni-icons type="info" size="20" color="#FF6B35"></uni-icons>
               </view>
-              <text class="status-title">系统状态</text>
+              <text class="status-title">公告详情</text>
             </view>
             <!-- MODIFICATION: 公告弹窗内容与公告数据进行绑定 -->
             <text class="status-text">{{ noticeData.content }}</text>
@@ -226,9 +226,9 @@ const calendarPopup = ref(null);
 // ==================== MODIFICATION START: 公告机制 ====================
 // 公告数据结构 (在真实应用中，这部分数据应该从服务器获取)
 const noticeData = ref({
-  version: "2", // 公告版本号，每次更新公告时递增或修改
-  title: "重要通知：新功能上线！",
-  content: "我们新增了用户QQ群，欢迎加入\n后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限",
+  version: "3", // 公告版本号，每次更新公告时递增或修改
+  title: "重要通知：请加用户群防走丢！",
+  content: "我们新增了用户QQ群，欢迎加入\n后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限\n你在哪看到本网站的？下方问卷可填写",
   timestamp: Date.now(),
   forceShow: false // 是否强制显示（即使已读过，只要版本号更新就会再次弹出）
 });
