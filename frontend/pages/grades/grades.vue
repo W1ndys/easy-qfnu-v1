@@ -1,28 +1,20 @@
 <template>
   <PageLayout>
-    <!-- 加载状态 -->
     <LoadingScreen v-if="isLoading" text="正在从教务系统同步成绩..." />
 
-    <!-- 内容区域 -->
     <view v-else class="page-container page-rounded-container">
-      <!-- 背景装饰（与其它页面一致） -->
       <view class="background-decoration">
         <view class="circle circle-1"></view>
         <view class="circle circle-2"></view>
         <view class="circle circle-3"></view>
       </view>
 
-      <!-- 次外层内容容器，避免装饰遮挡 -->
       <view class="content-wrapper">
-        <!-- 空状态 -->
-        <EmptyState v-if="semesters.length === 0" icon-type="info-filled" title="没有查询到任何成绩记录" description="请检查网络连接或稍后重试"
+        <EmptyState v-if="isEmpty" icon-type="info-filled" title="没有查询到任何成绩记录" description="请检查网络连接或稍后重试"
           :show-retry="true" @retry="fetchGrades" />
 
-        <!-- 有数据时显示 -->
         <view v-else>
-          <!-- GPA分析模块 (已内联) -->
           <view v-if="gpaAnalysis" class="analysis-container">
-            <!-- 主GPA显示区域 -->
             <view class="main-gpa-section">
               <view class="gpa-item">
                 <text class="gpa-value">{{ gpaAnalysis?.weighted_gpa?.toFixed(2) || 'N/A' }}</text>
@@ -38,13 +30,11 @@
               </view>
             </view>
 
-            <!-- 学年与学期GPA流式布局 -->
             <view class="detailed-gpa-section">
               <view class="section-header">
                 <text class="section-title">详细GPA分布</text>
               </view>
               <view class="details-flex-container">
-                <!-- 学年GPA -->
                 <template v-if="yearlyGpa && Object.keys(yearlyGpa).length > 0">
                   <view v-for="(gpa, year) in yearlyGpa" :key="year" class="detail-item-flex">
                     <text class="detail-label">{{ year }}学年</text>
@@ -52,7 +42,6 @@
                     <text class="detail-value">{{ gpa.weighted_gpa.toFixed(2) }}</text>
                   </view>
                 </template>
-                <!-- 学期GPA -->
                 <template v-if="semesterGpa && Object.keys(semesterGpa).length > 0">
                   <view v-for="(gpa, semester) in semesterGpa" :key="semester" class="detail-item-flex">
                     <text class="detail-label">{{ semester }}</text>
@@ -64,7 +53,6 @@
             </view>
           </view>
 
-          <!-- 自定义GPA计算模式切换 -->
           <view class="custom-gpa-toggle-section">
             <view class="toggle-left">
               <text class="toggle-title">自定义GPA计算</text>
@@ -73,13 +61,11 @@
             <switch :checked="isCustomMode" @change="toggleCustomMode" color="#7F4515" />
           </view>
 
-          <!-- 提示信息 -->
           <view v-if="isCustomMode" class="custom-mode-tip">
             <view class="tip-icon">💡</view>
             <text class="tip-text">请勾选 **需要计入** GPA的课程</text>
           </view>
 
-          <!-- 成绩列表 -->
           <view class="grades-list-container">
             <view v-for="semester in semesters" :key="semester.semesterName" class="semester-block">
               <view class="semester-header">
@@ -90,14 +76,11 @@
                   'is-custom-mode': isCustomMode,
                   'is-selected': isCourseSelected(course.index)
                 }">
-                  <!-- 卡片主区域 (用于点击) -->
                   <view class="course-main" @click="handleCourseClick(course)">
-                    <!-- 复选框 -->
                     <view v-if="isCustomMode" class="course-checkbox-wrapper">
                       <view class="checkbox-inner" :class="{ 'checked': isCourseSelected(course.index) }"></view>
                     </view>
 
-                    <!-- 核心信息 -->
                     <view class="course-core-info">
                       <text class="course-name">{{ course.courseName }}</text>
                       <view class="course-meta">
@@ -108,7 +91,6 @@
                       </view>
                     </view>
 
-                    <!-- 成绩与展开按钮 -->
                     <view class="course-side">
                       <view class="course-score">
                         <text class="score-text" :class="getScoreClass(course.score)">
@@ -122,7 +104,6 @@
                     </view>
                   </view>
 
-                  <!-- 可展开的详细信息 -->
                   <view v-show="isCourseExpanded(course.index)" class="course-details">
                     <view class="detail-grid">
                       <view class="detail-item">
@@ -159,7 +140,6 @@
                       </view>
                     </view>
                   </view>
-
                 </view>
               </view>
             </view>
@@ -168,9 +148,7 @@
       </view>
     </view>
 
-    <!-- 自定义计算悬浮操作栏 -->
     <view v-if="isCustomMode" class="custom-gpa-footer">
-      <!-- 计算结果展示 -->
       <view v-if="customGPAResult" class="result-display-card">
         <view class="result-header">
           <text class="result-title">自定义计算结果</text>
@@ -194,22 +172,20 @@
         </view>
       </view>
 
-      <!-- 操作按钮区域 -->
       <view class="footer-actions">
         <view class="selection-info">
-          <text class="info-text">已选 {{ selectedCourses.length }} / {{ allCourses.length }} 门</text>
+          <text class="info-text">{{ selectionInfoText }}</text>
           <view class="actions">
             <text class="action-btn" @click="selectAllCourses">全选</text>
             <text class="action-btn" @click="clearSelection">清空</text>
           </view>
         </view>
-        <button class="calculate-btn" @click="calculateCustomGPA"
-          :disabled="isCalculating || selectedCourses.length === 0">
+        <button class="calculate-btn" @click="calculateCustomGPA" :disabled="isCalculateDisabled">
           {{ isCalculating ? '计算中...' : '计算自定义GPA' }}
         </button>
       </view>
     </view>
-    <!-- 成绩页面信息提醒弹窗 -->
+
     <transition name="modal">
       <view v-if="showNoticeModal" class="modal-overlay" @click.self="closeNoticeModal">
         <view class="modal-container">
@@ -227,17 +203,20 @@
         </view>
       </view>
     </transition>
-
-
   </PageLayout>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { onLoad, onShow } from "@dcloudio/uni-app";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
 import EmptyState from "../../components/EmptyState/EmptyState.vue";
+
+// --- API & 全局常量 ---
+const API_BASE_URL = getApp().globalData.apiBaseURL;
+const API_GRADES_URL = `${API_BASE_URL}/api/v1/grades`;
+const API_GPA_CALCULATE_URL = `${API_BASE_URL}/api/v1/gpa/calculate`;
 
 // --- 基础页面状态 ---
 const isLoading = ref(true);
@@ -257,9 +236,28 @@ const customGPAResult = ref(null); // 用于存储计算结果
 
 // --- UI交互状态 ---
 const expandedCourses = ref(new Set()); // 存储展开的课程 `index`
+const showNoticeModal = ref(false);
 
-onLoad(() => checkLoginAndFetch());
+// --- 计算属性 ---
+const isEmpty = computed(() => semesters.value.length === 0);
+const selectionInfoText = computed(() => `已选 ${selectedCourses.value.length} / ${allCourses.value.length} 门`);
+const isCalculateDisabled = computed(() => isCalculating.value || selectedCourses.value.length === 0);
+
+// --- 生命周期钩子 ---
+onLoad(() => {
+  // 1. 检查登录并获取数据
+  checkLoginAndFetch();
+  // 2. 延迟500ms后弹出提示窗口
+  setTimeout(() => {
+    // 可选: 增加判断条件，例如仅在有成绩数据时显示
+    if (semesters.value.length > 0 || !isLoading.value) {
+      showNoticeModal.value = true;
+    }
+  }, 500);
+});
+
 onShow(() => {
+  // 每次页面显示时检查 token，防止在其他页面退出登录后，返回此页面时状态不正确
   if (!uni.getStorageSync("token")) {
     uni.showToast({ title: "请先登录", icon: "none" });
     uni.reLaunch({ url: "/pages/index/index" });
@@ -280,7 +278,7 @@ const fetchGrades = async () => {
   isLoading.value = true;
   try {
     const { statusCode, data } = await uni.request({
-      url: `${getApp().globalData.apiBaseURL}/api/v1/grades`,
+      url: API_GRADES_URL,
       method: "GET",
       header: { Authorization: "Bearer " + uni.getStorageSync("token") },
     });
@@ -343,11 +341,15 @@ const handleCourseClick = (course) => {
 
 const getScoreClass = (score) => {
   const numScore = parseFloat(score);
-  if (isNaN(numScore)) return 'score-text-grade';
+  if (isNaN(numScore)) return 'score-text-grade'; // 用于“优秀”、“良好”等文本成绩
   if (numScore >= 90) return 'score-high';
   if (numScore >= 75) return 'score-mid';
   if (numScore >= 60) return 'score-low';
   return 'score-fail';
+};
+
+const closeNoticeModal = () => {
+  showNoticeModal.value = false;
 };
 
 // --- 自定义GPA计算逻辑 ---
@@ -366,7 +368,7 @@ const toggleCourseSelection = (courseIndex) => {
   } else {
     selectedCourses.value.push(courseIndex);
   }
-  clearCustomResult();
+  clearCustomResult(); // 每次选择变化时，清除旧的计算结果
 };
 
 const selectAllCourses = () => {
@@ -397,7 +399,7 @@ const calculateCustomGPA = async () => {
 
   try {
     const { statusCode, data } = await uni.request({
-      url: `${getApp().globalData.apiBaseURL}/api/v1/gpa/calculate`,
+      url: API_GPA_CALCULATE_URL,
       method: "POST",
       header: {
         Authorization: "Bearer " + uni.getStorageSync("token"),
@@ -419,55 +421,65 @@ const calculateCustomGPA = async () => {
     isCalculating.value = false;
   }
 };
-
-// --- 弹窗提醒状态 ---
-
-const showNoticeModal = ref(false);
-
-onLoad(() => {
-  checkLoginAndFetch();
-  setTimeout(() => { showNoticeModal.value = true }, 500);
-});
-
-const closeNoticeModal = () => {
-  showNoticeModal.value = false;
-};
-
-
 </script>
 
 <style lang="scss" scoped>
 @import "../../styles/common.scss";
 
-// 定义主色调
+/* --- 主题变量 --- */
 $primary-color: #7F4515;
 $primary-color-light: #F5EFE6;
 
-/* 最外层背景（与其它页面统一） */
+/* --- 颜色变量 --- */
+$text-color-primary: #343a40;
+$text-color-secondary: #495057;
+$text-color-muted: #8c7d70;
+$border-color: #f0e9e4;
+$background-color: #f7f8fa;
+$background-color-light: #fdfcfa;
+$background-color-card: #ffffff;
+$score-high: #28a745;
+$score-mid: #17a2b8;
+$score-low: #ffc107;
+$score-fail: #dc3545;
+
+/* --- 尺寸变量 --- */
+$border-radius-lg: 40rpx;
+$border-radius-base: 16rpx;
+$border-radius-sm: 12rpx;
+$border-radius-xs: 8rpx;
+
+/* --- 字体变量 --- */
+$font-size-xxl: 40rpx;
+$font-size-xl: 36rpx;
+$font-size-lg: 30rpx;
+$font-size-base: 28rpx;
+$font-size-sm: 24rpx;
+$font-size-xs: 22rpx;
+$font-size-xxs: 20rpx;
+
+/* 页面基本布局 */
 .page-container {
   min-height: 100vh;
-  background: #f7f8fa;
+  background: $background-color;
   position: relative;
   overflow: hidden;
 }
 
-/* 次外层圆角容器（与其它页面统一） */
 .page-rounded-container {
-  background: #ffffff;
-  border-radius: 40rpx;
+  background: $background-color-card;
+  border-radius: $border-radius-lg;
   padding: 20rpx 20rpx 30rpx;
   box-shadow: 0 20rpx 60rpx var(--shadow-light);
   border: 1rpx solid var(--border-light);
 }
 
-/* 内容主体容器，避免装饰覆盖 */
 .content-wrapper {
   position: relative;
   z-index: 1;
-  padding: 0; // 保持原有子模块的内边距与间距
 }
 
-/* 背景装饰（与其它页面统一） */
+/* 背景装饰 */
 .background-decoration {
   position: fixed;
   top: 0;
@@ -520,13 +532,13 @@ $primary-color-light: #F5EFE6;
   }
 }
 
-/* 下方为原有样式，去除 page-container 上的宽度/居中/圆角，保持模块间距 */
+/* GPA分析模块 */
 .analysis-container {
-  background-color: #ffffff;
-  border-radius: 16rpx;
+  background-color: $background-color-card;
+  border-radius: $border-radius-base;
   padding: 20rpx;
   margin-bottom: 25rpx;
-  border: 1rpx solid #f0e9e4;
+  border: 1rpx solid $border-color;
 }
 
 .main-gpa-section {
@@ -535,12 +547,12 @@ $primary-color-light: #F5EFE6;
   text-align: center;
   padding-bottom: 20rpx;
   margin-bottom: 20rpx;
-  border-bottom: 1rpx solid #f0e9e4;
+  border-bottom: 1rpx solid $border-color;
 
   .gpa-item {
     .gpa-value {
       display: block;
-      font-size: 40rpx;
+      font-size: $font-size-xxl;
       font-weight: bold;
       color: $primary-color;
       line-height: 1.2;
@@ -548,14 +560,13 @@ $primary-color-light: #F5EFE6;
 
     .gpa-label {
       display: block;
-      font-size: 22rpx;
-      color: #8c7d70;
+      font-size: $font-size-xs;
+      color: $text-color-muted;
       margin-top: 4rpx;
     }
   }
 }
 
-// 流式布局
 .detailed-gpa-section {
   .section-header {
     margin-bottom: 10rpx;
@@ -563,7 +574,7 @@ $primary-color-light: #F5EFE6;
     .section-title {
       font-size: 26rpx;
       font-weight: bold;
-      color: #333;
+      color: $text-color-primary;
     }
   }
 }
@@ -577,20 +588,20 @@ $primary-color-light: #F5EFE6;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #fdfcfa;
+    background-color: $background-color-light;
     padding: 10rpx 15rpx;
-    border-radius: 8rpx;
-    flex-grow: 1; // 允许项目拉伸填充
-    min-width: calc(50% - 15rpx); // 最小宽度，保证一行最多两个
+    border-radius: $border-radius-xs;
+    flex-grow: 1;
+    min-width: calc(50% - 15rpx);
 
     .detail-label {
-      font-size: 24rpx;
-      color: #5c524a;
+      font-size: $font-size-sm;
+      color: $text-color-secondary;
       white-space: nowrap;
     }
 
     .detail-sub-info {
-      font-size: 20rpx;
+      font-size: $font-size-xxs;
       color: #a09387;
       margin: 0 10rpx;
       white-space: nowrap;
@@ -601,48 +612,45 @@ $primary-color-light: #F5EFE6;
       font-weight: bold;
       color: $primary-color;
       flex-shrink: 0;
-      margin-left: auto; // 将GPA值推到最右侧
+      margin-left: auto;
     }
   }
 }
 
-
-.grades-list-container {
-  padding-bottom: 250rpx;
-}
-
+/* 自定义GPA切换 */
 .custom-gpa-toggle-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #ffffff;
+  background-color: $background-color-card;
   padding: 20rpx;
-  border-radius: 16rpx;
+  border-radius: $border-radius-base;
   margin: 25rpx 0;
-  border: 1rpx solid #f0e9e4;
+  border: 1rpx solid $border-color;
 
   .toggle-left {
     .toggle-title {
       display: block;
-      font-size: 30rpx;
+      font-size: $font-size-lg;
       font-weight: bold;
-      color: #333;
+      color: $text-color-primary;
       margin-bottom: 4rpx;
     }
 
     .toggle-desc {
-      font-size: 24rpx;
-      color: #8c7d70;
+      font-size: $font-size-sm;
+      color: $text-color-muted;
     }
   }
 }
 
+/* 自定义模式提示 */
 .custom-mode-tip {
   display: flex;
   align-items: center;
   padding: 16rpx;
   background: $primary-color-light;
-  border-radius: 12rpx;
+  border-radius: $border-radius-sm;
   margin-bottom: 25rpx;
   border-left: 6rpx solid $primary-color;
 
@@ -653,9 +661,14 @@ $primary-color-light: #F5EFE6;
 
   .tip-text {
     color: $primary-color;
-    font-size: 24rpx;
+    font-size: $font-size-sm;
     line-height: 1.4;
   }
+}
+
+/* 成绩列表 */
+.grades-list-container {
+  padding-bottom: 250rpx; // 为悬浮操作栏留出空间
 }
 
 .semester-block {
@@ -667,9 +680,9 @@ $primary-color-light: #F5EFE6;
   margin-bottom: 15rpx;
 
   .semester-name {
-    font-size: 30rpx;
+    font-size: $font-size-lg;
     font-weight: bold;
-    color: #495057;
+    color: $text-color-secondary;
     border-left: 8rpx solid $primary-color;
     padding-left: 15rpx;
   }
@@ -682,9 +695,9 @@ $primary-color-light: #F5EFE6;
 }
 
 .course-card {
-  background-color: #ffffff;
-  border-radius: 16rpx;
-  border: 1rpx solid #f0e9e4;
+  background-color: $background-color-card;
+  border-radius: $border-radius-base;
+  border: 1rpx solid $border-color;
   box-shadow: 0 4rpx 12rpx rgba(127, 69, 21, 0.03);
   transition: all 0.2s ease-in-out;
 
@@ -742,9 +755,9 @@ $primary-color-light: #F5EFE6;
   min-width: 0;
 
   .course-name {
-    font-size: 28rpx;
+    font-size: $font-size-base;
     font-weight: bold;
-    color: #343a40;
+    color: $text-color-primary;
     margin-bottom: 10rpx;
   }
 
@@ -754,7 +767,7 @@ $primary-color-light: #F5EFE6;
     gap: 10rpx;
 
     .meta-tag {
-      font-size: 20rpx;
+      font-size: $font-size-xxs;
       padding: 2rpx 10rpx;
       border-radius: 6rpx;
 
@@ -788,23 +801,23 @@ $primary-color-light: #F5EFE6;
   margin-right: 10rpx;
 
   .score-text {
-    font-size: 36rpx;
+    font-size: $font-size-xl;
     font-weight: bold;
 
     &.score-high {
-      color: #28a745;
+      color: $score-high;
     }
 
     &.score-mid {
-      color: #17a2b8;
+      color: $score-mid;
     }
 
     &.score-low {
-      color: #ffc107;
+      color: $score-low;
     }
 
     &.score-fail {
-      color: #dc3545;
+      color: $score-fail;
     }
 
     &.score-text-grade {
@@ -813,7 +826,7 @@ $primary-color-light: #F5EFE6;
   }
 
   .score-tag {
-    font-size: 20rpx;
+    font-size: $font-size-xxs;
     color: #adb5bd;
   }
 }
@@ -829,7 +842,7 @@ $primary-color-light: #F5EFE6;
 .course-details {
   padding: 0 25rpx 25rpx 25rpx;
   background-color: #fffbf7;
-  border-top: 1rpx solid #f0e9e4;
+  border-top: 1rpx solid $border-color;
 
   .detail-grid {
     display: grid;
@@ -839,27 +852,27 @@ $primary-color-light: #F5EFE6;
     .detail-item {
       .detail-label {
         display: block;
-        font-size: 22rpx;
-        color: #8c7d70;
+        font-size: $font-size-xs;
+        color: $text-color-muted;
         margin-bottom: 2rpx;
       }
 
       .detail-value {
         display: block;
-        font-size: 24rpx;
-        color: #343a40;
+        font-size: $font-size-sm;
+        color: $text-color-primary;
       }
     }
   }
 }
 
-/* 悬浮操作栏与容器左右边距对齐 */
+/* 悬浮操作栏 */
 .custom-gpa-footer {
   position: fixed;
   bottom: 0;
   left: 20rpx;
   right: 20rpx;
-  background-color: #ffffff;
+  background-color: $background-color-card;
   box-shadow: 0 -10rpx 40rpx rgba(0, 0, 0, 0.06);
   padding: 15rpx 25rpx;
   padding-bottom: calc(15rpx + constant(safe-area-inset-bottom));
@@ -867,14 +880,12 @@ $primary-color-light: #F5EFE6;
   border-top-left-radius: 20rpx;
   border-top-right-radius: 20rpx;
   z-index: 100;
-  // 删除此前的水平居中 transform/固定宽度，改为与页面内边距对齐
-  // width/transform/left:50% 均不再需要
 }
 
 .result-display-card {
-  background: #ffffff;
-  border: 1rpx solid #f0e9e4;
-  border-radius: 16rpx;
+  background: $background-color-card;
+  border: 1rpx solid $border-color;
+  border-radius: $border-radius-base;
   margin-bottom: 15rpx;
   box-shadow: 0 8rpx 25rpx rgba(127, 69, 21, 0.05);
   overflow: hidden;
@@ -884,22 +895,22 @@ $primary-color-light: #F5EFE6;
     justify-content: space-between;
     align-items: center;
     padding: 15rpx 20rpx;
-    background-color: #fdfcfa;
+    background-color: $background-color-light;
 
     .result-title {
-      font-size: 28rpx;
+      font-size: $font-size-base;
       font-weight: bold;
-      color: #333;
+      color: $text-color-primary;
     }
 
     .close-result-btn {
-      font-size: 24rpx;
-      color: #8c7d70;
+      font-size: $font-size-sm;
+      color: $text-color-muted;
       padding: 5rpx 15rpx;
       border-radius: 10rpx;
 
       &:active {
-        background-color: #f0e9e4;
+        background-color: $border-color;
       }
     }
   }
@@ -915,7 +926,7 @@ $primary-color-light: #F5EFE6;
     text-align: center;
     padding-right: 30rpx;
     margin-right: 30rpx;
-    border-right: 1rpx solid #f0e9e4;
+    border-right: 1rpx solid $border-color;
 
     .gpa-value {
       display: block;
@@ -927,8 +938,8 @@ $primary-color-light: #F5EFE6;
 
     .gpa-label {
       display: block;
-      font-size: 22rpx;
-      color: #8c7d70;
+      font-size: $font-size-xs;
+      color: $text-color-muted;
       margin-top: 8rpx;
     }
   }
@@ -945,13 +956,13 @@ $primary-color-light: #F5EFE6;
         display: block;
         font-size: 34rpx;
         font-weight: bold;
-        color: #333;
+        color: $text-color-primary;
       }
 
       .stat-label {
         display: block;
-        font-size: 22rpx;
-        color: #8c7d70;
+        font-size: $font-size-xs;
+        color: $text-color-muted;
         margin-top: 4rpx;
       }
     }
@@ -972,7 +983,7 @@ $primary-color-light: #F5EFE6;
 
   .info-text {
     font-size: 26rpx;
-    color: #333;
+    color: $text-color-primary;
   }
 
   .actions {
@@ -980,11 +991,11 @@ $primary-color-light: #F5EFE6;
     gap: 20rpx;
 
     .action-btn {
-      font-size: 24rpx;
+      font-size: $font-size-sm;
       color: $primary-color;
       padding: 8rpx 16rpx;
       background: $primary-color-light;
-      border-radius: 12rpx;
+      border-radius: $border-radius-sm;
     }
   }
 }
@@ -994,9 +1005,9 @@ $primary-color-light: #F5EFE6;
   background: $primary-color;
   color: #ffffff;
   border: none;
-  border-radius: 16rpx;
+  border-radius: $border-radius-base;
   padding: 24rpx;
-  font-size: 30rpx;
+  font-size: $font-size-lg;
   font-weight: bold;
 
   &:disabled {
@@ -1020,90 +1031,18 @@ $primary-color-light: #F5EFE6;
 }
 
 .modal-container {
-  background: #fff;
-  border-radius: 20rpx;
-  max-width: 600rpx;
-  width: 80%;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.25);
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 24rpx;
-  border-bottom: 1rpx solid #f0e9e4;
-
-  .modal-title {
-    font-size: 32rpx;
-    font-weight: bold;
-    color: #333;
-  }
-}
-
-.modal-content {
-  padding: 30rpx;
-  font-size: 26rpx;
-  color: #555;
-  line-height: 1.6;
-  flex: 1;
-}
-
-.modal-footer {
-  padding: 20rpx;
-  border-top: 1rpx solid #f0e9e4;
-  display: flex;
-  justify-content: flex-end;
-
-  .confirm-btn {
-    background: $primary-color;
-    color: #fff;
-    border-radius: 12rpx;
-    padding: 14rpx 30rpx;
-    font-size: 28rpx;
-  }
-}
-
-/* 弹窗动画 */
-.modal-enter-active,
-.modal-leave-active {
-  transition: all 0.3s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-  transform: translateY(40rpx);
-}
-
-/* 样式追加到 <style scoped> */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.modal-container {
-  background: #fff;
+  background: $background-color-card;
   border-radius: 20rpx;
   max-width: 600rpx;
   padding: 30rpx;
   box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.25);
-  animation: fadeInUp 0.3s ease;
 }
 
+.modal-header,
 .modal-title {
-  font-size: 32rpx;
+  font-size: $font-size-lg;
   font-weight: bold;
-  color: #333;
+  color: $text-color-primary;
 }
 
 .modal-content {
@@ -1115,14 +1054,15 @@ $primary-color-light: #F5EFE6;
 
 .modal-footer {
   text-align: right;
+  margin-top: 10rpx;
 }
 
 .modal-btn {
   background: $primary-color;
   color: #fff;
-  border-radius: 12rpx;
+  border-radius: $border-radius-sm;
   padding: 16rpx 40rpx;
-  font-size: 28rpx;
+  font-size: $font-size-base;
 }
 
 /* 进入/退出动画 */
