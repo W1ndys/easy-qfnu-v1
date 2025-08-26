@@ -155,9 +155,9 @@
                   </view>
                   <text class="group-desc">获取最新消息和通知</text>
                 </view>
-                <button class="copy-btn" @click="copyQQGroup">
+                <button class="copy-btn" @click="openOfficialGroupLink">
                   <uni-icons type="copy" size="16" color="#7F4515"></uni-icons>
-                  <text>复制群号</text>
+                  <text>加入群聊</text>
                 </button>
               </view>
               <view class="group-item">
@@ -168,9 +168,9 @@
                   </view>
                   <text class="group-desc">建议反馈、开发想法交流</text>
                 </view>
-                <button class="copy-btn" @click="copyDevQQGroup">
+                <button class="copy-btn" @click="openDevQQGroupLink">
                   <uni-icons type="copy" size="16" color="#7F4515"></uni-icons>
-                  <text>复制群号</text>
+                  <text>加入群聊</text>
                 </button>
               </view>
             </view>
@@ -426,8 +426,34 @@ const handleClearCache = () => {
   });
 };
 
-const copyQQGroup = () => { uni.setClipboardData({ data: "1053432087", success: () => uni.showToast({ title: "QQ群号已复制", icon: "success" }) }); };
-const copyDevQQGroup = () => { uni.setClipboardData({ data: "1057327742", success: () => uni.showToast({ title: "开发群号已复制", icon: "success" }) }); };
+const openOfficialGroupLink = () => {
+  const url = 'https://qm.qq.com/q/jKCk6GtL1e';
+  // #ifdef H5
+  window.open(url, '_blank');
+  // #endif
+  // #ifndef H5
+  uni.setClipboardData({
+    data: url,
+    success: () => {
+      uni.showToast({ title: '已复制群链接，请在浏览器打开', icon: 'none' });
+    }
+  });
+  // #endif
+},
+  openDevQQGroupLink = () => {
+    const url = 'https://qm.qq.com/q/BBYFdHBDEc';
+    // #ifdef H5
+    window.open(url, '_blank');
+    // #endif
+    // #ifndef H5
+    uni.setClipboardData({
+      data: url,
+      success: () => {
+        uni.showToast({ title: '已复制群链接，请在浏览器打开', icon: 'none' });
+      }
+    });
+    // #endif
+  }
 
 const handleUserAgreement = () => {
   const url = "https://cq4hqujcxu3.feishu.cn/docx/EYE6d5ufAoQt5Axx7MFc4XMrnAf";
