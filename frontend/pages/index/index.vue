@@ -21,11 +21,8 @@
     <view class="content-wrapper">
       <!-- Logo区域 -->
       <view class="logo-section">
-        <image
-          class="logo"
-          src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png"
-          mode="aspectFit"
-        ></image>
+        <image class="logo" src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png" mode="aspectFit">
+        </image>
         <view class="app-title">曲奇教务</view>
         <view class="app-subtitle">让你的QFNU更简单</view>
 
@@ -46,22 +43,12 @@
 
         <uni-forms class="login-form" :modelValue="formData">
           <uni-forms-item class="form-item">
-            <uni-easyinput
-              prefixIcon="person"
-              v-model="formData.studentId"
-              placeholder="学号"
-              class="custom-input"
-              :maxlength="11"
-            />
+            <uni-easyinput prefixIcon="person" v-model="formData.studentId" placeholder="学号" class="custom-input"
+              :maxlength="11" />
           </uni-forms-item>
           <uni-forms-item class="form-item">
-            <uni-easyinput
-              prefixIcon="locked"
-              type="password"
-              v-model="formData.password"
-              placeholder="密码"
-              class="custom-input"
-            />
+            <uni-easyinput prefixIcon="locked" type="password" v-model="formData.password" placeholder="密码"
+              class="custom-input" />
           </uni-forms-item>
         </uni-forms>
 
@@ -73,12 +60,7 @@
               <text class="remember-text">记住账号密码</text>
             </label>
           </checkbox-group>
-          <text
-            class="clear-cache"
-            @click="clearCachedCredentials"
-            v-if="hasCachedCredentials"
-            >清除缓存</text
-          >
+          <text class="clear-cache" @click="clearCachedCredentials" v-if="hasCachedCredentials">清除缓存</text>
         </view>
 
         <view class="agreement">
@@ -180,7 +162,7 @@ const checkLoginStatus = () => {
       if (isTokenValid(token)) {
         console.log("Token验证通过，准备跳转到dashboard");
         uni.reLaunch({
-          url: "/pages/dashboard/index",
+          url: "/pages/dashboard/dashboard",
         });
       } else {
         console.log("Token无效，清除并停留在登录页");
@@ -328,7 +310,7 @@ const handleLogin = async () => {
       // 延时后跳转
       setTimeout(() => {
         uni.reLaunch({
-          url: "/pages/dashboard/index",
+          url: "/pages/dashboard/dashboard",
         });
       }, 1500);
     } else {
@@ -555,6 +537,7 @@ const handleMarqueeClick = () => {
   0% {
     transform: translateX(100vw);
   }
+
   100% {
     transform: translateX(-100%);
   }
@@ -565,7 +548,8 @@ const handleMarqueeClick = () => {
   width: 100%;
   height: 100vh;
   background: #f7f8fa;
-  padding-top: 30rpx; /* 调整为新的弹幕高度 */
+  padding-top: 30rpx;
+  /* 调整为新的弹幕高度 */
 }
 
 // 背景装饰圆圈
@@ -610,10 +594,12 @@ const handleMarqueeClick = () => {
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20rpx) rotate(180deg);
   }
@@ -624,7 +610,8 @@ const handleMarqueeClick = () => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  min-height: calc(100vh - 80rpx); /* 调整为新的弹幕高度 */
+  min-height: calc(100vh - 80rpx);
+  /* 调整为新的弹幕高度 */
   padding: 60rpx 60rpx 40rpx;
   box-sizing: border-box;
   position: relative;
