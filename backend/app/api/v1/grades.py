@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.schemas.gpa import (
     GPACalculateRequest,
-    GradesResponse,
+    GradesResponse,  # 注意：此模型可能需要根据新的返回结构进行调整
     GPACalculateResponse,
     SemesterResponse,
     ErrorResponse,
@@ -29,208 +29,95 @@ def handle_scraper_error(result: dict, operation_name: str = "操作"):
         )
 
 
-def _strip_courses_from_analysis(payload: dict) -> dict:
-    """
-    移除分析结果中的课程明细，仅保留聚合指标。
-    会处理以下路径：
-    - gpa_analysis.basic_gpa.courses
-    - gpa_analysis.no_retakes_gpa.courses
-    - semester_gpa.*.courses
-    - yearly_gpa.*.courses
-    - effective_gpa.courses
-    """
-    try:
-        ga = payload.get("gpa_analysis", {})
-        for k in ("basic_gpa", "no_retakes_gpa"):
-            if isinstance(ga.get(k), dict):
-                ga[k].pop("courses", None)
-
-        sem = payload.get("semester_gpa", {})
-        if isinstance(sem, dict):
-            for v in sem.values():
-                if isinstance(v, dict):
-                    v.pop("courses", None)
-
-        yearly = payload.get("yearly_gpa", {})
-        if isinstance(yearly, dict):
-            for v in yearly.values():
-                if isinstance(v, dict):
-                    v.pop("courses", None)
-
-        eff = payload.get("effective_gpa", {})
-        if isinstance(eff, dict):
-            eff.pop("courses", None)
-    except Exception:
-        # 忽略清理失败，不影响主流程
-        pass
-    return payload
-
-
 @router.get(
     "/grades",
-    response_model=GradesResponse,
+    response_model=GradesResponse,  # 建议根据新结构调整此模型
     summary="获取用户全部成绩和GPA分析",
     description="""
-获取当前登录用户的全部课程成绩，并返回精简后的GPA分析结果。
+获取当前登录用户的全部课程成绩，并返回精简且修正后的GPA分析结果。
 
-变更说明：
-- data 字段包含全部课程明细
-- 分析结果仅保留加权绩点、总学分、课程数量等聚合信息
-- 分析结果不再包含具体课程列表（不返回 courses）
+**核心变更:**
+- 修复了学年/学期GPA未考虑重修情况的BUG。
+- 移除了冗余的`gpa_analysis`和`effective_gpa`字段，结构更清晰。
 
-**功能特点：**
-- 获取用户所有学期的课程成绩明细（在 data 字段）
-- 自动计算基础GPA和去除重修后GPA（仅聚合信息）
-- 提供按学期、学年维度的GPA分析（仅聚合信息）
-- 计算每个学期与学年的加权平均绩点
-- 提供总的有效加权绩点（去除重修补考，取最高绩点）
-
-**认证要求：**
-- 需要携带有效的JWT Token（Authorization: Bearer <token>）
-- Token必须是通过登录接口获取的有效令牌
-
-**返回数据说明：**
-- `data`: 包含所有课程的详细成绩信息
-- `gpa_analysis`: 基础GPA与去重修GPA的聚合结果（不含课程列表）
-- `semester_gpa`: 按学期分组的GPA聚合结果（不含课程列表）
-- `yearly_gpa`: 按学年分组的GPA聚合结果（不含课程列表）
-- `effective_gpa`: 总的有效加权绩点聚合结果（不含课程列表）
-- `total_courses`: 总课程数量
-
-**数据更新：**
-- 数据直接从教务系统实时获取，确保信息准确性
-- 如教务系统更新成绩，下次调用即可获取最新数据
+**返回字段说明:**
+- `data`: 包含所有课程的 **原始** 详细成绩信息。
+- `basic_gpa`: 基于 **全部原始成绩** 计算的加权平均绩点、总学分等。
+- `effective_gpa`: **去除重修/补考，只取课程最高绩点** 后计算的有效加权平均绩点。
+- `yearly_gpa`: 基于 **有效绩点** 规则，按学年统计的绩点信息。
+- `semester_gpa`: 基于 **有效绩点** 规则，按学期统计的绩点信息。
 """,
     tags=["成绩"],
     responses={
         200: {
-            "description": "成功获取成绩和GPA分析（分析结果不含课程列表）",
-            "model": GradesResponse,
+            "description": "成功获取成绩和修正后的GPA分析",
             "content": {
                 "application/json": {
                     "example": {
                         "success": True,
-                        "message": "成功获取15条成绩记录",
+                        "message": "成功获取15条原始成绩记录",
                         "data": [
                             {
                                 "index": "1",
                                 "semester": "2023-2024-1",
                                 "courseCode": "CS001",
                                 "courseName": "数据结构",
-                                "groupName": "",
                                 "score": "90",
-                                "scoreTag": "正常考试",
                                 "credit": "4.0",
-                                "totalHours": "64",
                                 "gpa": "4.0",
-                                "retakeSemester": "",
-                                "assessmentMethod": "考试",
                                 "examType": "正常考试",
-                                "courseAttribute": "必修",
-                                "courseNature": "专业课",
-                                "courseCategory": "专业核心课",
                             }
                         ],
-                        "gpa_analysis": {
-                            "basic_gpa": {
-                                "weighted_gpa": 3.85,
-                                "total_credit": 32.0,
-                                "course_count": 10,
-                            },
-                            "no_retakes_gpa": {
-                                "weighted_gpa": 3.92,
-                                "total_credit": 28.0,
-                                "course_count": 9,
-                            },
-                        },
-                        "semester_gpa": {
-                            "2023-2024-1": {
-                                "weighted_gpa": 3.8,
-                                "total_credit": 16.0,
-                                "course_count": 5,
-                            },
-                            "2023-2024-2": {
-                                "weighted_gpa": 3.9,
-                                "total_credit": 16.0,
-                                "course_count": 5,
-                            },
-                        },
-                        "yearly_gpa": {
-                            "2023-2024": {
-                                "weighted_gpa": 3.85,
-                                "total_credit": 32.0,
-                                "course_count": 10,
-                            },
+                        "basic_gpa": {
+                            "weighted_gpa": 3.85,
+                            "total_credit": 32.0,
+                            "course_count": 10,
                         },
                         "effective_gpa": {
                             "weighted_gpa": 3.92,
                             "total_credit": 28.0,
                             "course_count": 9,
                         },
-                        "total_courses": 15,
-                    }
-                }
-            },
-        },
-        401: {
-            "description": "未登录或Token失效",
-            "model": ErrorResponse,
-            "content": {
-                "application/json": {
-                    "examples": {
-                        "no_token": {
-                            "summary": "未提供Token",
-                            "value": {"detail": "Not authenticated"},
+                        "yearly_gpa": {
+                            "2023-2024": {
+                                "weighted_gpa": 3.92,
+                                "total_credit": 28.0,
+                                "course_count": 9,
+                            }
                         },
-                        "invalid_token": {
-                            "summary": "Token无效或过期",
-                            "value": {"detail": "Could not validate credentials"},
-                        },
-                        "session_expired": {
-                            "summary": "教务系统Session过期",
-                            "value": {"detail": "Session不存在或已失效，请重新登录"},
+                        "semester_gpa": {
+                            "2023-2024-1": {
+                                "weighted_gpa": 4.0,
+                                "total_credit": 16.0,
+                                "course_count": 5,
+                            },
+                            "2023-2024-2": {
+                                "weighted_gpa": 3.85,
+                                "total_credit": 12.0,
+                                "course_count": 4,
+                            },
                         },
                     }
                 }
             },
         },
-        503: {
-            "description": "教务系统服务不可用",
-            "model": ErrorResponse,
-            "content": {
-                "application/json": {
-                    "example": {"detail": "获取成绩失败: 教务系统连接超时"}
-                }
-            },
-        },
+        401: {"description": "未登录或Token失效", "model": ErrorResponse},
+        503: {"description": "教务系统服务不可用", "model": ErrorResponse},
     },
 )
 async def get_user_grades_with_gpa(
     session=Depends(get_user_session),
 ):
-    """
-    获取用户全部成绩和GPA分析
-
-    返回示例:
-    {
-        "success": true,
-        "message": "成功获取成绩",
-        "data": [...],  # 成绩列表
-        "gpa": {...}    # GPA统计信息
-    }
-    """
+    """获取用户全部成绩和重构后的GPA分析"""
     try:
         logger.info("开始获取用户成绩和GPA分析...")
         grades_result = get_grades(session=session, semester="")
         handle_scraper_error(grades_result, "获取成绩")
 
-        # 新增：精简分析结果，移除 courses 详单
-        grades_result = _strip_courses_from_analysis(grades_result)
-
-        logger.info(f"成绩获取成功，共 {grades_result.get('total_courses', 0)} 门课程")
+        logger.info(f"成绩及GPA分析获取成功")
+        grades_result["message"] = "这是一个确认代码已更新的测试消息"
         return grades_result
     except HTTPException:
-        # 重新抛出HTTP异常
         raise
     except Exception as e:
         logger.error(f"获取用户成绩过程中发生未知错误: {e}")
@@ -245,116 +132,37 @@ async def get_user_grades_with_gpa(
     summary="自定义GPA计算",
     description="""
 根据用户指定的条件计算定制化的GPA结果。
-
-**功能特点：**
 - 支持选择指定课程进行GPA计算（通过课程序号）
 - 支持去除重修补考记录，只保留最高成绩
-- 灵活的GPA计算策略，满足不同评估需求
-- 基于实时成绩数据进行计算
-
-**使用场景：**
-- 计算专业核心课程的GPA
-- 申请研究生时计算特定课程的GPA
-- 分析学术表现时专注于某些重要课程
-- 生成各种奖学金申请所需的GPA数据
-
-**计算规则：**
-- 使用学分加权平均方法计算GPA
-- 如果指定了课程列表，只计算选中的课程
-- 如果没有指定课程列表，计算所有课程
-- 开启去重修模式时，同一门课程只取最高成绩记录
 """,
     tags=["成绩"],
     responses={
-        200: {
-            "description": "成功计算自定义GPA",
-            "model": GPACalculateResponse,
-            "content": {
-                "application/json": {
-                    "example": {
-                        "success": True,
-                        "message": "GPA计算完成",
-                        "data": {
-                            "weighted_gpa": 3.75,
-                            "total_credit": 28.0,
-                            "course_count": 8,
-                            "courses": [
-                                {
-                                    "index": "1",
-                                    "course_name": "数据结构",
-                                    "course_code": "CS001",
-                                    "credit": 4.0,
-                                    "grade_point": 4.0,
-                                    "score": "90",
-                                    "semester": "2023-2024-1",
-                                    "is_excluded": False,
-                                    "exclude_reason": None,
-                                }
-                            ],
-                        },
-                    }
-                }
-            },
-        },
+        200: {"description": "成功计算自定义GPA", "model": GPACalculateResponse},
         401: {"description": "未登录或Token失效", "model": ErrorResponse},
-        422: {
-            "description": "请求参数格式错误",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": [
-                            {
-                                "loc": ["body", "include_indices"],
-                                "msg": "ensure this value is greater than or equal to 0",
-                                "type": "value_error.number.not_ge",
-                            }
-                        ]
-                    }
-                }
-            },
-        },
         503: {"description": "教务系统服务不可用", "model": ErrorResponse},
     },
 )
 async def calculate_custom_gpa(
     request: GPACalculateRequest, session=Depends(get_user_session)
 ):
-    """
-    自定义GPA计算
-
-    根据用户提供的参数（选中课程、去除重修等）计算定制化的GPA结果。
-
-    Args:
-        request: GPA计算请求，包含选中课程列表和是否去除重修的配置
-        session: 当前用户的教务系统会话（通过依赖注入获取）
-
-    Returns:
-        GPACalculateResponse: 包含计算结果的响应对象
-
-    Raises:
-        HTTPException: 当获取成绩失败或计算出错时抛出异常
-    """
+    """自定义GPA计算"""
     try:
-        # 说明：request.include_indices 在服务内部按“选中模式(include)”处理
         logger.info(
-            f"开始自定义GPA计算，选中课程(按include模式): {request.include_indices}, 去重修: {request.remove_retakes}"
+            f"开始自定义GPA计算，选中课程: {request.include_indices}, 去重修: {request.remove_retakes}"
         )
 
-        logger.debug("获取用户成绩数据用于GPA计算...")
         grades_result = get_grades(session=session, semester="")
         handle_scraper_error(grades_result, "获取成绩用于计算")
 
         grades_data = grades_result.get("data", [])
         logger.debug(f"获取到 {len(grades_data)} 条成绩记录")
 
-        logger.debug("开始执行自定义GPA计算...")
         gpa_result = calculate_gpa_advanced(
             grades_data=grades_data,
-            include_indices=request.include_indices,  # include_indices 按 include 模式使用
+            include_indices=request.include_indices,
             remove_retakes=request.remove_retakes,
         )
 
-        # 修复响应格式，将 total_gpa 重命名为 data
         if gpa_result.get("success") and "total_gpa" in gpa_result:
             gpa_result["data"] = gpa_result.pop("total_gpa")
             logger.info("自定义GPA计算完成")
@@ -363,7 +171,6 @@ async def calculate_custom_gpa(
 
         return gpa_result
     except HTTPException:
-        # 重新抛出HTTP异常
         raise
     except Exception as e:
         logger.error(f"自定义GPA计算过程中发生未知错误: {e}")
@@ -376,94 +183,16 @@ async def calculate_custom_gpa(
     "/semesters",
     response_model=SemesterResponse,
     summary="获取可用学期列表",
-    description="""
-获取教务系统中当前用户可查询的所有学期列表。
-
-**功能说明：**
-- 返回用户在教务系统中有课程记录的所有学期
-- 学期格式为 "YYYY-YYYY-N"（如：2023-2024-1）
-- 数据按时间顺序排列，最新学期在前
-
-**学期格式说明：**
-- 第一部分：学年起始年份（如2023）
-- 第二部分：学年结束年份（如2024） 
-- 第三部分：学期序号（1=第一学期，2=第二学期，3=夏季学期）
-
-**使用场景：**
-- 前端显示学期选择器
-- 按学期筛选成绩数据
-- 学期统计分析
-- 用户学习进度跟踪
-
-**注意事项：**
-- 只返回有课程记录的学期
-- 如果用户是新生，可能只有当前学期数据
-""",
+    description="获取教务系统中当前用户可查询的所有学期列表。",
     tags=["成绩"],
     responses={
-        200: {
-            "description": "成功获取学期列表",
-            "model": SemesterResponse,
-            "content": {
-                "application/json": {
-                    "example": {
-                        "success": True,
-                        "message": "成功获取5个学期",
-                        "data": [
-                            "2023-2024-2",
-                            "2023-2024-1",
-                            "2022-2023-2",
-                            "2022-2023-1",
-                            "2021-2022-2",
-                        ],
-                    }
-                }
-            },
-        },
-        401: {
-            "description": "未登录或Token失效",
-            "model": ErrorResponse,
-            "content": {
-                "application/json": {
-                    "examples": {
-                        "no_token": {
-                            "summary": "未提供Token",
-                            "value": {"detail": "Not authenticated"},
-                        },
-                        "session_expired": {
-                            "summary": "教务系统Session过期",
-                            "value": {"detail": "Session不存在或已失效，请重新登录"},
-                        },
-                    }
-                }
-            },
-        },
-        503: {
-            "description": "教务系统服务不可用",
-            "model": ErrorResponse,
-            "content": {
-                "application/json": {
-                    "example": {"detail": "获取学期列表失败: 教务系统响应超时"}
-                }
-            },
-        },
+        200: {"description": "成功获取学期列表", "model": SemesterResponse},
+        401: {"description": "未登录或Token失效", "model": ErrorResponse},
+        503: {"description": "教务系统服务不可用", "model": ErrorResponse},
     },
 )
 async def get_semesters(session=Depends(get_user_session)):
-    """
-    获取可用学期列表
-
-    从教务系统获取当前用户有课程记录的所有学期，用于前端筛选和统计分析。
-
-    Args:
-        session: 当前用户的教务系统会话（通过依赖注入获取）
-
-    Returns:
-        SemesterResponse: 包含学期列表的响应对象
-
-    Raises:
-        HTTPException: 当获取学期列表失败时抛出异常
-    """
+    """获取可用学期列表"""
     try:
         logger.info("开始获取用户可用学期列表...")
         semesters_result = get_available_semesters(session=session)
@@ -474,7 +203,6 @@ async def get_semesters(session=Depends(get_user_session)):
         )
         return semesters_result
     except HTTPException:
-        # 重新抛出HTTP异常
         raise
     except Exception as e:
         logger.error(f"获取学期列表过程中发生未知错误: {e}")

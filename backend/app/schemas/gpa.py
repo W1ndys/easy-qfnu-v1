@@ -1,4 +1,4 @@
-# app/schemas/gpa.py
+# app/schemas/gpa.py (重构后)
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
@@ -38,17 +38,20 @@ class GPAAnalysis(BaseModel):
     courses: Optional[List[Dict[str, Any]]] = None
 
 
+# --- ↓↓↓ 核心修改部分：更新此模型以匹配新的API结构 ↓↓↓ ---
 class GradesResponse(BaseModel):
-    """成绩查询响应模型"""
+    """(新版) 成绩查询响应模型"""
 
     success: bool
     message: str
     data: List[CourseGrade]
-    gpa_analysis: Optional[Dict[str, GPAAnalysis]] = None
+    basic_gpa: Optional[GPAAnalysis] = None
+    effective_gpa: Optional[GPAAnalysis] = None
     semester_gpa: Optional[Dict[str, GPAAnalysis]] = None
     yearly_gpa: Optional[Dict[str, GPAAnalysis]] = None
-    effective_gpa: Optional[GPAAnalysis] = None  # 总的有效加权绩点（去除重修补考）
-    total_courses: Optional[int] = None
+
+
+# --- ↑↑↑ 核心修改部分 ↑↑↑ ---
 
 
 class GPACalculateResponse(BaseModel):

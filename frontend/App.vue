@@ -1,7 +1,7 @@
 <script>
 export default {
   globalData: {
-    apiBaseURL: "https://api.easy-qfnu.top",
+    apiBaseURL: "http://127.0.0.1:8000",
   },
   onLaunch: function () {
     console.log("App Launch");

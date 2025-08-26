@@ -287,11 +287,14 @@ const fetchGrades = async () => {
       allCourses.value = data.data || [];
       semesters.value = groupGradesBySemester(allCourses.value);
 
-      gpaAnalysis.value = data.gpa_analysis?.basic_gpa;
-      semesterGpa.value = data.semester_gpa;
-      yearlyGpa.value = data.yearly_gpa;
-      effectiveGpa.value = data.effective_gpa;
-      totalCourses.value = data.total_courses;
+      // --- 修改开始 ---
+      // 根据新的API结构进行赋值
+      gpaAnalysis.value = data.basic_gpa;       // 原：data.gpa_analysis?.basic_gpa
+      semesterGpa.value = data.semester_gpa;    // 无变化
+      yearlyGpa.value = data.yearly_gpa;        // 无变化
+      effectiveGpa.value = data.effective_gpa;  // 无变化
+      totalCourses.value = allCourses.value.length; // 原：data.total_courses
+      // --- 修改结束 ---
 
     } else if (statusCode === 401) {
       uni.removeStorageSync("token");
@@ -393,7 +396,7 @@ const calculateCustomGPA = async () => {
   isCalculating.value = true;
 
   const payload = {
-    include_indices: selectedCourses.value,
+    include_indices: selectedCourses.value.map(String), // 确保索引是字符串
     remove_retakes: true
   };
 
