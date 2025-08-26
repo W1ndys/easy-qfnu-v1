@@ -169,6 +169,23 @@
         </view>
       </view>
     </uni-popup>
+
+    <!-- 校历弹窗 -->
+    <uni-popup ref="calendarPopup" type="center">
+      <view class="popup-content calendar-popup">
+        <view class="popup-header">
+          <text class="popup-title">校历</text>
+          <view class="popup-close-btn" @click="closeCalendarModal">
+            <uni-icons type="closeempty" size="22" color="#909399"></uni-icons>
+          </view>
+        </view>
+        <view class="popup-body">
+          <image class="calendar-image" src="https://pic1.zhimg.com/80/v2-495ef4f801960eb4dcbedb73d4514507.jpeg"
+            mode="widthFix" @error="handleCalendarImageError" @load="handleCalendarImageLoad">
+          </image>
+        </view>
+      </view>
+    </uni-popup>
   </view>
 </template>
 
@@ -181,6 +198,7 @@ import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import ModernCard from "../../components/ModernCard/ModernCard.vue";
 
 const noticePopup = ref(null);
+const calendarPopup = ref(null);
 
 const profile = ref({
   student_name: "...",
@@ -196,6 +214,7 @@ const features = ref([
   { text: "选课推荐", description: "智能推荐选课方案", icon: "star", url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/", external: true },
   { text: "培养方案", description: "查看模块完成进度", icon: "list", url: "/pages/course-plan/index" },
   { text: "预选课查询", description: "支持选课模块探测", icon: "checkmarkempty", url: "/pages/pre-select-course/index" },
+  { text: "查看校历", description: "查看最新校历", icon: "calendar", url: "calendar", external: false },
   { text: "课表查询", description: "即将推出", icon: "calendar", url: "" },
   { text: "排名查询", description: "即将推出", icon: "medal", url: "" },
   { text: "赞赏名单", description: "查看赞赏名单", icon: "heart", url: "https://cq4hqujcxu3.feishu.cn/docx/DE9Ed1l5iofB0exEYZncwMeenvd", external: true },
@@ -255,10 +274,16 @@ const checkLoginStatus = () => {
 const openNoticeModal = () => { if (noticePopup.value) noticePopup.value.open(); };
 const closeNoticeModal = () => { if (noticePopup.value) noticePopup.value.close(); };
 
+const openCalendarModal = () => { if (calendarPopup.value) calendarPopup.value.open(); };
+const closeCalendarModal = () => { if (calendarPopup.value) calendarPopup.value.close(); };
+
 const handleNavigate = (index) => {
   const targetPage = features.value[index];
   if (targetPage.url) {
-    if (targetPage.external) {
+    if (targetPage.url === "calendar") {
+      // 特殊处理校历功能
+      openCalendarModal();
+    } else if (targetPage.external) {
       if (typeof window !== 'undefined') window.open(targetPage.url, "_blank");
       else if (typeof plus !== 'undefined') plus.runtime.openURL(targetPage.url);
       else uni.setClipboardData({ data: targetPage.url, success: () => uni.showToast({ title: "外链已复制,请在浏览器中打开", icon: "success", duration: 3000 }) });
@@ -341,6 +366,9 @@ const handleExternalLink = (title, url) => {
 
 const handleImageError = () => { uni.showToast({ title: "赞赏码加载失败", icon: "none" }); };
 const handleImageLoad = () => { console.log("赞赏码加载成功"); };
+
+const handleCalendarImageError = () => { uni.showToast({ title: "校历图片加载失败", icon: "none" }); };
+const handleCalendarImageLoad = () => { console.log("校历图片加载成功"); };
 </script>
 
 <style lang="scss" scoped>
@@ -813,6 +841,18 @@ const handleImageLoad = () => { console.log("赞赏码加载成功"); };
   font-size: 24rpx;
   color: var(--text-light);
   text-align: center;
+}
+
+/* ==================== 校历弹窗样式 ==================== */
+.calendar-popup {
+  width: 95vw;
+  max-width: 720rpx;
+}
+
+.calendar-image {
+  width: 100%;
+  border-radius: var(--radius-medium);
+  box-shadow: 0 8rpx 24rpx var(--shadow-light);
 }
 
 /* ==================== MODIFICATION START: 快捷操作按钮样式 ==================== */
