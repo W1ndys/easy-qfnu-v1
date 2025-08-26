@@ -8,21 +8,21 @@
 			}
 		},
 		{
-			"path": "pages/dashboard/index",
+			"path": "pages/dashboard/dashboard",
 			"style": {
 				"navigationBarTitleText": "个人中心",
 				"enablePullDownRefresh": false
 			}
 		},
 		{
-			"path": "pages/grades/index",
+			"path": "pages/grades/grades",
 			"style": {
 				"navigationBarTitleText": "成绩查询",
 				"enablePullDownRefresh": false
 			}
 		},
 		{
-			"path": "pages/average-scores/index",
+			"path": "pages/average-scores/average-scores",
 			"style": {
 				"navigationBarTitleText": "平均分查询",
 				"navigationBarBackgroundColor": "#f7f8fa",
@@ -31,31 +31,30 @@
 			}
 		},
 		{
-			"path": "pages/course-plan/index",
+			"path": "pages/course-plan/course-plan",
 			"style": {
 				"navigationBarTitleText": "培养方案",
 				"enablePullDownRefresh": false
 			}
 		},
 		{
-			"path": "pages/freshman-questions-search/index",
+			"path": "pages/freshman-questions-search/freshman-questions-search",
 			"style": {
 				"navigationBarTitleText": "新生入学考试辅助",
 				"enablePullDownRefresh": false
 			}
 		},
 		{
-			"path": "pages/pre-select-course/index",
+			"path": "pages/pre-select-course/pre-select-course",
 			"style": {
 				"navigationBarTitleText": "预选课查询",
 				"enablePullDownRefresh": false
 			}
 		},
 		{
-			"path" : "pages/classtable/classtable",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
+			"path": "pages/classtable/classtable",
+			"style": {
+				"navigationBarTitleText": ""
 			}
 		}
 	],
