@@ -214,7 +214,7 @@ const calendarPopup = ref(null);
 const noticeData = ref({
   version: "1.0.3", // 公告版本号，每次更新公告时递增或修改
   title: "重要通知：新功能上线！",
-  content: "我们新增了开发交流QQ群，欢迎加入\n后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限",
+  content: "我们新增了用户QQ群，欢迎加入\n后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限",
   timestamp: Date.now(),
   forceShow: false // 是否强制显示（即使已读过，只要版本号更新就会再次弹出）
 });
