@@ -13,6 +13,9 @@
                 </view>
                 <view class="tip-content" style="flex-direction: row; flex-wrap: wrap; justify-content: center;">
                     <view class="tip-text" style="text-align: left; line-height: 1.8; font-size: 28rpx;">
+                        <view style="margin-bottom: 18rpx; color: #d03050; font-weight: bold;">
+                            很遗憾，我高估了这个功能的可用性。从理论上讲，我的实现是完全可以做到提前预知选课模块的，但是由于教务系统的隔离性（暂且这么命名），以及系统内某种设定和其他系统内可能的原因，导致搜索结果与预期相差很大，有很多课是本应搜到但实际搜不到的，这一点我也无能为力，敬请谅解。
+                        </view>
                         本数据基于
                         <text style="font-weight: bold; color: #7F4515;">你个人的学生身份</text>
                         和
