@@ -155,7 +155,7 @@
                   </view>
                   <text class="group-desc">获取最新消息和通知</text>
                 </view>
-                <button class="copy-btn" @click="openOfficialGroupLink">
+                <button class="popup-action-btn" @click="openOfficialGroupLink">
                   <uni-icons type="copy" size="16" color="#7F4515"></uni-icons>
                   <text>加入群聊</text>
                 </button>
@@ -168,9 +168,23 @@
                   </view>
                   <text class="group-desc">建议反馈、开发想法交流</text>
                 </view>
-                <button class="copy-btn" @click="openDevQQGroupLink">
+                <button class="popup-action-btn" @click="openDevQQGroupLink">
                   <uni-icons type="copy" size="16" color="#7F4515"></uni-icons>
                   <text>加入群聊</text>
+                </button>
+              </view>
+              <!-- 新增：问卷调查，样式与加群一致 -->
+              <view class="group-item">
+                <view class="group-info">
+                  <view class="group-name">
+                    <uni-icons type="form" size="20" color="#7F4515"></uni-icons>
+                    <text class="group-title">问卷调查</text>
+                  </view>
+                  <text class="group-desc">你从哪里看到本网站的？</text>
+                </view>
+                <button class="popup-action-btn" @click="openSurvey">
+                  <uni-icons type="copy" size="16" color="#7F4515"></uni-icons>
+                  <text>填写问卷</text>
                 </button>
               </view>
             </view>
@@ -212,7 +226,7 @@ const calendarPopup = ref(null);
 // ==================== MODIFICATION START: 公告机制 ====================
 // 公告数据结构 (在真实应用中，这部分数据应该从服务器获取)
 const noticeData = ref({
-  version: "1.0.3", // 公告版本号，每次更新公告时递增或修改
+  version: "2", // 公告版本号，每次更新公告时递增或修改
   title: "重要通知：新功能上线！",
   content: "我们新增了用户QQ群，欢迎加入\n后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限",
   timestamp: Date.now(),
@@ -450,6 +464,20 @@ const openOfficialGroupLink = () => {
       data: url,
       success: () => {
         uni.showToast({ title: '已复制群链接，请在浏览器打开', icon: 'none' });
+      }
+    });
+    // #endif
+  },
+  openSurvey = () => {
+    const url = 'https://cq4hqujcxu3.feishu.cn/share/base/form/shrcnf92mQgZ2qKWLFZXhiQJ7Lc';
+    // #ifdef H5
+    window.open(url, '_blank');
+    // #endif
+    // #ifndef H5
+    uni.setClipboardData({
+      data: url,
+      success: () => {
+        uni.showToast({ title: '已复制问卷链接，请在浏览器打开', icon: 'none' });
       }
     });
     // #endif
