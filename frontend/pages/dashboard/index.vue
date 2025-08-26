@@ -129,23 +129,8 @@
           </view>
         </view>
         <view class="popup-body">
-          <view class="status-content-wrapper">
-            <view class="status-header">
-              <view class="status-icon warning">
-                <uni-icons type="info" size="20" color="#FF6B35"></uni-icons>
-              </view>
-              <text class="status-title">公告详情</text>
-            </view>
-            <!-- MODIFICATION: 公告弹窗内容与公告数据进行绑定 -->
-            <text class="status-text">{{ noticeData.content }}</text>
-          </view>
+          <text class="status-text">{{ noticeData.content }}</text>
           <view class="community-content-wrapper">
-            <view class="community-header">
-              <view class="community-icon">
-                <uni-icons type="chatbubble" size="20" color="#7F4515"></uni-icons>
-              </view>
-              <text class="community-title">加入QQ群</text>
-            </view>
             <view class="community-groups">
               <view class="group-item">
                 <view class="group-info">
@@ -171,20 +156,6 @@
                 <button class="popup-action-btn" @click="openDevQQGroupLink">
                   <uni-icons type="copy" size="16" color="#7F4515"></uni-icons>
                   <text>加入群聊</text>
-                </button>
-              </view>
-              <!-- 新增：问卷调查，样式与加群一致 -->
-              <view class="group-item">
-                <view class="group-info">
-                  <view class="group-name">
-                    <uni-icons type="form" size="20" color="#7F4515"></uni-icons>
-                    <text class="group-title">问卷调查</text>
-                  </view>
-                  <text class="group-desc">你从哪里看到本网站的？</text>
-                </view>
-                <button class="popup-action-btn" @click="openSurvey">
-                  <uni-icons type="copy" size="16" color="#7F4515"></uni-icons>
-                  <text>填写问卷</text>
                 </button>
               </view>
             </view>
@@ -710,7 +681,7 @@ const handleCalendarImageLoad = () => { console.log("校历图片加载成功");
 }
 
 .popup-body {
-  padding: 24rpx 32rpx;
+  padding: 12rpx 32rpx;
   display: flex;
   flex-direction: column;
   gap: 24rpx;
@@ -754,8 +725,8 @@ const handleCalendarImageLoad = () => { console.log("校历图片加载成功");
   font-size: 26rpx;
   color: #8b4513;
   line-height: 1.5;
-  margin-top: 8rpx;
-  padding-left: 60rpx;
+  margin-top: 0;
+  padding-left: 10rpx;
 }
 
 .community-content-wrapper {
