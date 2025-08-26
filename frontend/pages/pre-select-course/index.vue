@@ -76,9 +76,9 @@
                     <view class="search-tip"
                         style="margin: 12rpx 0 0 0; color: #868e96; font-size: 24rpx; line-height: 1.7;">
                         <view>支持模糊搜索，建议使用课程代码，速度更快，结果更精准。</view>
-                        <view>如果课余量显示-，大概率是选修课，原因是选修课模块教务系统后端没有提供课余量数据，请使用 <a href="http://xk.s.fz.z-xin.net"
+                        <view>如果课余量显示-，大概率是选修课，原因是选修课模块教务系统后端没有提供课余量数据，请使用我们的友情网站 <a href="http://xk.s.fz.z-xin.net"
                                 target="_blank" rel="noopener" style="color:#007aff;text-decoration:underline;">夫子校园</a>
-                            替代。</view>
+                            辅助查询</view>
                     </view>
 
                     <view class="card-actions-wrapper">
