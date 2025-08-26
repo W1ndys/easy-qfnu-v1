@@ -206,11 +206,11 @@ const noticePopup = ref(null);
 const calendarPopup = ref(null);
 
 const profile = ref({
-  student_name: "...",
+  student_name: "W1ndys",
   student_id: "加载中...",
-  college: "...",
-  major: "...",
-  class_name: "...",
+  college: "曲奇学院",
+  major: "曲奇专业",
+  class_name: "22曲奇班",
 });
 
 const features = ref([
@@ -226,7 +226,13 @@ const features = ref([
 ]);
 
 onLoad(() => { checkLoginStatus(); });
-onShow(() => { checkLoginStatus(); });
+onShow(() => {
+  // 只在需要时检查登录状态，避免重复请求
+  const token = uni.getStorageSync("token");
+  if (token && (!profile.value.student_id || profile.value.student_id === "加载中...")) {
+    checkLoginStatus();
+  }
+});
 
 const fetchProfile = async () => {
   const token = uni.getStorageSync("token");
@@ -238,7 +244,25 @@ const fetchProfile = async () => {
     header: { Authorization: `Bearer ${token}` },
     success: (res) => {
       if (res.statusCode === 200 && res.data.success) {
-        profile.value = res.data.data;
+        // 合并服务器数据，保持默认值作为后备
+        const serverData = res.data.data;
+        // 如果服务器返回了学号，则使用服务器数据；否则从token中获取
+        const studentId = serverData.student_id || (() => {
+          try {
+            const payload = decode(token);
+            return payload.sub;
+          } catch (e) {
+            return profile.value.student_id;
+          }
+        })();
+
+        profile.value = {
+          student_name: serverData.student_name || profile.value.student_name,
+          student_id: studentId,
+          college: serverData.college || profile.value.college,
+          major: serverData.major || profile.value.major,
+          class_name: serverData.class_name || profile.value.class_name,
+        };
       } else {
         uni.showToast({ title: res.data.message || `获取信息失败 (${res.statusCode})`, icon: "none" });
         if (res.statusCode === 401) {
@@ -263,8 +287,12 @@ const checkLoginStatus = () => {
   } else {
     try {
       const payload = decode(token);
-      profile.value.student_id = payload.sub;
-      fetchProfile();
+      // 不立即显示哈希值，保持默认的"加载中..."状态
+      // profile.value.student_id = payload.sub;
+      // 只在需要时才获取完整资料
+      if (!profile.value.student_name || profile.value.student_name === "W1ndys") {
+        fetchProfile();
+      }
     } catch (error) {
       console.error("Token解析失败", error);
       uni.removeStorageSync("token");
