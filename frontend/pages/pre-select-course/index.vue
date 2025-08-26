@@ -114,7 +114,7 @@
                             <text class="error-message">{{ debugInfo.message }}</text>
                         </view>
                     </view>
-                    <view class="button-group" style="margin-top: 20rpx">
+                    <view class="button-group" style="margin-top: -500rpx">
                         <button class="action-btn secondary-btn" @click="copyDebug">
                             <uni-icons type="copy" size="20" color="#495057" />
                             <text>复制详细诊断信息</text>
@@ -123,7 +123,7 @@
                 </ModernCard>
 
                 <EmptyState v-if="!hasData" icon-type="info-filled" title="暂无结果" description="请先输入课程名/编号或教师名进行查询"
-                    :show-retry="false" />
+                    :show-retry="false" style="margin-top: -120rpx;" />
 
                 <view v-else class="results-container">
                     <view class="results-summary">
@@ -138,8 +138,16 @@
                                     :key="`${m.module}-${c.course_id}-${c.group_name}`">
                                     <view class="course-header">
                                         <view class="course-title-group">
-                                            <text class="course-name">{{ c.course_name }}</text>
-                                            <text class="course-meta">{{ c.course_id }} / {{ c.group_name }}</text>
+                                            <view class="course-name clickable"
+                                                @click="copyToClipboard(c.course_name, '课程名称')">
+                                                <text>{{ c.course_name }}</text>
+                                                <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
+                                            </view>
+                                            <view class="course-meta clickable"
+                                                @click="copyToClipboard(c.course_id + ' / ' + c.group_name, '课程信息')">
+                                                <text>{{ c.course_id }} / {{ c.group_name }}</text>
+                                                <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
+                                            </view>
                                         </view>
                                         <view class="meta-tags">
                                             <text class="pill pill-ghost" v-if="c.credits">{{ c.credits }} 学分</text>
@@ -651,11 +659,43 @@ function copyToClipboard(text, label) {
     font-weight: 700;
     font-size: 30rpx;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+
+    &.clickable {
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            color: #7f4515;
+        }
+
+        &:active {
+            transform: scale(0.98);
+        }
+    }
 }
 
 .course-meta {
     font-size: 22rpx;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+
+    &.clickable {
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            color: #495057;
+        }
+
+        &:active {
+            transform: scale(0.98);
+        }
+    }
 }
 
 .meta-tags {
