@@ -12,7 +12,7 @@
                     </view>
                 </view>
                 <view class="tip-content" style="flex-direction: row; flex-wrap: wrap; justify-content: center;">
-                    <text class="tip-text">
+                    <view class="tip-text" style="text-align: left; line-height: 1.8; font-size: 28rpx;">
                         本数据基于
                         <text style="font-weight: bold; color: #7F4515;">你个人的学生身份</text>
                         和
@@ -21,10 +21,16 @@
                         <text style="font-weight: bold; color: #f56c6c;">不开放</text>
                         搜索权限。由于教学安排和教务系统限制，本页面搜索结果不保证准确。
                         <text style="font-weight: bold; color: #f56c6c;">仅供参考</text>
-                        ，请以实际为准。
-                        <br />
+                        ，请以实际为准。<br />
                         <text style="font-weight: bold; color: #198754;">公选课数据一般是准确的</text>，因为本模块与培养方案无关，公选课开放情况以教务系统为准。
-                    </text>
+                    </view>
+                    <view class="search-tip"
+                        style="margin: 12rpx 0 0 0; color: #868e96; font-size: 24rpx; line-height: 1.7;">
+                        <view>支持模糊搜索，建议使用课程代码，速度更快，结果更精准。</view>
+                        <view>如果课余量显示-，大概率是选修课，原因是选修课模块教务系统后端没有提供课余量数据，请使用我们的友情网站 <a href="http://xk.s.fz.z-xin.net"
+                                target="_blank" rel="noopener" style="color:#007aff;text-decoration:underline;">夫子校园</a>
+                            辅助查询</view>
+                    </view>
                 </view>
                 <view class="tip-footer">
                     <button class="tip-btn" @click="closeTipModal">我已知晓</button>
@@ -47,7 +53,7 @@
             </view>
 
             <view class="content-wrapper">
-                <ModernCard title="筛选与操作">
+                <ModernCard title="筛选与操作" style="padding: 20rpx;">
                     <view class="filters-grid">
                         <view class="form-item">
                             <text class="label">课程名/编号</text>
@@ -81,14 +87,6 @@
                                 </view>
                             </picker>
                         </view>
-                    </view>
-
-                    <view class="search-tip"
-                        style="margin: 12rpx 0 0 0; color: #868e96; font-size: 24rpx; line-height: 1.7;">
-                        <view>支持模糊搜索，建议使用课程代码，速度更快，结果更精准。</view>
-                        <view>如果课余量显示-，大概率是选修课，原因是选修课模块教务系统后端没有提供课余量数据，请使用我们的友情网站 <a href="http://xk.s.fz.z-xin.net"
-                                target="_blank" rel="noopener" style="color:#007aff;text-decoration:underline;">夫子校园</a>
-                            辅助查询</view>
                     </view>
 
                     <view class="card-actions-wrapper">
@@ -601,7 +599,7 @@ function copyToClipboard(text, label) {
     font-size: 24rpx;
     color: var(--text-secondary);
     text-align: center;
-    margin-bottom: 20rpx;
+    margin-bottom: 10rpx;
 }
 
 // 定制 uni-collapse 样式
