@@ -13,7 +13,17 @@
                 </view>
                 <view class="tip-content" style="flex-direction: row; flex-wrap: wrap; justify-content: center;">
                     <text class="tip-text">
-                        本数据基于你的学生身份进行搜索，如果搜索没有结果，但你从夫子校园或其他地方搜到了开课数据，说明教务系统没有对你开放这个课程的搜索权限，可能是教务系统的后端限制，不代表一直搜不到，建议选课前一天再看看。
+                        本数据基于
+                        <text style="font-weight: bold; color: #7F4515;">你个人的学生身份</text>
+                        和
+                        <text style="font-weight: bold; color: #7F4515;">当前开放的</text>
+                        选课年级库进行搜索，如果搜索没有结果，但你从夫子校园或其他地方搜到了开课数据，说明当前教务系统的开课数据对你
+                        <text style="font-weight: bold; color: #f56c6c;">不开放</text>
+                        搜索权限。由于教学安排和教务系统限制，本页面搜索结果不保证准确。
+                        <text style="font-weight: bold; color: #f56c6c;">仅供参考</text>
+                        ，请以实际为准。
+                        <br />
+                        <text style="font-weight: bold; color: #198754;">公选课数据一般是准确的</text>，因为本模块与培养方案无关，公选课开放情况以教务系统为准。
                     </text>
                 </view>
                 <view class="tip-footer">
@@ -141,23 +151,29 @@
                                     </view>
 
                                     <view class="course-details">
-                                        <view class="detail-item">
+                                        <view class="detail-item clickable"
+                                            @click="copyToClipboard(c.teacher_name, '教师姓名')">
                                             <uni-icons type="person" size="16" color="#868e96" />
                                             <text>{{ c.teacher_name }}</text>
+                                            <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
                                         </view>
-                                        <view class="detail-item">
+                                        <view class="detail-item clickable"
+                                            @click="copyToClipboard(c.location + ' @ ' + c.campus_name, '上课地点')">
                                             <uni-icons type="location" size="16" color="#868e96" />
                                             <text>{{ c.location }} @ {{ c.campus_name }}</text>
+                                            <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
                                         </view>
-                                        <view class="detail-item full-width">
+                                        <view class="detail-item full-width clickable"
+                                            @click="copyToClipboard(c.time_text, '上课时间')">
                                             <uni-icons type="calendar" size="16" color="#868e96" />
                                             <text>{{ c.time_text }}</text>
+                                            <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
                                         </view>
                                     </view>
 
                                     <view class="conflict-box" v-if="c.time_conflict">
                                         <uni-icons type="info" size="18" color="#c92a2a" />
-                                        <text class="conflict-text">{{ conflictText(c) }}</text>
+                                        <text class="conflict-text">{{ c.time_conflict }}</text>
                                     </view>
                                 </view>
                             </view>
@@ -240,14 +256,7 @@ function onClassPeriodChange(e) {
     query.value.class_period = classPeriodOptions[e.detail.value];
 }
 
-function conflictText(c) {
-    const arr = Array.isArray(c?.conflicts) ? c.conflicts.filter(Boolean) : [];
-    return (
-        c?.conflict_text ||
-        c?.conflict_detail ||
-        (arr.length ? arr.join("；") : "与已选或待选课程存在时间冲突")
-    );
-}
+
 
 function buildPayload() {
     const q = {
@@ -369,6 +378,24 @@ function closeTipModal() {
         showTipModal.value = false;
         isClosing.value = false;
     }, 200);
+}
+
+function copyToClipboard(text, label) {
+    uni.setClipboardData({
+        data: text,
+        success: () => {
+            uni.showToast({
+                title: `${label}已复制`,
+                icon: "none",
+            });
+        },
+        fail: () => {
+            uni.showToast({
+                title: "复制失败",
+                icon: "none",
+            });
+        },
+    });
 }
 </script>
 
@@ -683,9 +710,56 @@ function closeTipModal() {
     background-color: #f8f9fa;
     padding: 6rpx 12rpx;
     border-radius: 8rpx;
+    transition: all 0.2s ease;
 
     &.full-width {
         flex-basis: 100%;
+    }
+
+    &.clickable {
+        cursor: pointer;
+        user-select: text; // 允许文本被选中
+        position: relative;
+
+        &:hover {
+            background-color: #e9ecef;
+            transform: translateY(-1rpx);
+            box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+        }
+
+        &:active {
+            transform: translateY(0);
+            background-color: #dee2e6;
+        }
+    }
+}
+
+.copy-icon {
+    margin-left: 8rpx;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.detail-item.clickable:hover .copy-icon {
+    opacity: 1;
+}
+
+/* 添加点击反馈动画 */
+.detail-item.clickable:active {
+    animation: clickPulse 0.15s ease-out;
+}
+
+@keyframes clickPulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.98);
+    }
+
+    100% {
+        transform: scale(1);
     }
 }
 
@@ -893,12 +967,12 @@ function closeTipModal() {
 
 @keyframes slideOut {
     from {
-        transform: scale(1);
+        transform: scale(1) translateY(0);
         opacity: 1;
     }
 
     to {
-        transform: scale(0.92);
+        transform: scale(0.8) translateY(40rpx);
         opacity: 0;
     }
 }
