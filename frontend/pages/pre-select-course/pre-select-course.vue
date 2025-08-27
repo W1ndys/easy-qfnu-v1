@@ -16,6 +16,10 @@
                         <view style="margin-bottom: 18rpx; color: #d03050; font-weight: bold;">
                             很遗憾，我高估了这个功能的可用性。从理论上讲，我的实现是完全可以做到提前预知选课模块的，但是由于教务系统的隔离性（暂且这么命名），以及系统内某种设定和其他系统内可能的原因，导致搜索结果与预期相差很大，有很多课是本应搜到但实际搜不到的，这一点我也无能为力，敬请谅解。
                         </view>
+                        <!-- 新增绿色提示 -->
+                        <view style="margin-bottom: 18rpx; color: #198754; font-weight: bold;">
+                            不过，目前已经想到一种基于统计的办法来平替此功能，实用性还有待测试，敬请期待后续实践效果。
+                        </view>
                         本数据基于
                         <text style="font-weight: bold; color: #7F4515;">你个人的学生身份</text>
                         和
