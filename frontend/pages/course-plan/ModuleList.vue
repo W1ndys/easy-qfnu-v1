@@ -28,7 +28,7 @@
                                     {{
                                         formatNumber(
                                             Number(m.required_credits) - Number(m.completed_credits)
-                                    )
+                                        )
                                     }}
                                     学分</text>
                             </view>
@@ -70,14 +70,14 @@
                     </view>
 
                     <view class="course-sort-hint">
-                        <text class="sort-hint-text">
+                        <view class="sort-hint-text">
                             <uni-icons type="info" size="16" color="#666" />
-                            {{
+                            <text>{{
                                 isIncomplete(m)
                                     ? "未修课程已置顶显示，本学期课程优先"
                                     : "已修课程已置顶显示"
-                            }}
-                        </text>
+                            }}</text>
+                        </view>
                     </view>
                     <view class="course-list">
                         <view v-for="c in m.courses || []" :key="(c.course_code || '') + (c.course_name || '')"
@@ -236,4 +236,18 @@ initExpanded();
 
 <style lang="scss" scoped>
 @import './ModuleList.scss';
+
+.sort-hint-text {
+    font-size: 20rpx;
+    color: #8c8c8c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6rpx;
+
+    text {
+        font-size: 20rpx;
+        color: #8c8c8c;
+    }
+}
 </style>
