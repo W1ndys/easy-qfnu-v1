@@ -213,7 +213,7 @@ const noticeData = ref({
     </p>
   </div>`,
   timestamp: Date.now(),
-  forceShow: false // 是否强制显示（即使已读过，只要版本号更新就会再次弹出）
+  forceShow: false // 是否强制显示（即使已读过重新页面也会再次弹出）
 });
 
 // 公告已读版本的本地缓存键名
