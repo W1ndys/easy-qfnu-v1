@@ -2,50 +2,10 @@
     <PageLayout>
         <LoadingScreen v-if="isLoading" text="正在加载数据，加载完成后会在下方显示..." />
 
-        <!-- 使用提示弹窗 -->
-        <view v-if="showTipModal" class="tip-modal-overlay" :class="{ closing: isClosing }" @click="closeTipModal">
-            <view class="tip-modal" @click.stop>
-                <view class="tip-header">
-                    <text class="tip-title">使用提示</text>
-                    <view class="tip-close" @click="closeTipModal">
-                        <uni-icons type="close" size="20" color="#868e96" />
-                    </view>
-                </view>
-                <view class="tip-content" style="flex-direction: row; flex-wrap: wrap; justify-content: center;">
-                    <view class="tip-text" style="text-align: left; line-height: 1.8; font-size: 28rpx;">
-                        <view style="margin-bottom: 18rpx; color: #d03050; font-weight: bold;">
-                            很遗憾，我高估了这个功能的可用性。从理论上讲，我的实现是完全可以做到提前预知选课模块的，但是由于教务系统的隔离性（暂且这么命名），以及系统内某种设定和其他系统内可能的原因，导致搜索结果与预期相差很大，有很多课是本应搜到但实际搜不到的，这一点我也无能为力，敬请谅解。
-                        </view>
-                        <!-- 新增绿色提示 -->
-                        <view style="margin-bottom: 18rpx; color: #198754; font-weight: bold;">
-                            不过，目前已经想到一种基于统计的办法来平替此功能，实用性还有待测试，敬请期待后续实践效果。
-                        </view>
-                        本数据基于
-                        <text style="font-weight: bold; color: #7F4515;">你个人的学生身份</text>
-                        和
-                        <text style="font-weight: bold; color: #7F4515;">当前开放的</text>
-                        选课年级库进行搜索，如果搜索没有结果，但你从夫子校园或其他地方搜到了开课数据，说明当前教务系统的开课数据对你
-                        <text style="font-weight: bold; color: #f56c6c;">不开放</text>
-                        搜索权限。由于教学安排和教务系统限制，本页面搜索结果不保证准确。
-                        <text style="font-weight: bold; color: #f56c6c;">仅供参考</text>
-                        ，请以实际为准。<br />
-                        <text style="font-weight: bold; color: #198754;">公选课数据一般是准确的</text>，因为本模块与培养方案无关，公选课开放情况以教务系统为准。
-                    </view>
-                    <view class="search-tip"
-                        style="margin: 12rpx 0 0 0; color: #868e96; font-size: 24rpx; line-height: 1.7;">
-                        <view>支持模糊搜索，建议使用课程代码，速度更快，结果更精准。</view>
-                        <view>如果课余量显示-，大概率是选修课，原因是选修课模块教务系统后端没有提供课余量数据，请使用我们的友情网站 <a href="http://xk.s.fz.z-xin.net"
-                                target="_blank" rel="noopener" style="color:#007aff;text-decoration:underline;">夫子校园</a>
-                            辅助查询</view>
-                    </view>
-                </view>
-                <view class="tip-footer">
-                    <button class="tip-btn" @click="closeTipModal">我已知晓</button>
-                </view>
-            </view>
-        </view>
+        <!-- 使用提示弹窗 (提取为本地组件) -->
+        <TipModal :show="showTipModal" :isClosing="isClosing" @close="closeTipModal" />
 
-        <view v-else class="page-container">
+        <view class="page-container">
             <view class="background-decoration">
                 <view class="circle circle-1"></view>
                 <view class="circle circle-2"></view>
@@ -60,142 +20,17 @@
             </view>
 
             <view class="content-wrapper">
-                <ModernCard title="筛选与操作" style="padding: 20rpx;">
-                    <view class="filters-grid">
-                        <view class="form-item">
-                            <text class="label">课程名/编号</text>
-                            <input class="input" v-model.trim="query.course_id_or_name" placeholder="如 大学英语 或 g1234" />
-                        </view>
-                        <view class="form-item">
-                            <text class="label">教师名</text>
-                            <input class="input" v-model.trim="query.teacher_name" placeholder="如 张三" />
-                        </view>
-                        <view class="form-item">
-                            <text class="label">星期</text>
-                            <picker mode="selector" :range="weekOptions" @change="onWeekChange">
-                                <view class="picker-value" :class="{ 'is-selected': query.week_day }">
-                                    {{
-                                        query.week_day
-                                            ? `星期${query.week_day}`
-                                            : "选择星期（可选）"
-                                    }}
-                                </view>
-                            </picker>
-                        </view>
-                        <view class="form-item">
-                            <text class="label">节次</text>
-                            <picker mode="selector" :range="classPeriodOptionsDisplay" @change="onClassPeriodChange">
-                                <view class="picker-value" :class="{ 'is-selected': query.class_period }">
-                                    {{
-                                        query.class_period
-                                            ? `${query.class_period}节`
-                                            : "选择节次（可选）"
-                                    }}
-                                </view>
-                            </picker>
-                        </view>
-                    </view>
+                <FiltersCard :query="query" :weekOptions="weekOptions"
+                    :classPeriodOptionsDisplay="classPeriodOptionsDisplay"
+                    @update:course_id_or_name="(v) => (query.course_id_or_name = v)"
+                    @update:teacher_name="(v) => (query.teacher_name = v)" @weekChange="onWeekChange"
+                    @classPeriodChange="onClassPeriodChange" @secondary="handleSecondary" @primary="handlePrimary" />
 
-                    <view class="card-actions-wrapper">
-                        <button class="action-btn secondary-btn" @click="handleSecondary">
-                            <uni-icons type="refresh" size="20" color="#495057" />
-                            <text>重置</text>
-                        </button>
-                        <button class="action-btn primary-btn" @click="handlePrimary">
-                            <uni-icons type="paperplane" size="20" color="#fff" />
-                            <text>查询</text>
-                        </button>
-                    </view>
-                </ModernCard>
+                <ErrorCard :debugInfo="debugInfo" @copyDebug="copyDebug" />
 
-                <ModernCard v-if="debugInfo" title="查询出错">
-                    <view class="card-section">
-                        <text class="section-desc">抱歉，查询时遇到问题，请稍后重试。</text>
-                        <text class="section-desc muted-text">状态码：{{ debugInfo.statusCode }}</text>
-
-                        <!-- 显示具体错误信息 -->
-                        <view v-if="debugInfo.message" class="error-details">
-                            <text class="error-label">错误详情：</text>
-                            <text class="error-message">{{ debugInfo.message }}</text>
-                        </view>
-                    </view>
-                    <view class="button-group" style="margin-top: -500rpx">
-                        <button class="action-btn secondary-btn" @click="copyDebug">
-                            <uni-icons type="copy" size="20" color="#495057" />
-                            <text>复制详细诊断信息</text>
-                        </button>
-                    </view>
-                </ModernCard>
-
-                <EmptyState v-if="!hasData" icon-type="info-filled" title="暂无结果" description="请先输入课程名/编号或教师名进行查询"
-                    :show-retry="false" style="margin-top: -120rpx;" />
-
-                <view v-else class="results-container">
-                    <view class="results-summary">
-                        <text>查询到 {{ totalCount }} 门相关课程，已按模块分组</text>
-                    </view>
-
-                    <uni-collapse v-model="activeCollapseItems" class="results-collapse">
-                        <uni-collapse-item v-for="m in data.modules" :key="m.module" :name="m.module"
-                            :title="`${m.module_name} (${m.count || 0})`">
-                            <view v-if="m.courses && m.courses.length" class="course-list">
-                                <view class="course-item" v-for="c in m.courses"
-                                    :key="`${m.module}-${c.course_id}-${c.group_name}`">
-                                    <view class="course-header">
-                                        <view class="course-title-group">
-                                            <view class="course-name clickable"
-                                                @click="copyToClipboard(c.course_name, '课程名称')">
-                                                <text>{{ c.course_name }}</text>
-                                                <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
-                                            </view>
-                                            <view class="course-meta clickable"
-                                                @click="copyToClipboard(c.course_id + ' / ' + c.group_name, '课程信息')">
-                                                <text>{{ c.course_id }} / {{ c.group_name }}</text>
-                                                <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
-                                            </view>
-                                        </view>
-                                        <view class="meta-tags">
-                                            <text class="pill pill-ghost" v-if="c.credits">{{ c.credits }} 学分</text>
-                                            <text class="pill" :class="c.remain_count > 0 ? 'pill-success' : 'pill-danger'
-                                                ">
-                                                余量 {{ c.remain_count ?? "未知" }}
-                                            </text>
-                                        </view>
-                                    </view>
-
-                                    <view class="course-details">
-                                        <view class="detail-item clickable"
-                                            @click="copyToClipboard(c.teacher_name, '教师姓名')">
-                                            <uni-icons type="person" size="16" color="#868e96" />
-                                            <text>{{ c.teacher_name }}</text>
-                                            <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
-                                        </view>
-                                        <view class="detail-item clickable"
-                                            @click="copyToClipboard(c.location + ' @ ' + c.campus_name, '上课地点')">
-                                            <uni-icons type="location" size="16" color="#868e96" />
-                                            <text>{{ c.location }} @ {{ c.campus_name }}</text>
-                                            <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
-                                        </view>
-                                        <view class="detail-item full-width clickable"
-                                            @click="copyToClipboard(c.time_text, '上课时间')">
-                                            <uni-icons type="calendar" size="16" color="#868e96" />
-                                            <text>{{ c.time_text }}</text>
-                                            <uni-icons type="copy" size="14" color="#868e96" class="copy-icon" />
-                                        </view>
-                                    </view>
-
-                                    <view class="conflict-box" v-if="c.time_conflict">
-                                        <uni-icons type="info" size="18" color="#c92a2a" />
-                                        <text class="conflict-text">{{ c.time_conflict }}</text>
-                                    </view>
-                                </view>
-                            </view>
-                            <view v-else class="empty-module">
-                                <text class="muted-text">本模块无相关课程</text>
-                            </view>
-                        </uni-collapse-item>
-                    </uni-collapse>
-                </view>
+                <ResultsList v-if="data" :data="data" :hasData="hasData" :totalCount="totalCount"
+                    :activeNames="activeCollapseItems" @update:activeNames="(v) => (activeCollapseItems = v)"
+                    @copy="copyToClipboard" />
             </view>
         </view>
     </PageLayout>
@@ -205,10 +40,12 @@
 import { ref, computed } from "vue";
 import { onLoad, onShow } from "@dcloudio/uni-app";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
-import ModernCard from "../../components/ModernCard/ModernCard.vue";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
-import EmptyState from "../../components/EmptyState/EmptyState.vue";
 // uni-collapse 和 uni-icons 通常通过 uni-ui 的 easycom 自动引入，无需手动 import
+import TipModal from "./TipModal.vue";
+import FiltersCard from "./FiltersCard.vue";
+import ErrorCard from "./ErrorCard.vue";
+import ResultsList from "./ResultsList.vue";
 
 const isLoading = ref(true);
 const data = ref(null);
