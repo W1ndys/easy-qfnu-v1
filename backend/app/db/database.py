@@ -117,7 +117,7 @@ def get_session(student_id: str) -> Optional[requests.Session]:
             # 取出实际的二进制数据 - 明确类型转换
             session_data_raw = db_session_record.session_data
 
-            # 确保数据是bytes类型
+            # 确保数据是bytes类型且不为None
             if session_data_raw is not None:
                 # 兼容 memoryview、bytes 及其他类型
                 if isinstance(session_data_raw, memoryview):
@@ -135,7 +135,7 @@ def get_session(student_id: str) -> Optional[requests.Session]:
                 logger.info(f"Session对象重建成功 - 学号: {student_id}")
                 return new_session
             else:
-                logger.warning(f"Session数据为空 - 学号: {student_id}")
+                logger.warning(f"Session数据为空（可能已被清空）- 学号: {student_id}")
                 return None
         else:
             logger.info(
@@ -171,7 +171,7 @@ def get_session_by_hash(student_id_hash: str) -> Optional[requests.Session]:
             # 取出实际的二进制数据 - 明确类型转换
             session_data_raw = db_session_record.session_data
 
-            # 确保数据是bytes类型
+            # 确保数据是bytes类型且不为None
             if session_data_raw is not None:
                 # 兼容 memoryview、bytes 及其他类型
                 if isinstance(session_data_raw, memoryview):
@@ -189,7 +189,7 @@ def get_session_by_hash(student_id_hash: str) -> Optional[requests.Session]:
                 logger.info("Session 对象重建成功。")
                 return new_session
             else:
-                logger.warning("Session数据为空")
+                logger.warning("Session数据为空（可能已被清空）")
                 return None
         else:
             logger.info(f"数据库中未找到学号hash {student_id_hash} 的 session。")
@@ -202,12 +202,14 @@ def get_session_by_hash(student_id_hash: str) -> Optional[requests.Session]:
 
 
 def delete_session(student_id: str) -> bool:
-    """删除指定学号的session信息（使用学号hash）"""
+    """清空指定学号的session数据，保留记录行（使用学号hash）"""
     db = SessionLocal()
     try:
         # 将明文学号转换为hash值
         student_id_hash = hash_student_id(student_id)
-        logger.debug(f"删除session - 原始学号: {student_id}, hash: {student_id_hash}")
+        logger.debug(
+            f"清空session数据 - 原始学号: {student_id}, hash: {student_id_hash}"
+        )
 
         db_session_record = (
             db.query(SessionStore)
@@ -216,20 +218,22 @@ def delete_session(student_id: str) -> bool:
         )
 
         if db_session_record:
-            db.delete(db_session_record)
+            # 只清空session_data，保留记录行
+            setattr(db_session_record, "session_data", None)
+            setattr(db_session_record, "updated_at", datetime.datetime.now())
             db.commit()
             logger.info(
-                f"成功删除session - 学号: {student_id}, hash: {student_id_hash}"
+                f"成功清空session数据 - 学号: {student_id}, hash: {student_id_hash}"
             )
             return True
         else:
             logger.info(
-                f"数据库中未找到要删除的session - 学号: {student_id}, hash: {student_id_hash}"
+                f"数据库中未找到要清空的session - 学号: {student_id}, hash: {student_id_hash}"
             )
             return False
 
     except Exception as e:
-        logger.error(f"删除session失败: {e}")
+        logger.error(f"清空session数据失败: {e}")
         db.rollback()
         return False
     finally:
@@ -238,7 +242,7 @@ def delete_session(student_id: str) -> bool:
 
 def cleanup_expired_sessions(hours_ago: int = 2) -> int:
     """
-    清理指定小时数之前的过期session
+    清理指定小时数之前的过期session数据，保留记录行
 
     Args:
         hours_ago: 清理多少小时前的session，默认2小时
@@ -251,25 +255,27 @@ def cleanup_expired_sessions(hours_ago: int = 2) -> int:
         # 计算截止时间
         cutoff_time = datetime.datetime.now() - datetime.timedelta(hours=hours_ago)
         logger.info(
-            f"开始清理 {hours_ago} 小时前的过期session，截止时间: {cutoff_time}"
+            f"开始清理 {hours_ago} 小时前的过期session数据，截止时间: {cutoff_time}"
         )
 
-        # 查询并删除过期的session
+        # 查询并清空过期的session数据
         expired_sessions = (
             db.query(SessionStore).filter(SessionStore.updated_at < cutoff_time).all()
         )
 
-        deleted_count = 0
+        cleaned_count = 0
         for session in expired_sessions:
-            db.delete(session)
-            deleted_count += 1
+            # 只清空session_data，保留记录行
+            setattr(session, "session_data", None)
+            setattr(session, "updated_at", datetime.datetime.now())
+            cleaned_count += 1
 
         db.commit()
-        logger.info(f"成功清理 {deleted_count} 个过期session")
-        return deleted_count
+        logger.info(f"成功清理 {cleaned_count} 个过期session数据")
+        return cleaned_count
 
     except Exception as e:
-        logger.error(f"清理过期session失败: {e}")
+        logger.error(f"清理过期session数据失败: {e}")
         db.rollback()
         return 0
     finally:
@@ -277,10 +283,10 @@ def cleanup_expired_sessions(hours_ago: int = 2) -> int:
 
 
 def delete_session_by_hash(student_id_hash: str) -> bool:
-    """通过学号hash值删除session信息"""
+    """通过学号hash值清空session数据，保留记录行"""
     db = SessionLocal()
     try:
-        logger.debug(f"通过hash删除session - 学号hash: {student_id_hash}")
+        logger.debug(f"通过hash清空session数据 - 学号hash: {student_id_hash}")
 
         db_session_record = (
             db.query(SessionStore)
@@ -289,16 +295,18 @@ def delete_session_by_hash(student_id_hash: str) -> bool:
         )
 
         if db_session_record:
-            db.delete(db_session_record)
+            # 只清空session_data，保留记录行
+            setattr(db_session_record, "session_data", None)
+            setattr(db_session_record, "updated_at", datetime.datetime.now())
             db.commit()
-            logger.info(f"成功删除学号hash {student_id_hash} 的session")
+            logger.info(f"成功清空学号hash {student_id_hash} 的session数据")
             return True
         else:
             logger.info(f"数据库中未找到学号hash {student_id_hash} 的session")
             return False
 
     except Exception as e:
-        logger.error(f"通过hash删除session失败: {e}")
+        logger.error(f"通过hash清空session数据失败: {e}")
         db.rollback()
         return False
     finally:
