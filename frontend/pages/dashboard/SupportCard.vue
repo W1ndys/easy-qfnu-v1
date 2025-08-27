@@ -7,8 +7,8 @@
       </view>
       <view class="qr-code-container">
         <image class="qr-code"
-          src="https://picx.zhimg.com/80/v2-076422270c197b0031c609e47be2e36c_720w.png?source=d16d100b"
-          mode="aspectFit" @error="handleImageError" @load="handleImageLoad">
+          src="https://picx.zhimg.com/80/v2-076422270c197b0031c609e47be2e36c_720w.png?source=d16d100b" mode="aspectFit"
+          @error="handleImageError" @load="handleImageLoad">
         </image>
         <text class="qr-code-label">微信赞赏</text>
       </view>
@@ -18,6 +18,7 @@
 
 <script setup>
 import ModernCard from "../../components/ModernCard/ModernCard.vue";
+import supportCardLogic from "./SupportCard.js";
 
 const emit = defineEmits(['imageError', 'imageLoad']);
 
@@ -31,61 +32,5 @@ const handleImageLoad = () => {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/common.scss";
-
-.support-card {
-  margin-top: 16rpx;
-
-  :deep(.card-content) {
-    padding: 12rpx 8rpx !important;
-  }
-}
-
-.support-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.support-text {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-  text-align: center;
-}
-
-.support-title {
-  font-size: 32rpx;
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.support-desc {
-  font-size: 26rpx;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  text-align: center;
-}
-
-.qr-code-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.qr-code {
-  width: 220rpx;
-  height: 220rpx;
-  border-radius: var(--radius-medium);
-  border: 1rpx solid var(--border-light);
-  box-shadow: 0 8rpx 24rpx var(--shadow-light);
-}
-
-.qr-code-label {
-  font-size: 24rpx;
-  color: var(--text-light);
-  text-align: center;
-}
+@import "./SupportCard.scss";
 </style>

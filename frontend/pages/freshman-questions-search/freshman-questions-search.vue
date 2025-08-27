@@ -16,88 +16,15 @@
         </view>
 
         <!-- 免责声明 -->
-        <view class="disclaimer-card modern-card">
-            <view class="disclaimer-header">
-                <view class="disclaimer-icon">
-                    <uni-icons type="info-filled" size="24" color="#ff6b35"></uni-icons>
-                </view>
-                <text class="disclaimer-title">重要声明</text>
-            </view>
-            <view class="disclaimer-content">
-                <text class="disclaimer-text">
-                    本题库由新生手册根据大模型生成，仅供参考。使用前请确保您已充分阅读并学习曲阜师范大学新生手册内容并遵守相关规定。使用本程序造成的一切后果与本程序无关，使用本程序即代表您同意上方声明内容。
-                </text>
-            </view>
-        </view>
+        <DisclaimerCard />
 
         <!-- 交流群信息 -->
-        <view class="group-info-card modern-card">
-            <view class="group-header">
-                <view class="group-icon">
-                    <uni-icons type="chat-filled" size="24" color="#1890ff"></uni-icons>
-                </view>
-                <text class="group-title">学习交流群</text>
-            </view>
-            <view class="group-content">
-                <text class="group-description">曲师大25级选课学习交流群</text>
-                <view class="group-number" @click="copyGroupNumber">
-                    <text class="group-label">群号：</text>
-                    <text class="group-id">1046961227</text>
-                    <view class="copy-icon">
-                        <uni-icons type="copy" size="16" color="#1890ff"></uni-icons>
-                    </view>
-                </view>
-                <text class="group-hint">点击群号可复制</text>
-            </view>
-        </view>
+        <GroupInfoCard />
 
         <!-- 主内容区域 -->
         <view class="content-wrapper">
             <!-- 搜索表单卡片 -->
-            <view class="search-card modern-card">
-                <view class="card-header">
-                    <view class="header-icon">
-                        <uni-icons type="search" size="24" color="#7f4515"></uni-icons>
-                    </view>
-                    <view class="header-text">
-                        <text class="card-title">智能搜索</text>
-                        <text class="card-subtitle">输入题目关键词进行语义搜索</text>
-                    </view>
-                </view>
-
-                <view class="form-content">
-                    <view class="form-group">
-                        <view class="input-label">
-                            <uni-icons type="help" size="20" color="#495057"></uni-icons>
-                            <text>题目内容</text>
-                        </view>
-                        <view class="input-wrapper">
-                            <textarea class="modern-textarea" :class="{
-                                'input-error': questionError,
-                                'input-focus': questionFocused,
-                            }" v-model="searchForm.question" placeholder="请输入题目关键词或完整题目" auto-height
-                                @input="validateQuestion" @focus="questionFocused = true"
-                                @blur="questionFocused = false" />
-                            <view class="input-line" :class="{ active: questionFocused }"></view>
-                        </view>
-                        <text class="input-hint" :class="{ 'hint-error': questionError }">
-                            {{ questionHint }}
-                        </text>
-                    </view>
-
-                    <view class="button-group">
-                        <button class="action-btn primary-btn" @click="handleSearch" :loading="loading"
-                            :disabled="!canSearch">
-                            <uni-icons type="search" size="20" color="#ffffff" v-if="!loading"></uni-icons>
-                            <text>{{ loading ? "搜索中..." : "开始搜索" }}</text>
-                        </button>
-                        <button class="action-btn secondary-btn" @click="handleReset">
-                            <uni-icons type="refresh" size="20" color="#495057"></uni-icons>
-                            <text>重置</text>
-                        </button>
-                    </view>
-                </view>
-            </view>
+            <SearchCard :loading="loading" @search="handleSearch" @reset="handleReset" />
 
             <!-- 搜索结果 -->
             <view class="results-section" v-if="hasResults">
@@ -108,151 +35,50 @@
                     </view>
                 </view>
 
-                <view class="question-card modern-card" v-for="(result, index) in searchResults" :key="index">
-                    <view class="question-header">
-                        <view class="question-info">
-                            <view class="question-icon">
-                                <uni-icons type="help-filled" size="20" color="#7f4515"></uni-icons>
-                            </view>
-                            <text class="question-number">题目 {{ index + 1 }}</text>
-                            <view class="type-badge" v-if="result.type">
-                                <text class="type-text">{{ result.type }}</text>
-                            </view>
-                            <view class="similarity-badge">
-                                <text class="similarity-text">相似度: {{ (result.score * 100).toFixed(1) }}%</text>
-                            </view>
-                        </view>
-                    </view>
-
-                    <view class="question-content">
-                        <view class="question-text-section">
-                            <text class="question-text">{{ result.question }}</text>
-                        </view>
-
-                        <!-- 选项显示 -->
-                        <view class="options-section" v-if="result.options">
-                            <view class="options-list">
-                                <view class="option-item"
-                                    :class="{ 'correct-option': result.answer && option.key === result.answer.letter }"
-                                    v-for="option in formatOptions(result.options)" :key="option.key">
-                                    <text class="option-label">{{ option.key }}.</text>
-                                    <text class="option-text">{{ option.value }}</text>
-                                    <view class="correct-mark"
-                                        v-if="result.answer && option.key === result.answer.letter">
-                                        <uni-icons type="checkmarkempty" size="16" color="#52c41a"></uni-icons>
-                                    </view>
-                                </view>
-                            </view>
-                        </view>
-
-                        <view class="question-meta" v-if="result.category || result.difficulty || result.type">
-                            <view class="meta-item" v-if="result.type">
-                                <text class="meta-label">类型</text>
-                                <text class="meta-value">{{ result.type }}</text>
-                            </view>
-                            <view class="meta-item" v-if="result.category">
-                                <text class="meta-label">分类</text>
-                                <text class="meta-value">{{ result.category }}</text>
-                            </view>
-                            <view class="meta-item" v-if="result.difficulty">
-                                <text class="meta-label">难度</text>
-                                <text class="meta-value">{{ result.difficulty }}</text>
-                            </view>
-                        </view>
-                    </view>
-                </view>
+                <QuestionCard v-for="(result, index) in searchResults" :key="index" :result="result" :index="index" />
             </view>
 
             <!-- 空状态 -->
-            <view class="empty-state modern-card" v-else-if="searched && !loading">
-                <view class="empty-content">
-                    <view class="empty-icon">
-                        <uni-icons type="info" size="80" color="#adb5bd"></uni-icons>
-                    </view>
-                    <text class="empty-title">未找到相关题目</text>
-                    <text class="empty-subtitle">{{ emptyMessage }}</text>
-                    <button class="action-btn primary-btn retry-btn" @click="handleReset">
-                        <uni-icons type="refresh" size="20" color="#ffffff"></uni-icons>
-                        <text>重新搜索</text>
-                    </button>
-                </view>
-            </view>
+            <StateCards v-else-if="searched && !loading" type="empty" :empty-message="emptyMessage"
+                @retry="handleReset" />
 
             <!-- 初始状态 -->
-            <view class="initial-state modern-card" v-else-if="!searched && !loading">
-                <view class="initial-content">
-                    <view class="initial-icon">
-                        <uni-icons type="help" size="80" color="#7f4515"></uni-icons>
-                    </view>
-                    <text class="initial-title">欢迎使用搜索功能</text>
-                    <text class="initial-subtitle">输入题目关键词，快速找到相关题目和答案</text>
-                    <view class="tips-section">
-                        <view class="tip-item">
-                            <uni-icons type="checkmarkempty" size="16" color="#52c41a"></uni-icons>
-                            <text class="tip-text">支持关键词搜索</text>
-                        </view>
-                        <view class="tip-item">
-                            <uni-icons type="checkmarkempty" size="16" color="#52c41a"></uni-icons>
-                            <text class="tip-text">智能语义匹配</text>
-                        </view>
-                        <view class="tip-item">
-                            <uni-icons type="checkmarkempty" size="16" color="#52c41a"></uni-icons>
-                            <text class="tip-text">精准答案推荐</text>
-                        </view>
-                    </view>
-                </view>
-            </view>
+            <StateCards v-else-if="!searched && !loading" type="initial" />
 
             <!-- 加载状态 -->
-            <view class="loading-state modern-card" v-else-if="loading">
-                <view class="loading-content">
-                    <view class="loading-spinner">
-                        <uni-icons type="spinner-cycle" size="60" color="#7f4515"></uni-icons>
-                    </view>
-                    <text class="loading-text">正在搜索题目...</text>
-                    <text class="loading-subtitle">使用AI语义分析匹配相关内容</text>
-                </view>
-            </view>
+            <StateCards v-else-if="loading" type="loading" />
         </view>
     </view>
 </template>
 
 <script>
+import DisclaimerCard from './DisclaimerCard.vue';
+import GroupInfoCard from './GroupInfoCard.vue';
+import SearchCard from './SearchCard.vue';
+import QuestionCard from './QuestionCard.vue';
+import StateCards from './StateCards.vue';
+
 export default {
+    components: {
+        DisclaimerCard,
+        GroupInfoCard,
+        SearchCard,
+        QuestionCard,
+        StateCards
+    },
     data() {
         return {
-            searchForm: {
-                question: "",
-            },
             searchResults: [],
             loading: false,
             searched: false,
-            emptyMessage: "未找到相关题目",
-            questionError: false,
-            questionFocused: false,
+            emptyMessage: "未找到相关题目"
         };
     },
 
     computed: {
         hasResults() {
             return this.searchResults.length > 0;
-        },
-
-        questionHint() {
-            const length = this.searchForm.question.trim().length;
-            if (length === 0) {
-                return "请输入题目内容或关键词";
-            } else if (length < 2) {
-                return `至少需要2个字符，当前${length}个字符`;
-            } else {
-                return `已输入${length}个字符`;
-            }
-        },
-
-        canSearch() {
-            const questionLength = this.searchForm.question.trim().length;
-            return questionLength >= 2;
-        },
+        }
     },
 
     onLoad() {
@@ -262,34 +88,13 @@ export default {
     },
 
     methods: {
-        validateQuestion() {
-            const length = this.searchForm.question.trim().length;
-            this.questionError = length > 0 && length < 2;
-        },
-
-        async handleSearch() {
-            if (!this.searchForm.question.trim()) {
-                uni.showToast({
-                    title: "请输入题目内容",
-                    icon: "none",
-                });
-                return;
-            }
-
-            if (this.searchForm.question.trim().length < 2) {
-                uni.showToast({
-                    title: "题目内容至少需要2个字符",
-                    icon: "none",
-                });
-                return;
-            }
-
+        async handleSearch(params) {
             this.loading = true;
             this.searched = true;
 
             try {
                 const response = await this.searchQuestions({
-                    query: this.searchForm.question.trim(),
+                    query: params.query,
                     topk: 3,
                     threshold: 0.2
                 });
@@ -336,12 +141,8 @@ export default {
         },
 
         handleReset() {
-            this.searchForm = {
-                question: "",
-            };
             this.searchResults = [];
             this.searched = false;
-            this.questionError = false;
         },
 
         async searchQuestions(params) {
@@ -373,39 +174,8 @@ export default {
                     },
                 });
             });
-        },
-
-        formatOptions(options) {
-            if (!options || typeof options !== 'object') {
-                return [];
-            }
-
-            return Object.keys(options).map(key => ({
-                key: key,
-                value: options[key]
-            })).sort((a, b) => a.key.localeCompare(b.key));
-        },
-
-        copyGroupNumber() {
-            uni.setClipboardData({
-                data: '1046961227',
-                success: () => {
-                    uni.showToast({
-                        title: '群号已复制',
-                        icon: 'success',
-                        duration: 2000
-                    });
-                },
-                fail: () => {
-                    uni.showToast({
-                        title: '复制失败',
-                        icon: 'none',
-                        duration: 2000
-                    });
-                }
-            });
-        },
-    },
+        }
+    }
 };
 </script>
 
@@ -509,46 +279,7 @@ export default {
     font-style: italic;
 }
 
-// 免责声明样式
-.disclaimer-card {
-    margin: 0 30rpx 15rpx;
-    padding: 30rpx;
-    background: linear-gradient(135deg, rgba(255, 107, 53, 0.05), rgba(255, 107, 53, 0.08));
-    border: 1rpx solid rgba(255, 107, 53, 0.2);
-    border-left: 6rpx solid #ff6b35;
-}
 
-.disclaimer-header {
-    display: flex;
-    align-items: center;
-    gap: 16rpx;
-    margin-bottom: 20rpx;
-}
-
-.disclaimer-icon {
-    width: 40rpx;
-    height: 40rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.disclaimer-title {
-    font-size: 28rpx;
-    font-weight: 700;
-    color: #ff6b35;
-}
-
-.disclaimer-content {
-    padding-left: 56rpx;
-}
-
-.disclaimer-text {
-    font-size: 24rpx;
-    color: #495057;
-    line-height: 1.6;
-    word-break: break-word;
-}
 
 // 内容区域
 .content-wrapper {
@@ -570,183 +301,6 @@ export default {
     &:hover {
         transform: translateY(-4rpx);
         box-shadow: 0 24rpx 80rpx var(--shadow-medium);
-    }
-}
-
-// 搜索卡片
-.search-card {
-    padding: 40rpx;
-}
-
-.card-header {
-    display: flex;
-    align-items: center;
-    gap: 24rpx;
-    margin-bottom: 50rpx;
-}
-
-.header-icon {
-    width: 80rpx;
-    height: 80rpx;
-    background: rgba(127, 69, 21, 0.08);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.header-text {
-    flex: 1;
-}
-
-.card-title {
-    display: block;
-    font-size: 32rpx;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 8rpx;
-}
-
-.card-subtitle {
-    display: block;
-    font-size: 24rpx;
-    color: var(--text-secondary);
-}
-
-// 表单样式
-.form-group {
-    margin-bottom: 50rpx;
-
-    &:last-child {
-        margin-bottom: 0;
-    }
-}
-
-.input-label {
-    display: flex;
-    align-items: center;
-    gap: 12rpx;
-    margin-bottom: 20rpx;
-    font-size: 28rpx;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.input-wrapper {
-    position: relative;
-}
-
-.modern-textarea {
-    width: 100%;
-    min-height: 120rpx;
-    border: 2rpx solid #e9ecef;
-    border-radius: var(--radius-small);
-    padding: 24rpx;
-    font-size: 28rpx;
-    color: var(--text-primary);
-    background: #f8fafc;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-
-    &:focus {
-        border-color: #7f4515;
-        background: #ffffff;
-        box-shadow: 0 0 0 6rpx rgba(127, 69, 21, 0.1);
-    }
-
-    &.input-error {
-        border-color: #dc3545;
-        background: rgba(220, 53, 69, 0.05);
-    }
-}
-
-.input-line {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 4rpx;
-    background: linear-gradient(90deg, #7f4515, #8c5527);
-    border-radius: 2rpx;
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-
-    &.active {
-        transform: scaleX(1);
-    }
-}
-
-.input-hint {
-    display: block;
-    font-size: 22rpx;
-    color: var(--text-light);
-    margin-top: 12rpx;
-    transition: color 0.3s ease;
-
-    &.hint-error {
-        color: #dc3545;
-    }
-}
-
-// 按钮组
-.button-group {
-    display: flex;
-    gap: 24rpx;
-    margin-top: 60rpx;
-}
-
-.action-btn {
-    flex: 1;
-    height: 72rpx;
-    border-radius: 9999rpx;
-    font-size: 26rpx;
-    padding: 16rpx 24rpx;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12rpx;
-    transition: all 0.3s ease;
-    border: none;
-
-    &::after {
-        border: none;
-    }
-
-    &:active {
-        transform: scale(0.95);
-    }
-
-    text {
-        font-weight: inherit;
-    }
-}
-
-.primary-btn {
-    background: linear-gradient(135deg, #7f4515, #8c5527);
-    color: #ffffff;
-    box-shadow: 0 8rpx 24rpx rgba(127, 69, 21, 0.25);
-
-    &:disabled {
-        background: #adb5bd;
-        color: #6c757d;
-        box-shadow: none;
-    }
-
-    &:active:not(:disabled) {
-        box-shadow: 0 4rpx 12rpx rgba(127, 69, 21, 0.4);
-    }
-}
-
-.secondary-btn {
-    background: #f8f9fa;
-    color: var(--text-primary);
-    border: 2rpx solid #e9ecef;
-    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
-
-    &:active {
-        background: #e9ecef;
-        border-color: #dee2e6;
     }
 }
 
@@ -774,461 +328,20 @@ export default {
     color: var(--text-secondary);
 }
 
-// 题目卡片
-.question-card {
-    padding: 0;
-    overflow: hidden;
-    margin-bottom: 24rpx;
-}
 
-.question-header {
-    background: linear-gradient(135deg, #7f4515, #8c5527);
-    padding: 24rpx 30rpx;
-}
 
-.question-info {
-    display: flex;
-    align-items: center;
-    gap: 16rpx;
-    flex-wrap: wrap;
-}
 
-.question-icon {
-    width: 44rpx;
-    height: 44rpx;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
-.question-number {
-    font-size: 28rpx;
-    font-weight: 600;
-    color: #ffffff;
-    flex: 1;
-    min-width: 120rpx;
-}
 
-.type-badge {
-    background: rgba(255, 255, 255, 0.25);
-    padding: 6rpx 12rpx;
-    border-radius: 16rpx;
-    border: 1rpx solid rgba(255, 255, 255, 0.3);
-}
 
-.type-text {
-    font-size: 20rpx;
-    color: #ffffff;
-    font-weight: 500;
-}
-
-.similarity-badge {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 8rpx 16rpx;
-    border-radius: 20rpx;
-    border: 1rpx solid rgba(255, 255, 255, 0.3);
-}
-
-.similarity-text {
-    font-size: 22rpx;
-    color: #ffffff;
-    font-weight: 500;
-}
-
-.question-content {
-    padding: 30rpx;
-}
-
-.question-text-section,
-.options-section {
-    margin-bottom: 30rpx;
-
-    &:last-child {
-        margin-bottom: 0;
-    }
-}
-
-.section-label {
-    display: block;
-    font-size: 26rpx;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 16rpx;
-}
-
-.question-text {
-    font-size: 28rpx;
-    color: var(--text-primary);
-    line-height: 1.6;
-    word-break: break-word;
-    margin-bottom: 24rpx;
-}
-
-// 选项样式
-.options-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12rpx;
-}
-
-.option-item {
-    display: flex;
-    align-items: center;
-    gap: 12rpx;
-    padding: 16rpx 20rpx;
-    background: #f8f9fa;
-    border-radius: var(--radius-small);
-    border: 2rpx solid transparent;
-    transition: all 0.3s ease;
-    position: relative;
-
-    &.correct-option {
-        background: rgba(82, 196, 26, 0.08);
-        border-color: rgba(82, 196, 26, 0.3);
-        box-shadow: 0 2rpx 8rpx rgba(82, 196, 26, 0.15);
-    }
-}
-
-.option-label {
-    font-size: 26rpx;
-    font-weight: 600;
-    color: var(--text-primary);
-    min-width: 32rpx;
-}
-
-.option-text {
-    font-size: 26rpx;
-    color: var(--text-secondary);
-    line-height: 1.5;
-    flex: 1;
-}
-
-.correct-mark {
-    margin-left: auto;
-    width: 28rpx;
-    height: 28rpx;
-    background: rgba(82, 196, 26, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-// 答案样式
-.answer-content {
-    background: linear-gradient(135deg, rgba(127, 69, 21, 0.05), rgba(127, 69, 21, 0.08));
-    border-radius: var(--radius-small);
-    padding: 20rpx;
-    border-left: 6rpx solid #7f4515;
-}
-
-.answer-item {
-    display: flex;
-    align-items: center;
-    gap: 16rpx;
-}
-
-.answer-letter {
-    width: 48rpx;
-    height: 48rpx;
-    background: linear-gradient(135deg, #7f4515, #8c5527);
-    color: #ffffff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24rpx;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.answer-text {
-    font-size: 26rpx;
-    color: var(--text-primary);
-    line-height: 1.6;
-    font-weight: 500;
-    flex: 1;
-}
-
-// 状态页面样式
-.empty-state,
-.initial-state,
-.loading-state {
-    padding: 80rpx 40rpx;
-}
-
-.empty-content,
-.initial-content,
-.loading-content {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 30rpx;
-}
-
-.empty-icon,
-.initial-icon,
-.loading-spinner {
-    opacity: 0.6;
-}
-
-.empty-title,
-.initial-title,
-.loading-text {
-    font-size: 32rpx;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.empty-subtitle,
-.initial-subtitle,
-.loading-subtitle {
-    font-size: 24rpx;
-    color: var(--text-secondary);
-    text-align: center;
-    line-height: 1.5;
-}
-
-.retry-btn {
-    width: 200rpx;
-    margin-top: 20rpx;
-}
-
-// 提示区域
-.tips-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16rpx;
-    margin-top: 30rpx;
-}
-
-.tip-item {
-    display: flex;
-    align-items: center;
-    gap: 12rpx;
-    padding: 12rpx 20rpx;
-    background: rgba(127, 69, 21, 0.05);
-    border-radius: 12rpx;
-    border: 1rpx solid rgba(127, 69, 21, 0.1);
-}
-
-.tip-text {
-    font-size: 24rpx;
-    color: var(--text-secondary);
-}
-
-// 加载动画
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.loading-spinner {
-    animation: spin 1s linear infinite;
-}
-
-// 交流群信息样式
-.group-info-card {
-    margin: 0 30rpx 15rpx;
-    padding: 30rpx;
-    background: linear-gradient(135deg, rgba(24, 144, 255, 0.05), rgba(24, 144, 255, 0.08));
-    border: 1rpx solid rgba(24, 144, 255, 0.2);
-    border-left: 6rpx solid #1890ff;
-}
-
-.group-header {
-    display: flex;
-    align-items: center;
-    gap: 16rpx;
-    margin-bottom: 20rpx;
-}
-
-.group-icon {
-    width: 40rpx;
-    height: 40rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.group-title {
-    font-size: 28rpx;
-    font-weight: 700;
-    color: #1890ff;
-}
-
-.group-content {
-    padding-left: 56rpx;
-}
-
-.group-description {
-    display: block;
-    font-size: 26rpx;
-    color: #495057;
-    line-height: 1.6;
-    margin-bottom: 16rpx;
-}
-
-.group-number {
-    display: flex;
-    align-items: center;
-    gap: 8rpx;
-    padding: 12rpx 16rpx;
-    background: rgba(24, 144, 255, 0.1);
-    border-radius: 8rpx;
-    margin-bottom: 12rpx;
-    cursor: pointer;
-    transition: all 0.3s ease;
-
-    &:active {
-        transform: scale(0.98);
-        background: rgba(24, 144, 255, 0.15);
-    }
-}
-
-.group-label {
-    font-size: 24rpx;
-    color: #495057;
-    font-weight: 500;
-}
-
-.group-id {
-    font-size: 26rpx;
-    color: #1890ff;
-    font-weight: 700;
-    letter-spacing: 1rpx;
-    flex: 1;
-}
-
-.copy-icon {
-    width: 24rpx;
-    height: 24rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.group-hint {
-    font-size: 22rpx;
-    color: #8c8c8c;
-    font-style: italic;
-}
-
-// 响应式适配（添加交流群的适配）
+// 响应式适配
 @media (max-width: 600rpx) {
-    .disclaimer-card {
-        margin: 0 15rpx 12rpx;
-        padding: 24rpx;
-    }
-
-    .disclaimer-content {
-        padding-left: 0;
-        margin-top: 16rpx;
-    }
-
-    .disclaimer-text {
-        font-size: 22rpx;
-    }
-
     .content-wrapper {
         padding: 0 15rpx 30rpx;
     }
 
-    .search-card {
-        padding: 25rpx;
-    }
-
-    .button-group {
-        flex-direction: column;
-    }
-
     .page-title {
         font-size: 36rpx;
-    }
-
-    .question-card {
-        margin-bottom: 20rpx;
-    }
-
-    .question-header {
-        padding: 20rpx 24rpx;
-    }
-
-    .question-content {
-        padding: 24rpx;
-    }
-
-    .question-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12rpx;
-    }
-
-    .question-number {
-        flex: none;
-        width: 100%;
-    }
-
-    .type-badge,
-    .similarity-badge {
-        align-self: flex-start;
-    }
-
-    .question-meta {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .option-item {
-        padding: 12rpx 16rpx;
-    }
-
-    .answer-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12rpx;
-    }
-
-    .answer-letter {
-        align-self: flex-start;
-    }
-
-    .group-info-card {
-        margin: 0 15rpx 12rpx;
-        padding: 24rpx;
-    }
-
-    .group-content {
-        padding-left: 0;
-        margin-top: 16rpx;
-    }
-
-    .group-description {
-        font-size: 24rpx;
-    }
-
-    .group-number {
-        padding: 10rpx 14rpx;
-    }
-
-    .group-label {
-        font-size: 22rpx;
-    }
-
-    .group-id {
-        font-size: 24rpx;
-    }
-
-    .group-hint {
-        font-size: 20rpx;
     }
 }
 </style>

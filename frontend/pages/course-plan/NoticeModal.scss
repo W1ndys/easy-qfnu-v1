@@ -1,0 +1,123 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 32rpx;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-container {
+  background: #ffffff;
+  border-radius: 20rpx;
+  max-width: 600rpx;
+  width: 100%;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100rpx);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 退出动画关键帧 */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100rpx);
+    opacity: 0;
+  }
+}
+
+/* overlay 的离场动画 */
+.modal-leave-active {
+  animation: fadeOut 0.25s ease-in forwards;
+}
+
+/* 弹窗容器的离场动画（配合 overlay 一起） */
+.modal-leave-active .modal-container {
+  animation: slideDown 0.25s ease-in forwards;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 24rpx 24rpx 16rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.modal-content {
+  padding: 24rpx;
+}
+
+.notice-text {
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.modal-actions {
+  display: flex;
+  padding: 16rpx 24rpx 24rpx;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  padding: 12rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.primary-btn {
+  background-color: #834A1A;
+  color: white;
+}
+
+.primary-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(131, 74, 26, 0.3);
+}

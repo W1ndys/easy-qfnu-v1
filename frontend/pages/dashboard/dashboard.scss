@@ -1,0 +1,14 @@
+@import "../../styles/common.scss";
+
+.user-profile-page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.page-rounded-container {
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 12rpx 8rpx;
+  box-shadow: 0 8rpx 24rpx var(--shadow-light);
+  border: 1rpx solid var(--border-light);
+}
