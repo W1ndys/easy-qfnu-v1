@@ -1,4 +1,5 @@
 // API服务模块 - 处理成绩相关的数据请求
+import { ProfileAPI } from "../dashboard/ProfileCard.js";
 
 /**
  * 获取成绩数据
@@ -7,6 +8,13 @@
 export const fetchGradesData = async () => {
     const API_BASE_URL = getApp().globalData.apiBaseURL
     const API_GRADES_URL = `${API_BASE_URL}/api/v1/grades`
+
+    // 检查个人信息是否可用（用于日志记录）
+    if (ProfileAPI.isProfileAvailable()) {
+        const studentId = ProfileAPI.getStudentId();
+        const studentName = ProfileAPI.getStudentName();
+        console.log(`正在为学生 ${studentName}(${studentId}) 获取成绩数据`);
+    }
 
     try {
         const { statusCode, data } = await uni.request({
@@ -51,9 +59,17 @@ export const calculateCustomGPA = async (selectedIndices) => {
     const API_BASE_URL = getApp().globalData.apiBaseURL
     const API_GPA_CALCULATE_URL = `${API_BASE_URL}/api/v1/gpa/calculate`
 
+    // 可以在请求中包含学生信息用于服务端日志记录
     const payload = {
         include_indices: selectedIndices.map(String), // 确保索引是字符串
         remove_retakes: true
+    };
+
+    // 如果个人信息可用，添加到payload中（可选）
+    if (ProfileAPI.isProfileAvailable()) {
+        const studentId = ProfileAPI.getStudentId();
+        console.log(`正在为学生 ${studentId} 计算自定义GPA`);
+        // payload.student_id = studentId; // 根据API需求决定是否添加
     }
 
     try {
@@ -110,4 +126,32 @@ export const checkLoginStatus = () => {
         return false
     }
     return true
+}
+
+/**
+ * 获取当前学生的基本信息（用于其他API调用）
+ * @returns {Object|null} 学生基本信息或null
+ */
+export const getCurrentStudentInfo = () => {
+    if (!ProfileAPI.isProfileAvailable()) {
+        console.warn("个人信息缓存不可用");
+        return null;
+    }
+
+    return {
+        studentId: ProfileAPI.getStudentId(),
+        studentName: ProfileAPI.getStudentName(),
+        college: ProfileAPI.getCollege(),
+        major: ProfileAPI.getMajor(),
+        className: ProfileAPI.getClassName()
+    };
+}
+
+/**
+ * 检查是否有足够的学生信息进行API调用
+ * @returns {boolean} 是否有足够信息
+ */
+export const hasRequiredStudentInfo = () => {
+    const studentId = ProfileAPI.getStudentId();
+    return studentId && studentId !== "加载中...";
 }
