@@ -1,11 +1,11 @@
 <template>
   <ModernCard class="profile-card" highlight>
-    <view class="profile-content">
+    <view class="profile-content" :class="{ 'loading': loading }">
       <view class="identity-section">
         <view class="avatar-wrapper">
           <image class="avatar" src="https://pic1.zhimg.com/80/v2-82c1c70c69720aadac79594ea50ed4a7.png"
             mode="aspectFit"></image>
-          <view class="status-indicator"></view>
+          <view class="status-indicator" :class="{ 'loading-pulse': loading }"></view>
         </view>
         <view class="identity-info">
           <text class="welcome-text">欢迎回来~</text>
@@ -32,21 +32,29 @@
 </template>
 
 <script setup>
+import { onMounted } from "vue";
 import ModernCard from "../../components/ModernCard/ModernCard.vue";
-import profileCardLogic from "./ProfileCard.js";
+import { useProfileCard } from "./ProfileCard.js";
 
-defineProps({
-  profile: {
-    type: Object,
-    required: true,
-    default: () => ({
-      student_name: "W1ndys",
-      student_id: "加载中...",
-      college: "曲奇学院",
-      major: "曲奇专业",
-      class_name: "22曲奇班",
-    })
-  }
+// 使用 ProfileCard 的业务逻辑
+const {
+  profile,
+  loading,
+  fetchProfile,
+  refreshProfile,
+  initProfile
+} = useProfileCard();
+
+// 组件挂载时初始化用户资料
+onMounted(() => {
+  initProfile();
+});
+
+// 暴露方法给父组件使用
+defineExpose({
+  refreshProfile,
+  fetchProfile,
+  profile
 });
 </script>
 

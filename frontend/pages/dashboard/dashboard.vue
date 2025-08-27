@@ -3,7 +3,7 @@
     <PageLayout>
       <view class="page-rounded-container">
         <!-- 用户信息卡片 -->
-        <ProfileCard :profile="profile" />
+        <ProfileCard ref="profileCardRef" />
 
         <!-- 公告栏 -->
         <NoticeBar :notice-data="noticeData" @click="openNoticeModal" />
@@ -49,8 +49,8 @@ const {
   // 数据
   noticeModalRef,
   calendarModalRef,
+  profileCardRef,
   noticeData,
-  profile,
   features,
 
   // 方法

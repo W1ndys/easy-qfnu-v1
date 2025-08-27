@@ -55,14 +55,8 @@ export function useDashboard() {
         }
     };
 
-    // ==================== 用户数据 ====================
-    const profile = ref({
-        student_name: "W1ndys",
-        student_id: "加载中...",
-        college: "曲奇学院",
-        major: "曲奇专业",
-        class_name: "22曲奇班",
-    });
+    // ==================== ProfileCard 引用 ====================
+    const profileCardRef = ref(null);
 
     const features = ref([
         { text: "成绩查询", description: "查看成绩与GPA分析", icon: "paperplane", url: "/pages/grades/grades" },
@@ -76,48 +70,7 @@ export function useDashboard() {
         { text: "更多功能", description: "敬请期待", icon: "gear", url: "" },
     ]);
 
-    // ==================== 数据获取 ====================
-    const fetchProfile = async () => {
-        const token = uni.getStorageSync("token");
-        if (!token) return;
-        const baseURL = getApp().globalData.apiBaseURL;
-        uni.request({
-            url: `${baseURL}/api/v1/profile`,
-            method: "GET",
-            header: { Authorization: `Bearer ${token}` },
-            success: (res) => {
-                if (res.statusCode === 200 && res.data.success) {
-                    const serverData = res.data.data;
-                    const studentId = serverData.student_id || (() => {
-                        try {
-                            const payload = decode(token);
-                            return payload.sub;
-                        } catch (e) {
-                            return profile.value.student_id;
-                        }
-                    })();
 
-                    profile.value = {
-                        student_name: serverData.student_name || profile.value.student_name,
-                        student_id: studentId,
-                        college: serverData.college || profile.value.college,
-                        major: serverData.major || profile.value.major,
-                        class_name: serverData.class_name || profile.value.class_name,
-                    };
-                } else {
-                    uni.showToast({ title: res.data.message || `获取信息失败 (${res.statusCode})`, icon: "none" });
-                    if (res.statusCode === 401) {
-                        uni.removeStorageSync("token");
-                        setTimeout(() => { uni.reLaunch({ url: "/pages/index/index" }); }, 1500);
-                    }
-                }
-            },
-            fail: (err) => {
-                console.error("获取个人信息请求失败", err);
-                uni.showToast({ title: "网络请求失败，请稍后重试", icon: "none" });
-            },
-        });
-    };
 
     const checkLoginStatus = () => {
         const token = uni.getStorageSync("token");
@@ -128,9 +81,7 @@ export function useDashboard() {
         } else {
             try {
                 const payload = decode(token);
-                if (!profile.value.student_name || profile.value.student_name === "W1ndys") {
-                    fetchProfile();
-                }
+                console.log("Token验证成功", payload);
             } catch (error) {
                 console.error("Token解析失败", error);
                 uni.removeStorageSync("token");
@@ -162,11 +113,12 @@ export function useDashboard() {
     };
 
     const handleRefresh = () => {
-        uni.showLoading({ title: "正在刷新..." });
-        fetchProfile().finally(() => {
-            uni.hideLoading();
-            uni.showToast({ title: "数据已刷新", icon: "success" });
-        });
+        // 通过 ProfileCard 组件刷新用户资料
+        if (profileCardRef.value && profileCardRef.value.refreshProfile) {
+            profileCardRef.value.refreshProfile();
+        } else {
+            uni.showToast({ title: "刷新功能暂不可用", icon: "none" });
+        }
     };
 
     const handleLogout = () => {
@@ -270,7 +222,7 @@ export function useDashboard() {
 
         onShow(() => {
             const token = uni.getStorageSync("token");
-            if (token && (!profile.value.student_id || profile.value.student_id === "加载中...")) {
+            if (token) {
                 checkLoginStatus();
             }
         });
@@ -280,8 +232,8 @@ export function useDashboard() {
         // 数据
         noticeModalRef,
         calendarModalRef,
+        profileCardRef,
         noticeData,
-        profile,
         features,
 
         // 方法
