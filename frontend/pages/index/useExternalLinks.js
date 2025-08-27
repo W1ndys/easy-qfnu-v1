@@ -5,6 +5,15 @@ export function useExternalLinks() {
 
     // 打开用户协议
     const openAgreement = () => {
+        // #ifdef H5
+        // H5 环境直接跳转
+        if (typeof window !== "undefined" && window.open) {
+            window.open(AGREEMENT_URL, "_blank");
+            return;
+        }
+        // #endif
+
+        // 其他平台显示选择弹窗
         uni.showModal({
             title: "用户协议",
             content: `即将跳转到用户协议页面：\n${AGREEMENT_URL}\n\n是否继续？`,
@@ -34,6 +43,15 @@ export function useExternalLinks() {
 
     // 打开账号激活页面
     const openActivationPage = () => {
+        // #ifdef H5
+        // H5 环境直接跳转
+        if (typeof window !== "undefined" && window.open) {
+            window.open(ACTIVATION_URL, "_blank");
+            return;
+        }
+        // #endif
+
+        // 其他平台显示选择弹窗
         uni.showModal({
             title: "账号激活",
             content: `即将跳转到账号激活页面：\n${ACTIVATION_URL}\n\n是否继续？`,
