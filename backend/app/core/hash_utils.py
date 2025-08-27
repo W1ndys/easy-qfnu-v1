@@ -5,7 +5,7 @@ import os
 from loguru import logger
 
 # 从环境变量读取盐值，如果没有则使用默认值（生产环境中应该设置环境变量）
-HASH_SALT = os.getenv("STUDENT_ID_SALT", "EasyQFNUJW_Student_Hash_Salt_2024")
+HASH_SALT = os.getenv("STUDENT_ID_SALT", "STUDENT_ID_SALT")
 
 
 def hash_student_id(student_id: str) -> str:
