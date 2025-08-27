@@ -113,7 +113,7 @@ const agreed = ref(false);
 // 新增：跳转到新生搜索页面
 const goToFreshmanSearch = () => {
   uni.navigateTo({
-    url: "/pages/freshman-questions-search/index",
+    url: "/pages/freshman-questions-search/freshman-questions-search",
   });
 };
 
