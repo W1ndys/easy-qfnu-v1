@@ -18,9 +18,10 @@ class HttpStatusError(Exception):
         self.url = url
 
 
-def get_jx0502zbid(session: Session) -> Optional[str]:
+def get_jx0502zbid_and_name(session: Session) -> Optional[Dict[str, str]]:
     """
-    获取教务系统中的选课轮次编号(jx0502zbid)
+    获取教务系统中的选课轮次编号(jx0502zbid)和选课轮次名称(jx0502zbmc)
+    返回: {"jx0502zbid": "选课ID", "name": "选课名称"} 或 None
     """
     url = "http://zhjw.qfnu.edu.cn/jsxsd/xsxk/xklc_list"
     jx0502zbid_pattern = re.compile(r"jx0502zbid=([^&]+)")
@@ -29,16 +30,29 @@ def get_jx0502zbid(session: Session) -> Optional[str]:
         resp = session.get(url, timeout=10)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
-        rows = soup.find_all("tr")
 
-        # 忽略学期筛选，直接返回第一个有效的 jx0502zbid
+        # 查找表格
+        table = soup.find("table", {"id": "tbKxkc"})
+        if not table:
+            logging.warning("未找到选课列表表格")
+            return None
+
+        rows = table.find_all("tr")  # type: ignore
+
+        # 跳过表头，从第二行开始解析
         for row in rows[1:]:
             try:
-                link = row.find("a", href=True)  # type: ignore
-                if link and "jx0502zbid" in link["href"]:  # type: ignore
-                    m = jx0502zbid_pattern.search(link["href"])  # type: ignore
-                    if m:
-                        return m.group(1)
+                cells = row.find_all("td")  # type: ignore
+                if len(cells) >= 4:  # 确保有足够的列
+                    # 获取选课名称（第2列，索引1）
+                    course_name = cells[1].get_text(strip=True)
+
+                    # 获取操作列中的链接（第4列，索引3）
+                    link = cells[3].find("a", href=True)  # type: ignore
+                    if link and "jx0502zbid" in link["href"]:  # type: ignore
+                        m = jx0502zbid_pattern.search(link["href"])  # type: ignore
+                        if m:
+                            return {"jx0502zbid": m.group(1), "name": course_name}
             except (AttributeError, IndexError) as e:
                 logging.warning(f"解析行数据时出错: {str(e)}")
                 continue
@@ -286,15 +300,15 @@ def pre_select_course_query(
         week_day: 上课星期(可选)
         class_period: 上课节次(可选)
     """
-    # 1) 获取选课轮次编号
-    jx0502zbid = get_jx0502zbid(session)
-    if not jx0502zbid:
+    # 1) 获取选课轮次编号和名称
+    jx0502zbid_and_name = get_jx0502zbid_and_name(session)
+    if not jx0502zbid_and_name:
         raise RuntimeError("未获取到有效的选课轮次编号，可能是当前未开放任何轮次的选课")
 
     # 2) 刷新选课上下文session
     _safe_get(
         session,
-        f"http://zhjw.qfnu.edu.cn/jsxsd/xsxk/xsxk_index?jx0502zbid={jx0502zbid}",
+        f"http://zhjw.qfnu.edu.cn/jsxsd/xsxk/xsxk_index?jx0502zbid={jx0502zbid_and_name['jx0502zbid']}",
     )
 
     # 3) 依次查询模块
@@ -321,7 +335,8 @@ def pre_select_course_query(
             continue
 
     return {
-        "jx0502zbid": jx0502zbid,
+        "jx0502zbid": jx0502zbid_and_name["jx0502zbid"],
+        "jx0502zbmc": jx0502zbid_and_name["name"],
         "modules": results,
         "errors": errors,
     }
