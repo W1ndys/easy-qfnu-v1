@@ -14,7 +14,7 @@
 
             <view class="page-header">
                 <view class="header-content">
-                    <text class="page-title">预选课查询</text>
+                    <text class="page-title">选课查询</text>
                     <text class="page-subtitle">Pre-select Course Search</text>
                 </view>
             </view>
@@ -79,7 +79,7 @@ const totalCount = computed(() => {
 
 onLoad(() => {
     if (!ensureLogin()) return;
-    uni.setNavigationBarTitle({ title: "预选课查询" });
+    uni.setNavigationBarTitle({ title: "选课查询" });
     isLoading.value = false;
     // 显示使用提示弹窗
     showTipModal.value = true;
@@ -176,7 +176,7 @@ async function fetchData() {
                 allow: allow || "",
                 message: typeof res === "string" ? res : JSON.stringify(res),
             };
-            console.warn("预选课查询失败", debugInfo.value);
+            console.warn("选课查询失败", debugInfo.value);
         }
     } catch (e) {
         console.error("请求失败", e);

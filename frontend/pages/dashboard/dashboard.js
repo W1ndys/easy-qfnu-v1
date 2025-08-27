@@ -63,7 +63,7 @@ export function useDashboard() {
         { text: "平均分查询", description: "查看课程平均分数据", icon: "bars", url: "/pages/average-scores/average-scores" },
         { text: "选课推荐", description: "智能推荐选课方案", icon: "star", url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/", external: true },
         { text: "培养方案", description: "查看模块完成进度", icon: "list", url: "/pages/course-plan/course-plan" },
-        { text: "预选课查询", description: "支持选课模块探测", icon: "checkmarkempty", url: "/pages/pre-select-course/pre-select-course" },
+        { text: "选课查询", description: "支持选课模块探测", icon: "checkmarkempty", url: "/pages/pre-select-course/pre-select-course" },
         { text: "查看校历", description: "查看最新校历", icon: "calendar", url: "calendar", external: false },
         { text: "课表查询", description: "即将推出", icon: "calendar", url: "" },
         { text: "排名查询", description: "即将推出", icon: "medal", url: "" },
@@ -180,7 +180,7 @@ export function useDashboard() {
 
     const handleShareSite = () => {
         const shareText = `我发现一个超级好用的曲师大教务工具，你也来看看吧
-多维度成绩分析、历史平均分查询、选课推荐、培养方案解析、预选课查询，各种功能~
+多维度成绩分析、历史平均分查询、选课推荐、培养方案解析、选课查询，各种功能~
 地址：https://easy-qfnu.top`;
 
         uni.setClipboardData({

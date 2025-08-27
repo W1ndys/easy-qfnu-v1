@@ -47,7 +47,7 @@
 		{
 			"path": "pages/pre-select-course/pre-select-course",
 			"style": {
-				"navigationBarTitleText": "预选课查询",
+				"navigationBarTitleText": "选课查询",
 				"enablePullDownRefresh": false
 			}
 		},
@@ -58,10 +58,9 @@
 			}
 		},
 		{
-			"path" : "pages/example/example",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
+			"path": "pages/example/example",
+			"style": {
+				"navigationBarTitleText": ""
 			}
 		}
 	],
