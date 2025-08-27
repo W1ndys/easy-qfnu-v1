@@ -212,12 +212,12 @@ const calendarPopup = ref(null);
 // ==================== MODIFICATION START: 公告机制 ====================
 // 公告数据结构 (在真实应用中，这部分数据应该从服务器获取)
 const noticeData = ref({
-  version: "4", // 公告版本号，每次更新公告时递增或修改
+  version: "5", // 公告版本号，每次更新公告时递增或修改
   title: "重要通知：请加用户群防走丢！",
   content: `<div style="line-height: 1.6;">
     <p style="margin-bottom: 16rpx;">我们新增了用户QQ群，欢迎加入</p>
     <p style="margin-bottom: 16rpx;">后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限</p>
-    <p style="margin-bottom: 16rpx;"></p>
+    <p style="margin-bottom: 16rpx; color: red;">仪表盘下方新增了分享本站功能，欢迎分享给朋友</p>
     <br>
     <p style="margin-bottom: 16rpx;">
       帮朋友转出奥创健身年卡，需要请联系QQ 
