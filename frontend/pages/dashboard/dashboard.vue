@@ -129,7 +129,7 @@
           </view>
         </view>
         <view class="popup-body">
-          <text class="status-text">{{ noticeData.content }}</text>
+          <rich-text class="status-text" :nodes="noticeData.content"></rich-text>
           <view class="community-content-wrapper">
             <view class="community-groups">
               <view class="group-item">
@@ -199,7 +199,19 @@ const calendarPopup = ref(null);
 const noticeData = ref({
   version: "4", // 公告版本号，每次更新公告时递增或修改
   title: "重要通知：请加用户群防走丢！",
-  content: "我们新增了用户QQ群，欢迎加入\n后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限\n\n帮朋友转出奥创健身年卡，需要请联系QQ 1053240065 （备注曲奇教务来的）",
+  content: `<div style="line-height: 1.6;">
+    <p style="margin-bottom: 16rpx;">我们新增了用户QQ群，欢迎加入</p>
+    <p style="margin-bottom: 16rpx;">后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限</p>
+    <p style="margin-bottom: 16rpx;"></p>
+    <p style="margin-bottom: 16rpx;">
+      帮朋友转出奥创健身年卡，需要请联系QQ 
+      <span 
+        style="color: #7F4515; font-weight: 600; user-select: all; cursor: pointer;" 
+        onclick="navigator.clipboard && navigator.clipboard.writeText && navigator.clipboard.writeText('1053240065');uni.showToast && uni.showToast({title: 'QQ号已复制', icon: 'none'});"
+      >1053240065</span>
+      （点击QQ号可复制，备注曲奇教务来的）
+    </p>
+  </div>`,
   timestamp: Date.now(),
   forceShow: false // 是否强制显示（即使已读过，只要版本号更新就会再次弹出）
 });
