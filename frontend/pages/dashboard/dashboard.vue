@@ -97,6 +97,11 @@
               <uni-icons type="heart" size="20"></uni-icons>
               <text>赞赏名单</text>
             </button>
+
+            <button class="action-btn btn-secondary" @click="handleShareSite">
+              <uni-icons type="redo" size="20"></uni-icons>
+              <text>分享本站</text>
+            </button>
           </view>
         </ModernCard>
 
@@ -130,6 +135,16 @@
         </view>
         <view class="popup-body">
           <rich-text class="status-text" :nodes="noticeData.content"></rich-text>
+
+          <!-- 添加QQ号复制按钮 -->
+          <view class="qq-copy-section">
+            <text class="copy-label">快速复制QQ号：</text>
+            <button class="qq-copy-btn" @click="copyQQNumber">
+              <uni-icons type="copy" size="16" color="#7F4515"></uni-icons>
+              <text>1053240065</text>
+            </button>
+          </view>
+
           <view class="community-content-wrapper">
             <view class="community-groups">
               <view class="group-item">
@@ -203,13 +218,11 @@ const noticeData = ref({
     <p style="margin-bottom: 16rpx;">我们新增了用户QQ群，欢迎加入</p>
     <p style="margin-bottom: 16rpx;">后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限</p>
     <p style="margin-bottom: 16rpx;"></p>
+    <br>
     <p style="margin-bottom: 16rpx;">
       帮朋友转出奥创健身年卡，需要请联系QQ 
-      <span 
-        style="color: #7F4515; font-weight: 600; user-select: all; cursor: pointer;" 
-        onclick="navigator.clipboard && navigator.clipboard.writeText && navigator.clipboard.writeText('1053240065');uni.showToast && uni.showToast({title: 'QQ号已复制', icon: 'none'});"
-      >1053240065</span>
-      （点击QQ号可复制，备注曲奇教务来的）
+      <span style="color: #7F4515; font-weight: 600; user-select: all;">1053240065</span>
+      （长按QQ号可复制，备注曲奇教务来的）
     </p>
   </div>`,
   timestamp: Date.now(),
@@ -491,6 +504,29 @@ const handleSponsorList = () => {
   handleExternalLink("赞赏名单", sponsorUrl);
 };
 
+const handleShareSite = () => {
+  const shareText = `我发现一个超级好用的曲师大教务工具，你也来看看吧
+多维度成绩分析、历史平均分查询、选课推荐、培养方案解析、预选课查询，各种功能~
+地址：https://easy-qfnu.top`;
+
+  uni.setClipboardData({
+    data: shareText,
+    success: () => {
+      uni.showToast({
+        title: "分享内容已复制到剪贴板",
+        icon: "success",
+        duration: 2000
+      });
+    },
+    fail: () => {
+      uni.showToast({
+        title: "复制失败，请手动复制",
+        icon: "none"
+      });
+    }
+  });
+};
+
 const handleExternalLink = (title, url) => {
   if (typeof window !== 'undefined') window.open(url, "_blank");
   else if (typeof plus !== 'undefined') plus.runtime.openURL(url);
@@ -502,6 +538,29 @@ const handleImageLoad = () => { console.log("赞赏码加载成功"); };
 
 const handleCalendarImageError = () => { uni.showToast({ title: "校历图片加载失败", icon: "none" }); };
 const handleCalendarImageLoad = () => { console.log("校历图片加载成功"); };
+
+/**
+ * @description: 复制QQ号到剪贴板
+ */
+const copyQQNumber = () => {
+  const qqNumber = "1053240065";
+  uni.setClipboardData({
+    data: qqNumber,
+    success: () => {
+      uni.showToast({
+        title: `QQ号 ${qqNumber} 已复制`,
+        icon: "success",
+        duration: 2000
+      });
+    },
+    fail: () => {
+      uni.showToast({
+        title: "复制失败，请手动复制",
+        icon: "none"
+      });
+    }
+  });
+};
 </script>
 
 <style lang="scss" scoped>
@@ -739,6 +798,53 @@ const handleCalendarImageLoad = () => { console.log("校历图片加载成功");
   line-height: 1.5;
   margin-top: 0;
   padding-left: 10rpx;
+}
+
+/* QQ号复制区域样式 */
+.qq-copy-section {
+  background: #ffffff;
+  padding: 20rpx;
+  border-radius: var(--radius-medium);
+  border: 1rpx solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.copy-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.qq-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 20rpx;
+  background: rgba(127, 69, 21, 0.08);
+  border: 1rpx solid rgba(127, 69, 21, 0.15);
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: #7f4515;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  min-width: 160rpx;
+  justify-content: center;
+
+  &::after {
+    border: none;
+  }
+
+  &:active {
+    background: rgba(127, 69, 21, 0.15);
+    transform: scale(0.95);
+  }
+
+  text {
+    font-weight: inherit;
+  }
 }
 
 .community-content-wrapper {
