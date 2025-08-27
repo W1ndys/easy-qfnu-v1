@@ -7,19 +7,57 @@ class ProfileCache {
     static CACHE_KEY = "user_profile_cache";
     static CACHE_EXPIRE_TIME = 30 * 60 * 1000; // 30分钟过期时间
 
+    // 获取当前用户的唯一标识
+    static getCurrentUserKey() {
+        const token = uni.getStorageSync("token");
+        if (!token) return null;
+
+        try {
+            // 从token中提取用户ID作为唯一标识
+            const payload = decode(token);
+            return payload.sub || payload.user_id || payload.id || token.substring(0, 32);
+        } catch (error) {
+            // 如果token解析失败，使用token的前32位作为标识
+            return token.substring(0, 32);
+        }
+    }
+
     // 保存个人信息到缓存
     static save(profileData) {
         try {
+            const userKey = this.getCurrentUserKey();
+            if (!userKey) {
+                console.warn("无法获取用户标识，跳过缓存");
+                return;
+            }
+
             const cacheData = {
                 profile: profileData,
                 timestamp: Date.now(),
-                version: "1.0"
+                version: "1.1",
+                userKey: userKey, // 添加用户标识
+                tokenHash: this.getTokenHash() // 添加token哈希用于验证
             };
             uni.setStorageSync(this.CACHE_KEY, JSON.stringify(cacheData));
-            console.log("个人信息已缓存", profileData);
+            console.log("个人信息已缓存", { user: userKey, profile: profileData });
         } catch (error) {
             console.error("缓存个人信息失败", error);
         }
+    }
+
+    // 获取token的哈希值用于验证
+    static getTokenHash() {
+        const token = uni.getStorageSync("token");
+        if (!token) return null;
+
+        // 简单的哈希算法，用于检测token变化
+        let hash = 0;
+        for (let i = 0; i < token.length; i++) {
+            const char = token.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // 转换为32位整数
+        }
+        return hash.toString();
     }
 
     // 从缓存读取个人信息
@@ -35,6 +73,25 @@ class ProfileCache {
             // 检查缓存是否过期
             if (this.isExpired(cacheData.timestamp)) {
                 console.log("个人信息缓存已过期，清除缓存");
+                this.clear();
+                return null;
+            }
+
+            // 检查是否是当前用户的缓存
+            const currentUserKey = this.getCurrentUserKey();
+            if (!currentUserKey || cacheData.userKey !== currentUserKey) {
+                console.log("缓存用户不匹配，清除旧缓存", {
+                    cached: cacheData.userKey,
+                    current: currentUserKey
+                });
+                this.clear();
+                return null;
+            }
+
+            // 检查token是否已变化
+            const currentTokenHash = this.getTokenHash();
+            if (cacheData.tokenHash && cacheData.tokenHash !== currentTokenHash) {
+                console.log("Token已变化，清除缓存");
                 this.clear();
                 return null;
             }
@@ -81,9 +138,37 @@ class ProfileCache {
             if (!cacheString) return false;
 
             const cacheData = JSON.parse(cacheString);
-            return !this.isExpired(cacheData.timestamp);
+
+            // 检查过期时间
+            if (this.isExpired(cacheData.timestamp)) {
+                return false;
+            }
+
+            // 检查用户标识
+            const currentUserKey = this.getCurrentUserKey();
+            if (!currentUserKey || cacheData.userKey !== currentUserKey) {
+                return false;
+            }
+
+            // 检查token变化
+            const currentTokenHash = this.getTokenHash();
+            if (cacheData.tokenHash && cacheData.tokenHash !== currentTokenHash) {
+                return false;
+            }
+
+            return true;
         } catch (error) {
             return false;
+        }
+    }
+
+    // 强制清除所有用户的缓存（登出时使用）
+    static clearAll() {
+        try {
+            uni.removeStorageSync(this.CACHE_KEY);
+            console.log("所有用户的个人信息缓存已清除");
+        } catch (error) {
+            console.error("清除缓存失败", error);
         }
     }
 }
@@ -133,6 +218,57 @@ export const ProfileAPI = {
     // 清除个人信息缓存
     clearProfile() {
         ProfileCache.clear();
+    },
+
+    // 清除所有缓存（登出时使用）
+    clearAllProfiles() {
+        ProfileCache.clearAll();
+    },
+
+    // 检查当前登录状态并清理无效缓存
+    validateAndCleanCache() {
+        const token = uni.getStorageSync("token");
+        if (!token) {
+            // 没有token时清除所有缓存
+            ProfileCache.clearAll();
+            return false;
+        }
+
+        // 如果缓存无效，自动清除
+        if (!ProfileCache.isValid()) {
+            ProfileCache.clear();
+            return false;
+        }
+
+        return true;
+    },
+
+    // 调试方法：获取缓存详细信息
+    getCacheDebugInfo() {
+        const cacheString = uni.getStorageSync("user_profile_cache");
+        if (!cacheString) {
+            return { status: "no_cache", message: "没有缓存数据" };
+        }
+
+        try {
+            const cacheData = JSON.parse(cacheString);
+            const currentUserKey = ProfileCache.getCurrentUserKey();
+            const currentTokenHash = ProfileCache.getTokenHash();
+
+            return {
+                status: "has_cache",
+                cacheUserKey: cacheData.userKey,
+                currentUserKey: currentUserKey,
+                cacheTokenHash: cacheData.tokenHash,
+                currentTokenHash: currentTokenHash,
+                isExpired: ProfileCache.isExpired(cacheData.timestamp),
+                isValid: ProfileCache.isValid(),
+                timestamp: new Date(cacheData.timestamp).toLocaleString(),
+                version: cacheData.version
+            };
+        } catch (error) {
+            return { status: "error", message: "缓存数据损坏", error: error.message };
+        }
     }
 };
 
@@ -254,21 +390,28 @@ export function useProfileCard() {
     // 检查并初始化用户资料
     const initProfile = () => {
         const token = uni.getStorageSync("token");
-        if (token) {
-            // 首先尝试从缓存加载
-            const cacheLoaded = loadFromCache();
+        if (!token) {
+            // 没有token时清除所有缓存
+            ProfileCache.clearAll();
+            return;
+        }
 
-            if (!cacheLoaded) {
-                // 缓存不存在或过期，从服务器获取
-                console.log("缓存不可用，从服务器获取个人信息");
+        // 验证并清理无效缓存
+        ProfileAPI.validateAndCleanCache();
+
+        // 首先尝试从缓存加载
+        const cacheLoaded = loadFromCache();
+
+        if (!cacheLoaded) {
+            // 缓存不存在或无效，从服务器获取
+            console.log("缓存不可用，从服务器获取个人信息");
+            fetchProfile();
+        } else {
+            // 缓存加载成功，但如果数据是默认值则仍需要从服务器获取
+            if (profile.value.student_name === "W1ndys" ||
+                profile.value.student_id === "加载中...") {
+                console.log("缓存数据不完整，从服务器重新获取");
                 fetchProfile();
-            } else {
-                // 缓存加载成功，但如果数据是默认值则仍需要从服务器获取
-                if (profile.value.student_name === "W1ndys" ||
-                    profile.value.student_id === "加载中...") {
-                    console.log("缓存数据不完整，从服务器重新获取");
-                    fetchProfile();
-                }
             }
         }
     };
@@ -297,7 +440,8 @@ export function useProfileCard() {
         // 缓存管理方法
         clearProfileCache: ProfileCache.clear,
         getCachedProfile: ProfileCache.get,
-        isProfileCacheValid: ProfileCache.isValid
+        isProfileCacheValid: ProfileCache.isValid,
+        getCacheDebugInfo: ProfileAPI.getCacheDebugInfo
     };
 }
 

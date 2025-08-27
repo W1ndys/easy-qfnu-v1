@@ -2,6 +2,7 @@
 import { ref, nextTick } from "vue";
 import { onLoad, onShow } from "@dcloudio/uni-app";
 import { decode } from "../../utils/jwt-decode.js";
+import { ProfileAPI } from "./ProfileCard.js";
 
 export function useDashboard() {
     // 弹窗引用
@@ -126,7 +127,12 @@ export function useDashboard() {
             title: "确认退出", content: "确定要退出登录吗？", confirmColor: "#7F4515",
             success: (res) => {
                 if (res.confirm) {
+                    // 清除token
                     uni.removeStorageSync("token");
+
+                    // 清除个人信息缓存
+                    ProfileAPI.clearAllProfiles();
+
                     uni.showToast({ title: "已退出登录", icon: "success" });
                     setTimeout(() => { uni.reLaunch({ url: "/pages/index/index" }); }, 1000);
                 }
@@ -143,7 +149,11 @@ export function useDashboard() {
                     try {
                         const token = uni.getStorageSync("token");
                         uni.clearStorageSync();
-                        if (token) uni.setStorageSync("token", token);
+                        if (token) {
+                            uni.setStorageSync("token", token);
+                            // 清除个人信息缓存（因为可能包含旧数据）
+                            ProfileAPI.clearProfile();
+                        }
                         uni.showToast({ title: "缓存已清除", icon: "success", duration: 2000 });
                     } catch (e) {
                         uni.showToast({ title: "清除缓存失败", icon: "error" });
