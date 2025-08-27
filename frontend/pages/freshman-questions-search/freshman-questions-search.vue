@@ -85,6 +85,7 @@ export default {
         uni.setNavigationBarTitle({
             title: "新生入学考试辅助",
         });
+        console.log("用户进入新生入学考试辅助页面");
     },
 
     methods: {

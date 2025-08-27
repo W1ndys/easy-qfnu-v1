@@ -63,6 +63,7 @@ export default {
                     showNoticeModal.value = true;
                 }
             }, 500);
+            console.log("用户进入成绩分析页面");
         });
 
         onShow(() => {
@@ -98,8 +99,6 @@ export default {
         };
 
         // --- UI交互与辅助函数 ---
-        const isCourseSelected = (courseIndex) => selectedCourses.value.includes(courseIndex);
-        const isCourseExpanded = (courseIndex) => expandedCourses.value.has(courseIndex);
 
         const toggleExpand = (courseIndex) => {
             if (expandedCourses.value.has(courseIndex)) {

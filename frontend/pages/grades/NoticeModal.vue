@@ -3,7 +3,7 @@
         <view v-if="showModal" class="modal-overlay" @click.self="$emit('close')">
             <view class="modal-container">
                 <view class="modal-header">
-                    <text class="modal-title">成绩查询与GPA分析提示</text>
+                    <text class="modal-title">成绩分析与GPA分析提示</text>
                 </view>
                 <view class="modal-content">
                     <text>

@@ -54,6 +54,7 @@ onLoad(async () => {
     await fetchCurrentSemester(savedYear);
   }
   checkLoginAndFetch();
+  console.log("用户进入培养方案页面");
 });
 
 onShow(() => {

@@ -87,6 +87,7 @@ function handleReset() {
 onMounted(() => {
   uni.setNavigationBarTitle({ title: "平均分查询" });
   checkLoginStatus();
+  console.log("用户进入平均分查询页面");
 });
 </script>
 

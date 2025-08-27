@@ -59,7 +59,7 @@ export function useDashboard() {
     const profileCardRef = ref(null);
 
     const features = ref([
-        { text: "成绩查询", description: "查看成绩与GPA分析", icon: "paperplane", url: "/pages/grades/grades" },
+        { text: "成绩分析", description: "查看成绩与GPA分析", icon: "paperplane", url: "/pages/grades/grades" },
         { text: "平均分查询", description: "查看课程平均分数据", icon: "bars", url: "/pages/average-scores/average-scores" },
         { text: "选课推荐", description: "智能推荐选课方案", icon: "star", url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/", external: true },
         { text: "培养方案", description: "查看模块完成进度", icon: "list", url: "/pages/course-plan/course-plan" },
@@ -218,6 +218,7 @@ export function useDashboard() {
         onLoad(() => {
             checkLoginStatus();
             checkNoticeUpdate();
+            console.log("用户进入仪表盘页面");
         });
 
         onShow(() => {

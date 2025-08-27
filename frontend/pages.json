@@ -17,7 +17,7 @@
 		{
 			"path": "pages/grades/grades",
 			"style": {
-				"navigationBarTitleText": "成绩查询",
+				"navigationBarTitleText": "成绩分析",
 				"enablePullDownRefresh": false
 			}
 		},
