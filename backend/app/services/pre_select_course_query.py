@@ -21,7 +21,7 @@ class HttpStatusError(Exception):
 def get_jx0502zbid_and_name(session: Session) -> Optional[Dict[str, str]]:
     """
     获取教务系统中的选课轮次编号(jx0502zbid)和选课轮次名称(jx0502zbmc)
-    返回: {"jx0502zbid": "选课ID", "name": "选课名称"} 或 None
+    返回: {"jx0502zbid": "选课ID", "name": "选课名称", "semester": "选课学期"} 或 None
     """
     url = "http://zhjw.qfnu.edu.cn/jsxsd/xsxk/xklc_list"
     jx0502zbid_pattern = re.compile(r"jx0502zbid=([^&]+)")
@@ -49,14 +49,18 @@ def get_jx0502zbid_and_name(session: Session) -> Optional[Dict[str, str]]:
                 if len(cells) >= 4:  # 确保有足够的列
                     # 获取选课名称（第2列，索引1）
                     course_name = cells[1].get_text(strip=True)
-
+                    semester = cells[0].get_text(strip=True)
                     # 获取操作列中的链接（第4列，索引3）
                     link = cells[3].find("a", href=True)  # type: ignore
                     if link and "jx0502zbid" in link["href"]:  # type: ignore
                         m = jx0502zbid_pattern.search(link["href"])  # type: ignore
                         if m:
                             candidates.append(
-                                {"jx0502zbid": m.group(1), "name": course_name}
+                                {
+                                    "jx0502zbid": m.group(1),
+                                    "name": course_name,
+                                    "semester": semester,
+                                }
                             )
             except (AttributeError, IndexError) as e:
                 logging.warning(f"解析行数据时出错: {str(e)}")
