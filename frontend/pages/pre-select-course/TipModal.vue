@@ -9,22 +9,18 @@
             </view>
             <view class="tip-content" style="flex-direction: row; flex-wrap: wrap; justify-content: center;">
                 <view class="tip-text" style="text-align: left; line-height: 1.8; font-size: 28rpx;">
-                    <view style="margin-bottom: 18rpx; color: #d03050; font-weight: bold;">
-                        很遗憾，我高估了这个功能的可用性。从理论上讲，我的实现是完全可以做到提前预知选课模块的，但是由于教务系统的隔离性（暂且这么命名），以及系统内某种设定和其他系统内可能的原因，导致搜索结果与预期相差很大，有很多课是本应搜到但实际搜不到的，这一点我也无能为力，敬请谅解。
-                    </view>
                     <view style="margin-bottom: 18rpx; color: #198754; font-weight: bold;">
-                        不过，目前已经想到一种基于统计的办法来平替此功能，实用性还有待测试，敬请期待后续实践效果。
+                        本查询接口为优化查询接口，会匿名化收集你的查询数据，用于统计收集结果参考，仅收集查询结果，不收集个人数据，收集到的数据无法定位到你个人。
                     </view>
                     本数据基于
                     <text style="font-weight: bold; color: #7F4515;">你个人的学生身份</text>
                     和
                     <text style="font-weight: bold; color: #7F4515;">当前开放的</text>
-                    选课年级库进行搜索，如果搜索没有结果，但你从夫子校园或其他地方搜到了开课数据，说明当前教务系统的开课数据对你
-                    <text style="font-weight: bold; color: #f56c6c;">不开放</text>
-                    搜索权限。由于教学安排和教务系统限制，本页面搜索结果不保证准确。
-                    <text style="font-weight: bold; color: #f56c6c;">仅供参考</text>
+                    选课年级库进行搜索，如果搜索没有结果，但你从夫子校园或其他地方搜到了开课数据，说明当前教务系统
+                    <text style="font-weight: bold; color: #f56c6c;">隔离了数据</text>
                     ，请以实际为准。<br />
                     <text style="font-weight: bold; color: #198754;">公选课数据一般是准确的</text>，因为本模块与培养方案无关，公选课开放情况以教务系统为准。
+                    <text style="font-weight: bold; color: #f56c6c;">仅供参考</text>
                 </view>
                 <view class="search-tip"
                     style="margin: 12rpx 0 0 0; color: #868e96; font-size: 24rpx; line-height: 1.7;">
