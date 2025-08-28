@@ -53,6 +53,19 @@ class CourseQueryLogger:
             round_title = query_results.get("select_course_round_name")
             semester = getattr(query_results, "semester", None)  # 如果有学期信息
 
+            # 如果年级与选课轮次不匹配，并且不是补选或退选，则跳过记录
+            if (
+                grade
+                and round_title
+                and f"{grade}级" not in round_title
+                and "补选" not in round_title
+                and "退选" not in round_title
+            ):
+                logger.warning(
+                    f"年级{grade}与选课轮次{round_title}不匹配，且不是补选或退选，跳过记录"
+                )
+                return
+
             # 遍历每个模块的查询结果
             modules = query_results.get("modules", [])
 
