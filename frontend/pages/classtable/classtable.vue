@@ -43,7 +43,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { onLoad, onShow } from "@dcloudio/uni-app";
-import decode from "../../utils/jwt-decode.js";
+import { decode } from "../../utils/jwt-decode.js";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
 import DateNavigator from "./components/DateNavigator.vue";
