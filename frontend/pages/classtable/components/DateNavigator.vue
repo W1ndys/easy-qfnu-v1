@@ -3,7 +3,7 @@
         <!-- 日期导航头部 -->
         <view class="date-header">
             <button class="nav-arrow nav-arrow--prev" @click="gotoPrevDay">
-                <uni-icons type="arrowleft" size="24" color="#7f4515" />
+                <uni-icons type="arrow-left" size="24" color="#7f4515" />
             </button>
 
             <view class="date-display" @click="showDatePicker">
@@ -17,9 +17,15 @@
                 <uni-icons type="calendar" size="20" color="#7f4515" />
             </view>
 
-            <button class="nav-arrow nav-arrow--next" @click="gotoNextDay">
-                <uni-icons type="arrowright" size="24" color="#7f4515" />
-            </button>
+            <view class="header-actions">
+                <button v-if="!isToday" class="today-btn" @click="gotoToday">
+                    <uni-icons type="home" size="18" color="#7f4515" />
+                    <text>今日</text>
+                </button>
+                <button class="nav-arrow nav-arrow--next" @click="gotoNextDay">
+                    <uni-icons type="arrow-right" size="24" color="#7f4515" />
+                </button>
+            </view>
         </view>
 
         <!-- 日期滑动选择器 -->
@@ -285,6 +291,36 @@ initDateList();
     padding: 24rpx 20rpx;
     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
     border-bottom: 1rpx solid #f0f0f0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+}
+
+.today-btn {
+    height: 64rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8rpx;
+    background: #fff;
+    border: 2rpx solid rgba(127, 69, 21, 0.2);
+    border-radius: 32rpx;
+    padding: 0 24rpx;
+    font-size: 24rpx;
+    color: #7f4515;
+    font-weight: 600;
+
+    &::after {
+        border: none;
+    }
+
+    &:active {
+        transform: scale(0.95);
+        background: rgba(127, 69, 21, 0.1);
+    }
 }
 
 .nav-arrow {
