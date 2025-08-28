@@ -10,15 +10,6 @@
       <view class="popup-body">
         <rich-text class="status-text" :nodes="noticeData.content"></rich-text>
 
-        <!-- 添加QQ号复制按钮 -->
-        <view class="qq-copy-section">
-          <text class="copy-label">快速复制QQ号：</text>
-          <button class="qq-copy-btn" @click="copyQQNumber">
-            <uni-icons type="copy" size="16" color="#7F4515"></uni-icons>
-            <text>1053240065</text>
-          </button>
-        </view>
-
         <view class="community-content-wrapper">
           <view class="community-groups">
             <view class="group-item">

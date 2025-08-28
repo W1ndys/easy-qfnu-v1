@@ -17,12 +17,6 @@ export function useDashboard() {
       <p style="margin-bottom: 16rpx;">我们新增了用户QQ群，欢迎加入</p>
       <p style="margin-bottom: 16rpx;">后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限</p>
       <p style="margin-bottom: 16rpx; color: red;">仪表盘下方新增了分享本站功能，欢迎分享给朋友</p>
-      <br>
-      <p style="margin-bottom: 16rpx;">
-        帮朋友转出奥创健身年卡，需要请联系QQ 
-        <span style="color: #7F4515; font-weight: 600; user-select: all;">1053240065</span>
-        （长按QQ号可复制，备注曲奇教务来的）
-      </p>
     </div>`,
         timestamp: Date.now(),
         forceShow: false
