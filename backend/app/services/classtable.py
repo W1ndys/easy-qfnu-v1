@@ -236,7 +236,6 @@ class ClassTableService:
                             frontend_course = {
                                 "id": f"course_{len(result['data']['courses']) + 1}",  # 唯一ID
                                 "name": course_info["course_name"],
-                                "teacher": course_info.get("teacher", ""),  # 教师信息
                                 "location": course_info["location"],
                                 "classroom": course_info["location"],  # 别名
                                 "credits": course_info["credits"],
@@ -300,18 +299,13 @@ class ClassTableService:
             Dict: 课程信息字典，如果解析失败返回None
         """
         try:
-            # 获取课程名称
-            course_name = course_element.get_text(strip=True)
-            if not course_name:
-                return None
-
             # 获取title属性中的详细信息
             title = course_element.get("title", "")
             if not title:
                 return None
 
             course_info = {
-                "course_name": course_name,
+                "course_name": "",
                 "credits": "",
                 "course_type": "",
                 "time_detail": "",
@@ -328,6 +322,8 @@ class ClassTableService:
                     course_info["credits"] = line.replace("课程学分：", "")
                 elif line.startswith("课程属性："):
                     course_info["course_type"] = line.replace("课程属性：", "")
+                elif line.startswith("课程名称："):
+                    course_info["course_name"] = line.replace("课程名称：", "")
                 elif line.startswith("上课时间："):
                     time_detail = line.replace("上课时间：", "")
                     course_info["time_detail"] = time_detail
@@ -339,6 +335,14 @@ class ClassTableService:
                     course_info["location"] = line.replace("上课地点：", "")
                 elif line.startswith("课堂名称："):
                     course_info["class_name"] = line.replace("课堂名称：", "")
+
+            # 如果没有从title中获取到课程名称，则使用显示文字作为备用
+            if not course_info["course_name"]:
+                course_info["course_name"] = course_element.get_text(strip=True)
+
+            # 确保课程名称不为空
+            if not course_info["course_name"]:
+                return None
 
             return course_info
 

@@ -46,7 +46,6 @@ class CourseStyle(BaseModel):
     col: int
     row_span: int
     col_span: int
-    color: str
 
 
 class CourseRawData(BaseModel):
@@ -66,7 +65,6 @@ class Course(BaseModel):
 
     id: str
     name: str
-    teacher: str
     location: str
     classroom: str
     credits: str
