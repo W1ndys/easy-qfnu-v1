@@ -11,13 +11,13 @@ export function useDashboard() {
 
     // ==================== 公告机制 ====================
     const noticeData = ref({
-        version: "6",
+        version: "7",
         title: "重要通知：请加用户群防走丢！",
         content: `<div style="line-height: 1.6;">
             <p style="margin-bottom: 16rpx;">我们新增了用户QQ群，欢迎加入</p>
             <p style="margin-bottom: 16rpx;">后期很有可能会推出QQ号强绑定，需要加群使用，请尽快加群，群额度有限</p>
             <p style="margin-bottom: 16rpx; color: red;">仪表盘下方新增了分享本站功能，欢迎分享给朋友</p>
-            <p style="margin-bottom: 16rpx;">开发者今天心情糟糕，看见代码就烦了哈哈哈。本网站即将面临四个月的暂停开发，2025年12月后左右恢复开发进度</p>
+            <p style="margin-bottom: 16rpx;">开发者今天心情不咋地，看见代码就烦了。出于备考压力，本网站即将面临四个月的暂停开发，2025年12月后左右恢复开发进度</p>
             <p style="margin-bottom: 16rpx; color: red;">开学快乐！</p>
         </div>`,
         timestamp: Date.now(),
