@@ -34,6 +34,9 @@
             <uni-icons type="home" size="24" color="#fff" />
             <text class="today-text">今日</text>
         </view>
+
+        <!-- 警告弹窗 -->
+        <WarningModal ref="warningModalRef" @confirm="onWarningConfirm" />
     </PageLayout>
 </template>
 
@@ -44,11 +47,13 @@ import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
 import DateNavigator from "./components/DateNavigator.vue";
 import ClassTableView from "./components/ClassTableView.vue";
+import WarningModal from "./components/WarningModal.vue";
 
 const isLoading = ref(true);
 const selectedDate = ref(new Date().toISOString().split('T')[0]); // 默认今天
 const coursesData = ref({}); // 缓存不同日期的课程数据
 const dateNavigatorRef = ref(null); // DateNavigator组件引用
+const warningModalRef = ref(null); // WarningModal组件引用
 
 // 当前选中日期的课程
 const currentCourses = computed(() => {
@@ -64,6 +69,10 @@ const isToday = computed(() => {
 onLoad(() => {
     if (!ensureLogin()) return;
     uni.setNavigationBarTitle({ title: "课程表" });
+
+    // 检查是否需要显示警告弹窗
+    showWarning();
+
     fetchTodayCourses();
 });
 
@@ -239,6 +248,21 @@ function handleGotoToday() {
     if (dateNavigatorRef.value) {
         dateNavigatorRef.value.gotoToday();
     }
+}
+
+// 显示警告弹窗
+function showWarning() {
+    // 延迟一点时间显示弹窗，确保页面加载完成
+    setTimeout(() => {
+        if (warningModalRef.value) {
+            warningModalRef.value.show();
+        }
+    }, 500);
+}
+
+// 警告弹窗确认事件
+function onWarningConfirm() {
+    console.log('用户已确认警告信息');
 }
 </script>
 
