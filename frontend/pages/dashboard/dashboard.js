@@ -63,8 +63,9 @@ export function useDashboard() {
         { text: "培养方案", description: "查看模块完成进度", icon: "list", url: "/pages/course-plan/course-plan" },
         { text: "选课查询", description: "支持选课模块探测", icon: "checkmarkempty", url: "/pages/pre-select-course/pre-select-course" },
         { text: "查看校历", description: "查看最新校历", icon: "calendar", url: "calendar", external: false },
+        { text: "无课教室", description: "查询空闲教室", icon: "home", url: "" },
+        { text: "无考教室", description: "查询无考试教室", icon: "compose", url: "" },
         { text: "排名查询", description: "即将推出", icon: "medal", url: "" },
-
         { text: "更多功能", description: "敬请期待", icon: "gear", url: "" },
     ]);
 
