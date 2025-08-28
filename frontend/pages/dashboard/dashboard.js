@@ -55,7 +55,7 @@ export function useDashboard() {
     const profileCardRef = ref(null);
 
     const features = ref([
-
+        { text: "今日课表", description: "实时查看今日课表", icon: "calendar", url: "/pages/classtable/classtable" },
         { text: "成绩分析", description: "查看成绩与GPA分析", icon: "paperplane", url: "/pages/grades/grades" },
         { text: "平均分查询", description: "查看课程平均分数据", icon: "bars", url: "/pages/average-scores/average-scores" },
         { text: "选课推荐", description: "智能推荐选课方案", icon: "star", url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/", external: true },
@@ -63,7 +63,7 @@ export function useDashboard() {
         { text: "选课查询", description: "支持选课模块探测", icon: "checkmarkempty", url: "/pages/pre-select-course/pre-select-course" },
         { text: "查看校历", description: "查看最新校历", icon: "calendar", url: "calendar", external: false },
         { text: "排名查询", description: "即将推出", icon: "medal", url: "" },
-        { text: "课表查询", description: "实现难度较大，请使用wakeup课程表app替代", icon: "calendar", url: "" },
+
         { text: "更多功能", description: "敬请期待", icon: "gear", url: "" },
     ]);
 
