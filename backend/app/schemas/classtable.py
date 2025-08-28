@@ -1,128 +1,49 @@
 # app/schemas/classtable.py
-from pydantic import BaseModel
-from typing import List, Dict, Any
+from pydantic import BaseModel, Field
+from typing import List, Optional
 
 
-class WeekInfo(BaseModel):
-    """周信息"""
+class CourseInfo(BaseModel):
+    """单个课程信息模型"""
 
-    current_week: int
-    total_weeks: int
-
-
-class TimeSlot(BaseModel):
-    """时间段信息"""
-
-    period: int
-    name: str
-    time: str
-    slots: List[int]
+    course_name: str = Field(..., description="课程名称")
+    course_credits: str = Field(..., description="课程学分")
+    course_property: str = Field(..., description="课程属性")
+    class_time: str = Field(..., description="上课时间")
+    classroom: str = Field(..., description="上课地点")
+    class_name: str = Field(..., description="课堂名称")
+    day_of_week: int = Field(..., description="星期几(1-7)")
+    period: str = Field(..., description="节次信息")
 
 
-class Weekday(BaseModel):
-    """星期信息"""
+class DayCourses(BaseModel):
+    """某一天的课程信息"""
 
-    id: int
-    name: str
-    short: str
-
-
-class CourseTimeInfo(BaseModel):
-    """课程时间信息"""
-
-    weekday: int
-    weekday_name: str
-    period: int
-    period_name: str
-    time_slots: List[int]
-    actual_periods: List[int]  # 新增：实际节次信息
-    start_time: str
-    end_time: str
-    is_cross_period: bool  # 新增：是否跨大节课程
+    date: str = Field(..., description="日期(YYYY-MM-DD)")
+    day_of_week: int = Field(..., description="星期几(1-7)")
+    courses: List[CourseInfo] = Field(default=[], description="当天的课程列表")
 
 
-class CourseStyle(BaseModel):
-    """课程样式信息"""
+class WeekCourses(BaseModel):
+    """一周的课程信息"""
 
-    row: int
-    col: int
-    row_span: int
-    col_span: int
-
-
-class CourseRawData(BaseModel):
-    """课程原始数据"""
-
-    course_name: str
-    credits: str
-    course_type: str
-    time_detail: str
-    location: str
-    class_name: str
-    weeks: List[int]
-    actual_periods: List[int] = []  # 新增：解析出的具体节次
+    week_number: int = Field(..., description="第几周")
+    start_date: str = Field(..., description="本周开始日期(YYYY-MM-DD)")
+    end_date: str = Field(..., description="本周结束日期(YYYY-MM-DD)")
+    days: List[DayCourses] = Field(default=[], description="一周七天的课程")
 
 
-class Course(BaseModel):
-    """课程信息"""
+class DayClassTableResponse(BaseModel):
+    """单日课程表查询响应模型"""
 
-    id: str
-    name: str
-    location: str
-    classroom: str
-    credits: str
-    course_type: str
-    class_name: str
-    weeks: List[int]
-    time_info: CourseTimeInfo
-    style: CourseStyle
-    raw_data: CourseRawData
+    success: bool = Field(..., description="请求是否成功")
+    message: str = Field(..., description="响应消息")
+    data: Optional[DayCourses] = Field(None, description="单日课程数据")
 
 
-class CourseStats(BaseModel):
-    """课程统计信息"""
+class WeekClassTableResponse(BaseModel):
+    """周课程表查询响应模型"""
 
-    total_courses: int
-    total_hours: int
-    courses_by_day: Dict[str, int]
-
-
-class ClassTableData(BaseModel):
-    """课程表数据"""
-
-    week_info: WeekInfo
-    time_slots: List[TimeSlot]
-    weekdays: List[Weekday]
-    courses: List[Course]
-    stats: CourseStats
-
-
-class ClassTableResponse(BaseModel):
-    """课程表响应"""
-
-    success: bool
-    message: str
-    data: ClassTableData
-
-
-class ClassTableInfoData(BaseModel):
-    """课程表基础信息数据"""
-
-    time_slots: List[TimeSlot]
-    weekdays: List[Weekday]
-
-
-class ClassTableInfoResponse(BaseModel):
-    """课程表基础信息响应"""
-
-    success: bool
-    message: str
-    data: ClassTableInfoData
-
-
-class ErrorResponse(BaseModel):
-    """错误响应"""
-
-    success: bool = False
-    message: str
-    data: Dict[str, Any] = {}
+    success: bool = Field(..., description="请求是否成功")
+    message: str = Field(..., description="响应消息")
+    data: Optional[WeekCourses] = Field(None, description="周课程数据")
