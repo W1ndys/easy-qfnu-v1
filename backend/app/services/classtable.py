@@ -261,9 +261,6 @@ class ClassTableService:
                                     "col": day_index + 1,  # 第几天 (1-7)
                                     "row_span": 1,  # 占几行
                                     "col_span": 1,  # 占几列
-                                    "color": ClassTableService._generate_course_color(
-                                        course_info["course_name"]
-                                    ),
                                 },
                                 "raw_data": course_info,  # 保留原始数据
                             }
@@ -369,40 +366,6 @@ class ClassTableService:
             6: {"start": "自由", "end": "安排"},
         }
         return time_mapping.get(period, {"start": "未知", "end": "时间"})
-
-    @staticmethod
-    def _generate_course_color(course_name: str) -> str:
-        """
-        为课程生成颜色标识
-
-        Args:
-            course_name: 课程名称
-
-        Returns:
-            str: 十六进制颜色值
-        """
-        # 基于课程名称生成固定的颜色
-        colors = [
-            "#3498db",
-            "#e74c3c",
-            "#2ecc71",
-            "#f39c12",
-            "#9b59b6",
-            "#1abc9c",
-            "#34495e",
-            "#e67e22",
-            "#95a5a6",
-            "#16a085",
-            "#27ae60",
-            "#8e44ad",
-            "#2980b9",
-            "#f1c40f",
-            "#d35400",
-        ]
-
-        # 使用课程名称的哈希值来选择颜色
-        hash_value = hash(course_name) % len(colors)
-        return colors[hash_value]
 
     @staticmethod
     def get_class_table_data(session: requests.Session, date: str) -> Dict[str, Any]:
