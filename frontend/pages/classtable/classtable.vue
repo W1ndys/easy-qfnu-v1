@@ -62,8 +62,9 @@
         </view>
 
         <!-- 课程详情弹窗 -->
-        <view v-if="selectedCourse" class="course-detail-modal" @click="closeCourseDetail">
-            <view class="modal-content" @click.stop>
+        <view v-if="selectedCourse" class="course-detail-modal" :class="{ show: modalVisible }"
+            @click="closeCourseDetail">
+            <view class="modal-content" :class="{ show: modalVisible }" @click.stop>
                 <view class="modal-header">
                     <text class="modal-title">{{ selectedCourse.name }}</text>
                     <button class="modal-close" @click="closeCourseDetail">
@@ -131,7 +132,8 @@ import DaySchedule from "./DaySchedule.vue";
 import {
     fetchClassTable,
     getCachedClassTable,
-    setCachedClassTable
+    setCachedClassTable,
+    isSameWeek
 } from "./api.js";
 
 // 响应式数据
@@ -140,7 +142,11 @@ const classTableData = ref(null);
 const error = ref('');
 const selectedDate = ref(formatDateToString(new Date()));
 const selectedCourse = ref(null);
+const modalVisible = ref(false);
 const showStats = ref(false);
+
+// 缓存相关状态
+const lastRequestDate = ref(null); // 记录上次请求的日期
 
 // 计算属性
 const hasData = computed(() => !!classTableData.value);
@@ -220,37 +226,60 @@ function ensureLogin() {
     return true;
 }
 
-// 获取课程表数据
-async function fetchData(showLoading = true) {
+// 获取课程表数据 - 智能缓存版本
+async function fetchData(showLoading = true, forceRefresh = false) {
     if (showLoading) {
         isLoading.value = true;
     }
     error.value = '';
 
     try {
-        // 尝试从缓存获取
-        const cachedData = getCachedClassTable(selectedDate.value);
-        if (cachedData && showLoading) {
-            classTableData.value = cachedData;
-            isLoading.value = false;
+        // 检查是否需要从API获取数据
+        let needApiRequest = forceRefresh;
 
-            // 后台更新缓存
-            setTimeout(() => {
-                fetchData(false);
-            }, 100);
-            return;
+        if (!forceRefresh) {
+            // 检查是否有可用缓存
+            const cachedData = getCachedClassTable(selectedDate.value);
+
+            if (cachedData) {
+                console.log(`使用缓存数据，日期: ${selectedDate.value}`);
+                classTableData.value = cachedData;
+                lastRequestDate.value = selectedDate.value;
+
+                if (showLoading) {
+                    isLoading.value = false;
+                }
+                return;
+            }
+
+            // 检查是否与上次请求在同一周
+            if (lastRequestDate.value && isSameWeek(selectedDate.value, lastRequestDate.value)) {
+                console.log(`在同一周内切换日期，不需要重新请求: ${selectedDate.value}`);
+                // 如果当前已有数据，直接使用
+                if (classTableData.value) {
+                    if (showLoading) {
+                        isLoading.value = false;
+                    }
+                    return;
+                }
+            }
+
+            needApiRequest = true;
         }
 
-        // 从API获取数据
-        console.log(`获取课程表数据: ${selectedDate.value}`);
-        const data = await fetchClassTable(selectedDate.value);
+        if (needApiRequest) {
+            // 从API获取数据
+            console.log(`从API获取课程表数据: ${selectedDate.value}`);
+            const data = await fetchClassTable(selectedDate.value);
 
-        classTableData.value = data;
+            classTableData.value = data;
+            lastRequestDate.value = selectedDate.value;
 
-        // 缓存数据
-        setCachedClassTable(selectedDate.value, data);
+            // 缓存数据
+            setCachedClassTable(selectedDate.value, data);
 
-        console.log('课程表数据加载成功', data);
+            console.log('课程表数据加载成功', data);
+        }
 
     } catch (e) {
         console.error("获取课程表失败", e);
@@ -260,10 +289,11 @@ async function fetchData(showLoading = true) {
         const cachedData = getCachedClassTable(selectedDate.value);
         if (cachedData) {
             classTableData.value = cachedData;
+            lastRequestDate.value = selectedDate.value;
             uni.showToast({
-                title: "已显示缓存数据，" + error.value,
+                title: "网络错误，已显示缓存数据",
                 icon: "none",
-                duration: 3000
+                duration: 2000
             });
         } else {
             classTableData.value = null;
@@ -278,9 +308,9 @@ async function fetchData(showLoading = true) {
     }
 }
 
-// 重试获取数据
+// 重试获取数据 - 强制刷新
 function retryFetch() {
-    fetchData();
+    fetchData(true, true);
 }
 
 // 前一天
@@ -304,17 +334,21 @@ function onCourseClick(event) {
     console.log('课程点击:', event);
     selectedCourse.value = event.course;
 
-    // 可以添加统计或其他逻辑
-    uni.showToast({
-        title: `查看 ${event.course.name}`,
-        icon: "none",
-        duration: 1000
-    });
+    // 延迟显示弹窗，创建入场动画效果
+    setTimeout(() => {
+        modalVisible.value = true;
+    }, 10);
 }
 
 // 关闭课程详情
 function closeCourseDetail() {
-    selectedCourse.value = null;
+    // 先触发退场动画
+    modalVisible.value = false;
+
+    // 延迟移除元素，等待动画完成
+    setTimeout(() => {
+        selectedCourse.value = null;
+    }, 300);
 }
 
 // 切换统计显示
@@ -540,12 +574,19 @@ function toggleStats() {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0);
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40rpx;
+    transition: all 0.3s ease;
+    opacity: 0;
+
+    &.show {
+        background: rgba(0, 0, 0, 0.5);
+        opacity: 1;
+    }
 }
 
 .modal-content {
@@ -556,6 +597,14 @@ function toggleStats() {
     max-height: 80vh;
     overflow: hidden;
     box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+    transform: scale(0.7) translateY(50rpx);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    opacity: 0;
+
+    &.show {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
 }
 
 .modal-header {
@@ -582,12 +631,18 @@ function toggleStats() {
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: all 0.2s ease;
 
         &::after {
             border: none;
         }
 
         &:active {
+            background: #e9ecef;
+            transform: scale(0.95);
+        }
+
+        &:hover {
             background: #e9ecef;
         }
     }
@@ -654,6 +709,8 @@ function toggleStats() {
         border-radius: 16rpx;
         font-size: 26rpx;
         font-weight: 600;
+        transition: all 0.2s ease;
+        box-shadow: 0 4rpx 12rpx rgba(127, 69, 21, 0.25);
 
         &::after {
             border: none;
@@ -661,6 +718,12 @@ function toggleStats() {
 
         &:active {
             transform: scale(0.98);
+            box-shadow: 0 2rpx 8rpx rgba(127, 69, 21, 0.3);
+        }
+
+        &:hover {
+            transform: translateY(-2rpx);
+            box-shadow: 0 6rpx 16rpx rgba(127, 69, 21, 0.3);
         }
     }
 }

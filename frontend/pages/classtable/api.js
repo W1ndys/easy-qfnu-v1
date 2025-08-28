@@ -133,6 +133,60 @@ const formatDateForApi = (date) => {
 };
 
 /**
+ * 获取日期所在周的标识符
+ * 返回格式：YYYY-WW (年-周数)
+ * 以周一作为一周的开始，周日和周一之间算新的一周
+ */
+const getWeekIdentifier = (date) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) {
+        return null;
+    }
+
+    // 获取星期几 (0=周日, 1=周一, ..., 6=周六)
+    const dayOfWeek = dateObj.getDay();
+
+    // 计算当前周的周一日期（作为一周的起始点）
+    let weekStartDate = new Date(dateObj);
+
+    if (dayOfWeek === 0) {
+        // 周日，回溯到本周一（6天前）
+        weekStartDate.setDate(dateObj.getDate() - 6);
+    } else {
+        // 周一到周六，回溯到本周一
+        weekStartDate.setDate(dateObj.getDate() - (dayOfWeek - 1));
+    }
+
+    // 使用周一的日期来计算周标识符
+    const year = weekStartDate.getFullYear();
+    const startOfYear = new Date(year, 0, 1);
+
+    // 找到年份的第一个周一
+    const firstDayOfYear = startOfYear.getDay();
+    const daysToFirstMonday = firstDayOfYear === 1 ? 0 : (8 - firstDayOfYear);
+    const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
+
+    // 计算相对于第一个周一的周数
+    if (weekStartDate < firstMonday) {
+        // 如果在第一个周一之前，属于上一年的最后一周
+        return getWeekIdentifier(new Date(year - 1, 11, 31));
+    }
+
+    const weekNumber = Math.floor((weekStartDate - firstMonday) / (7 * 24 * 60 * 60 * 1000)) + 1;
+
+    return `${year}-${String(weekNumber).padStart(2, '0')}`;
+};
+
+/**
+ * 判断两个日期是否在同一周
+ */
+const isSameWeek = (date1, date2) => {
+    const week1 = getWeekIdentifier(date1);
+    const week2 = getWeekIdentifier(date2);
+    return week1 === week2 && week1 !== null && week2 !== null;
+};
+
+/**
  * 处理课程表数据
  */
 const processClassTableData = (rawData) => {
@@ -381,28 +435,34 @@ export const fetchDateRangeClassTable = async (startDate, endDate) => {
 };
 
 /**
- * 缓存管理
+ * 缓存管理 - 基于周的缓存策略
  */
 const CACHE_CONFIG = {
-    key: 'classtable_cache',
-    maxAge: 10 * 60 * 1000, // 10分钟缓存
-    maxSize: 50 // 最多缓存50个条目
+    key: 'classtable_week_cache',
+    maxAge: 30 * 60 * 1000, // 30分钟缓存
 };
 
 /**
- * 获取缓存的课程表数据
+ * 获取缓存的课程表数据 - 基于周缓存
  */
 export const getCachedClassTable = (date) => {
     try {
-        const cache = uni.getStorageSync(CACHE_CONFIG.key) || {};
-        const key = formatDateForApi(date);
-        const item = cache[key];
+        const cache = uni.getStorageSync(CACHE_CONFIG.key);
+        if (!cache) return null;
 
-        if (item && Date.now() - item.timestamp < CACHE_CONFIG.maxAge) {
-            console.log(`使用缓存的课程表数据: ${key}`);
-            return item.data;
+        // 检查缓存是否过期
+        if (Date.now() - cache.timestamp > CACHE_CONFIG.maxAge) {
+            console.log('课程表缓存已过期');
+            return null;
         }
 
+        // 检查请求的日期是否在缓存的周内
+        if (cache.weekId && isSameWeek(date, cache.requestDate)) {
+            console.log(`使用缓存的课程表数据，周标识: ${cache.weekId}`);
+            return cache.data;
+        }
+
+        console.log('请求日期不在缓存周内，需要重新获取');
         return null;
     } catch (error) {
         console.warn('读取课程表缓存失败:', error);
@@ -411,40 +471,25 @@ export const getCachedClassTable = (date) => {
 };
 
 /**
- * 缓存课程表数据
+ * 缓存课程表数据 - 基于周缓存
  */
 export const setCachedClassTable = (date, data) => {
     try {
-        const cache = uni.getStorageSync(CACHE_CONFIG.key) || {};
-        const key = formatDateForApi(date);
+        const weekId = getWeekIdentifier(date);
+        if (!weekId) {
+            console.warn('无法获取日期的周标识，跳过缓存');
+            return;
+        }
 
-        // 添加新缓存
-        cache[key] = {
+        const cache = {
             data,
+            weekId,
+            requestDate: formatDateForApi(date),
             timestamp: Date.now()
         };
 
-        // 清理过期缓存
-        const now = Date.now();
-        Object.keys(cache).forEach(cacheKey => {
-            if (now - cache[cacheKey].timestamp > CACHE_CONFIG.maxAge) {
-                delete cache[cacheKey];
-            }
-        });
-
-        // 限制缓存大小
-        const keys = Object.keys(cache);
-        if (keys.length > CACHE_CONFIG.maxSize) {
-            // 删除最旧的缓存
-            keys.sort((a, b) => cache[a].timestamp - cache[b].timestamp);
-            const toDelete = keys.slice(0, keys.length - CACHE_CONFIG.maxSize);
-            toDelete.forEach(deleteKey => {
-                delete cache[deleteKey];
-            });
-        }
-
         uni.setStorageSync(CACHE_CONFIG.key, cache);
-        console.log(`课程表数据已缓存: ${key}`);
+        console.log(`课程表数据已缓存，周标识: ${weekId}, 请求日期: ${cache.requestDate}`);
 
     } catch (error) {
         console.warn('缓存课程表数据失败:', error);
@@ -463,12 +508,14 @@ export const clearClassTableCache = () => {
     }
 };
 
-// 导出常量
+// 导出常量和函数
 export {
     API_CONFIG,
     CACHE_CONFIG,
     validateDate,
     formatDateForApi,
     getDefaultTimeSlots,
-    getDefaultWeekdays
+    getDefaultWeekdays,
+    getWeekIdentifier,
+    isSameWeek
 };
