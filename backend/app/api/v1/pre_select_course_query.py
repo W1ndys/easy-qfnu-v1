@@ -7,6 +7,9 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.services.base import get_user_session, BaseEducationService
 from app.services.pre_select_course_query import pre_select_course_query
+from app.services.profile import ProfileService
+from app.services.course_query_logger import CourseQueryLogger
+from loguru import logger
 
 router = APIRouter(tags=["预选课查询"])
 
@@ -130,7 +133,7 @@ class Config:
                             "location": "XXXXXX",  # 脱敏后的教室位置
                             "campus_name": "XXXXXX",  # 脱敏后的校区名称
                             "remain_count": 3,
-                            "time_conflict": "与“XXXXXX”冲突",  # 脱敏后的冲突信息
+                            "time_conflict": "与'XXXXXX'冲突",  # 脱敏后的冲突信息
                         },
                     ],
                 }
@@ -174,6 +177,7 @@ def pre_select_course_query_api(
     - 查询顺序：专业内跨年级、本学期计划、选修、公选、计划外
     """
     try:
+        # 执行预选课查询
         data_dict = pre_select_course_query(
             session=session,
             course_id_or_name=payload.course_id_or_name,
@@ -181,6 +185,21 @@ def pre_select_course_query_api(
             week_day=payload.week_day,
             class_period=payload.class_period,
         )
+
+        # 获取学生个人信息用于记录查询日志
+        try:
+            profile_result = ProfileService.get_student_profile(session)
+            if profile_result.get("success") and profile_result.get("data"):
+                profile = profile_result["data"]
+
+                CourseQueryLogger.log_course_queries(
+                    profile=profile,
+                    query_results=data_dict,
+                )
+        except Exception as log_error:
+            # 记录日志失败不影响正常的查询结果返回
+            logger.warning(f"记录课程查询日志失败: {log_error}")
+
         return {
             "ok": True,
             "message": "查询成功",
