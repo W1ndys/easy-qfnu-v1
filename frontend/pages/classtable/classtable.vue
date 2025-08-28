@@ -43,6 +43,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { onLoad, onShow } from "@dcloudio/uni-app";
+import decode from "../../utils/jwt-decode.js";
 import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
 import DateNavigator from "./components/DateNavigator.vue";
@@ -86,8 +87,19 @@ function ensureLogin() {
         uni.showToast({ title: "请先登录", icon: "none" });
         uni.reLaunch({ url: "/pages/index/index" });
         return false;
+    } else {
+        try {
+            const payload = decode(token);
+            console.log("Token 验证成功", payload);
+            return true;
+        } catch (error) {
+            console.error("Token 解析失败", error);
+            uni.removeStorageSync("token");
+            uni.showToast({ title: "凭证无效,请重新登录", icon: "none" });
+            uni.reLaunch({ url: "/pages/index/index" });
+            return false;
+        }
     }
-    return true;
 }
 
 // 日期变化事件
