@@ -21,8 +21,21 @@
             </view>
 
             <view class="content-wrapper">
-                <!-- 日期选择器 -->
-                <DateSelector v-model="selectedDate" @change="onDateChange" />
+                <!-- 简易日期导航 -->
+                <view class="simple-date-nav">
+                    <button class="nav-btn" @click="goToPreviousDay">
+                        <uni-icons type="left" size="20" color="#495057" />
+                    </button>
+
+                    <view class="date-info">
+                        <view class="main-date">{{ formatDisplayDate.month }}月{{ formatDisplayDate.day }}日</view>
+                        <view class="sub-date">{{ formatDisplayDate.weekDay }} • {{ formatDisplayDate.year }}</view>
+                    </view>
+
+                    <button class="nav-btn" @click="goToNextDay">
+                        <uni-icons type="right" size="20" color="#495057" />
+                    </button>
+                </view>
 
                 <!-- 网络错误状态 -->
                 <EmptyState v-if="error && !classTableData" icon-type="wifi-off" title="加载失败" :description="error"
@@ -113,7 +126,7 @@ import PageLayout from "../../components/PageLayout/PageLayout.vue";
 import ModernCard from "../../components/ModernCard/ModernCard.vue";
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen.vue";
 import EmptyState from "../../components/EmptyState/EmptyState.vue";
-import DateSelector from "./DateSelector.vue";
+
 import DaySchedule from "./DaySchedule.vue";
 import {
     fetchClassTable,
@@ -132,8 +145,36 @@ const showStats = ref(false);
 // 计算属性
 const hasData = computed(() => !!classTableData.value);
 
+// 解析日期字符串为Date对象
+function parseDate(dateStr) {
+    if (!dateStr) return new Date();
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return new Date();
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+}
+
+// 获取星期名称
+function getWeekDay(date) {
+    const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    return weekDays[date.getDay()];
+}
+
+// 格式化显示日期
+const formatDisplayDate = computed(() => {
+    const date = parseDate(selectedDate.value);
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        day: date.getDate(),
+        weekDay: getWeekDay(date)
+    };
+});
+
 // 格式化日期为字符串
 function formatDateToString(date) {
+    if (typeof date === 'string') {
+        return date;
+    }
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -242,10 +283,19 @@ function retryFetch() {
     fetchData();
 }
 
-// 日期改变处理
-function onDateChange(event) {
-    console.log('日期改变:', event);
-    selectedDate.value = event.date;
+// 前一天
+function goToPreviousDay() {
+    const current = parseDate(selectedDate.value);
+    current.setDate(current.getDate() - 1);
+    selectedDate.value = formatDateToString(current);
+    fetchData();
+}
+
+// 后一天
+function goToNextDay() {
+    const current = parseDate(selectedDate.value);
+    current.setDate(current.getDate() + 1);
+    selectedDate.value = formatDateToString(current);
     fetchData();
 }
 
@@ -613,5 +663,74 @@ function toggleStats() {
             transform: scale(0.98);
         }
     }
+}
+
+/* 简易日期导航样式 */
+.simple-date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border-radius: 20rpx;
+    padding: 24rpx;
+    margin-bottom: 24rpx;
+    box-shadow: 0 8rpx 32rpx rgba(127, 69, 21, 0.08);
+    border: 1rpx solid #f0f0f0;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4rpx;
+        background: linear-gradient(135deg, #7f4515, #8c5527);
+    }
+}
+
+.nav-btn {
+    width: 64rpx;
+    height: 64rpx;
+    border-radius: 50%;
+    background: #f8f9fa;
+    border: 2rpx solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+
+    &::after {
+        border: none;
+    }
+
+    &:active {
+        transform: scale(0.95);
+        background: #e9ecef;
+    }
+}
+
+.date-info {
+    flex: 1;
+    text-align: center;
+    padding: 0 20rpx;
+}
+
+.main-date {
+    font-size: 32rpx;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1.2;
+    margin-bottom: 8rpx;
+}
+
+.sub-date {
+    font-size: 24rpx;
+    color: #7f8c8d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8rpx;
 }
 </style>
