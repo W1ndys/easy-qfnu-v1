@@ -35,8 +35,10 @@ class CourseTimeInfo(BaseModel):
     period: int
     period_name: str
     time_slots: List[int]
+    actual_periods: List[int]  # 新增：实际节次信息
     start_time: str
     end_time: str
+    is_cross_period: bool  # 新增：是否跨大节课程
 
 
 class CourseStyle(BaseModel):
@@ -58,6 +60,7 @@ class CourseRawData(BaseModel):
     location: str
     class_name: str
     weeks: List[int]
+    actual_periods: List[int] = []  # 新增：解析出的具体节次
 
 
 class Course(BaseModel):

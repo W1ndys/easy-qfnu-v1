@@ -225,6 +225,17 @@ const processClassTableData = (rawData) => {
             if (course.time_info.weekday === 0) {
                 course.time_info.weekday = 7; // 周日转为7
             }
+
+            // 处理跨大节课程的时间显示
+            if (course.time_info.is_cross_period && course.time_info.actual_periods) {
+                // 使用实际节次信息
+                course.time_info.display_periods = course.time_info.actual_periods;
+                course.time_info.period_count = course.time_info.actual_periods.length;
+            } else {
+                // 普通课程使用time_slots
+                course.time_info.display_periods = course.time_info.time_slots || [];
+                course.time_info.period_count = course.time_info.display_periods.length;
+            }
         }
 
         // 确保样式信息（简化设计，统一颜色）
@@ -245,8 +256,9 @@ const processClassTableData = (rawData) => {
     const processedStats = {
         total_courses: processedCourses.length,
         total_hours: processedCourses.reduce((sum, course) => {
-            const slots = course.time_info?.time_slots || [];
-            return sum + slots.length;
+            // 使用实际节次数量计算总学时
+            const periodCount = course.time_info?.period_count || 0;
+            return sum + periodCount;
         }, 0),
         courses_by_day: data.stats?.courses_by_day || {}
     };

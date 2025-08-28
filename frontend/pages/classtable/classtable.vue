@@ -105,6 +105,11 @@
                             <text class="value">{{ selectedCourse.time_info.start_time }} - {{
                                 selectedCourse.time_info.end_time }}</text>
                         </view>
+                        <view v-if="selectedCourse.time_info.is_cross_period" class="detail-row">
+                            <text class="label">实际节次：</text>
+                            <text class="value">第{{ selectedCourse.time_info.actual_periods?.join('、') || '未知' }}节
+                                (跨大节课程)</text>
+                        </view>
                         <view class="detail-row">
                             <text class="label">上课周次：</text>
                             <text class="value">第{{ selectedCourse.weeks?.join('、') || '未知' }}周</text>

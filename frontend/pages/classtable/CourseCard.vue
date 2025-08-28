@@ -7,6 +7,7 @@
                 <view class="time-info">
                     <uni-icons type="clock" size="16" color="rgba(127,69,21,0.7)" />
                     <text>{{ timeDisplay }}</text>
+                    <text v-if="course.time_info?.is_cross_period" class="cross-period-indicator">跨节</text>
                 </view>
                 <view class="course-type-tag" :style="getTypeTagStyle(course.course_type)">
                     {{ course.course_type }}

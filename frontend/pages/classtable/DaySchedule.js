@@ -74,8 +74,11 @@ export function useDaySchedule(props) {
 
         // 计算总学时
         const totalHours = courses.reduce((sum, course) => {
-            const slots = course.time_info?.time_slots || [];
-            return sum + slots.length;
+            // 使用实际节次数量或display_periods长度
+            const periodCount = course.time_info?.period_count ||
+                course.time_info?.display_periods?.length ||
+                course.time_info?.time_slots?.length || 0;
+            return sum + periodCount;
         }, 0);
 
         // 获取当前正在进行的课程

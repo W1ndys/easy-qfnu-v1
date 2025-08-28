@@ -2,7 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import re
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from loguru import logger
 from datetime import datetime
 
@@ -196,6 +196,9 @@ class ClassTableService:
                 "星期日",
             ]
 
+            # 用于课程去重的集合（存储已处理的课程唯一标识）
+            processed_courses = set()
+
             # 解析每一行
             rows = tbody.find_all("tr")  # type: ignore
             for row_index, row in enumerate(rows):
@@ -232,6 +235,24 @@ class ClassTableService:
                             course_element
                         )
                         if course_info:
+                            # 创建课程唯一标识：课程名称 + 星期 + 具体节次
+                            actual_periods = course_info.get("actual_periods", [])
+                            if actual_periods:
+                                # 使用具体节次信息作为标识
+                                periods_str = "-".join(map(str, sorted(actual_periods)))
+                                course_key = f"{course_info['course_name']}_{weekday}_{periods_str}"
+                            else:
+                                # 如果没有具体节次信息，使用大节作为标识
+                                course_key = f"{course_info['course_name']}_{weekday}_{current_period['period']}"
+
+                            # 检查是否已处理过这门课程
+                            if course_key in processed_courses:
+                                logger.debug(f"跳过重复课程: {course_key}")
+                                continue
+
+                            # 标记为已处理
+                            processed_courses.add(course_key)
+
                             # 构建前端友好的课程对象
                             frontend_course = {
                                 "id": f"course_{len(result['data']['courses']) + 1}",  # 唯一ID
@@ -242,19 +263,12 @@ class ClassTableService:
                                 "course_type": course_info["course_type"],
                                 "class_name": course_info["class_name"],
                                 "weeks": course_info["weeks"],
-                                "time_info": {
-                                    "weekday": day_index + 1,  # 1-7
-                                    "weekday_name": weekday,
-                                    "period": current_period["period"],
-                                    "period_name": current_period["name"],
-                                    "time_slots": current_period["time_slots"],
-                                    "start_time": ClassTableService._get_period_time(
-                                        current_period["period"]
-                                    )["start"],
-                                    "end_time": ClassTableService._get_period_time(
-                                        current_period["period"]
-                                    )["end"],
-                                },
+                                "time_info": ClassTableService._build_time_info(
+                                    day_index + 1,
+                                    weekday,
+                                    current_period,
+                                    actual_periods,
+                                ),
                                 "style": {
                                     "row": current_period["period"],  # 第几大节 (1-6)
                                     "col": day_index + 1,  # 第几天 (1-7)
@@ -331,6 +345,29 @@ class ClassTableService:
                     week_match = re.search(r"第(\d+)周", time_detail)
                     if week_match:
                         course_info["weeks"] = [int(week_match.group(1))]
+
+                    # 提取具体节次信息（如 [02-03-04]节）
+                    period_match = re.search(r"\[(\d+(?:-\d+)*)]\u8282", time_detail)
+                    if period_match:
+                        period_str = period_match.group(1)
+                        # 解析节次范围
+                        if "-" in period_str:
+                            # 连续节次（如 02-04 表示 02,03,04节）
+                            parts = period_str.split("-")
+                            if len(parts) == 2:
+                                start_period = int(parts[0])
+                                end_period = int(parts[1])
+                                course_info["actual_periods"] = list(
+                                    range(start_period, end_period + 1)
+                                )
+                            else:
+                                # 如果是 02-03-04 这种格式
+                                course_info["actual_periods"] = [int(p) for p in parts]
+                        else:
+                            # 单节课
+                            course_info["actual_periods"] = [int(period_str)]
+                    else:
+                        course_info["actual_periods"] = []
                 elif line.startswith("上课地点："):
                     course_info["location"] = line.replace("上课地点：", "")
                 elif line.startswith("课堂名称："):
@@ -349,6 +386,93 @@ class ClassTableService:
         except Exception as e:
             logger.error(f"解析课程信息时出错: {str(e)}")
             return None
+
+    @staticmethod
+    def _build_time_info(
+        weekday: int, weekday_name: str, current_period: Dict, actual_periods: List[int]
+    ) -> Dict[str, Any]:
+        """
+        构建课程时间信息，支持跨大节课程
+
+        Args:
+            weekday: 星期数字 (1-7)
+            weekday_name: 星期名称
+            current_period: 当前大节信息
+            actual_periods: 实际节次列表
+
+        Returns:
+            Dict: 时间信息字典
+        """
+        if actual_periods:
+            # 如果有具体节次信息，计算完整的时间范围
+            start_time, end_time = ClassTableService._calculate_time_range(
+                actual_periods
+            )
+
+            return {
+                "weekday": weekday,
+                "weekday_name": weekday_name,
+                "period": current_period["period"],
+                "period_name": current_period["name"],
+                "time_slots": actual_periods,  # 使用实际节次
+                "actual_periods": actual_periods,  # 保留原始节次信息
+                "start_time": start_time,
+                "end_time": end_time,
+                "is_cross_period": len(actual_periods) > 2,  # 是否跨大节
+            }
+        else:
+            # 没有具体节次信息，使用大节信息
+            period_time = ClassTableService._get_period_time(current_period["period"])
+            return {
+                "weekday": weekday,
+                "weekday_name": weekday_name,
+                "period": current_period["period"],
+                "period_name": current_period["name"],
+                "time_slots": current_period["time_slots"],
+                "actual_periods": [],
+                "start_time": period_time["start"],
+                "end_time": period_time["end"],
+                "is_cross_period": False,
+            }
+
+    @staticmethod
+    def _calculate_time_range(periods: List[int]) -> tuple[str, str]:
+        """
+        根据节次列表计算时间范围
+
+        Args:
+            periods: 节次列表（如 [2, 3, 4]）
+
+        Returns:
+            tuple: (开始时间, 结束时间)
+        """
+        if not periods:
+            return "未知", "时间"
+
+        # 节次到时间的映射
+        period_time_map = {
+            1: ("08:00", "08:45"),  # 第1小节
+            2: ("08:55", "09:40"),  # 第2小节
+            3: ("10:00", "10:45"),  # 第3小节
+            4: ("10:55", "11:40"),  # 第4小节
+            5: ("14:00", "14:45"),  # 第5小节
+            6: ("14:55", "15:40"),  # 第6小节
+            7: ("16:00", "16:45"),  # 第7小节
+            8: ("16:55", "17:40"),  # 第8小节
+            9: ("19:00", "19:45"),  # 第9小节
+            10: ("19:55", "20:40"),  # 第10小节
+            11: ("20:50", "21:35"),  # 第11小节
+            12: ("自由", "安排"),  # 第12小节（网课）
+            13: ("自由", "安排"),  # 第13小节（网课）
+        }
+
+        start_period = min(periods)
+        end_period = max(periods)
+
+        start_time = period_time_map.get(start_period, ("未知", "时间"))[0]
+        end_time = period_time_map.get(end_period, ("未知", "时间"))[1]
+
+        return start_time, end_time
 
     @staticmethod
     def _get_period_time(period: int) -> Dict[str, str]:

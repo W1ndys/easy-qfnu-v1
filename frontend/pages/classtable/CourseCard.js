@@ -9,8 +9,18 @@ export function useCourseCard(props) {
     const timeDisplay = computed(() => {
         if (!props.course?.time_info) return '';
 
-        const { period_name, start_time, end_time, time_slots } = props.course.time_info;
-        return `${period_name} ${start_time}-${end_time}`;
+        const timeInfo = props.course.time_info;
+        const { start_time, end_time, is_cross_period, actual_periods, period_name } = timeInfo;
+
+        if (is_cross_period && actual_periods && actual_periods.length > 0) {
+            // 跨大节课程：显示实际节次范围
+            const firstPeriod = actual_periods[0];
+            const lastPeriod = actual_periods[actual_periods.length - 1];
+            return `第${firstPeriod}-${lastPeriod}节 ${start_time}-${end_time}`;
+        } else {
+            // 普通课程：显示大节名称
+            return `${period_name || ''} ${start_time}-${end_time}`;
+        }
     });
 
     // 统一的课程卡片样式（浅色主题）
