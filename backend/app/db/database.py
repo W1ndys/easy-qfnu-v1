@@ -28,7 +28,7 @@ class SessionStore(Base):
     student_id_hash = Column(
         String, unique=True, index=True, nullable=False
     )  # 存储学号hash值
-    session_data = Column(BLOB, nullable=False)
+    session_data = Column(BLOB, nullable=True)  # 改为允许NULL
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=True)
 
@@ -266,7 +266,8 @@ def cleanup_expired_sessions(hours_ago: int = 2) -> int:
         cleaned_count = 0
         for session in expired_sessions:
             # 只清空session_data，保留记录行
-            setattr(session, "session_data", None)
+            empty_cookies = pickle.dumps({})  # 序列化空字典
+            setattr(session, "session_data", empty_cookies)
             setattr(session, "updated_at", datetime.datetime.now())
             cleaned_count += 1
 
