@@ -121,8 +121,8 @@ export default {
         };
 
         // --- 自定义GPA计算逻辑 ---
-        const toggleCustomMode = (e) => {
-            isCustomMode.value = e.detail.value;
+        const toggleCustomMode = (value) => {
+            isCustomMode.value = value;
             if (!isCustomMode.value) {
                 clearSelection();
                 clearCustomResult();
