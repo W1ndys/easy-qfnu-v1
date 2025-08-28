@@ -1,0 +1,271 @@
+.weekly-table-container {
+	display: flex;
+	flex-direction: column;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+/* 表格头部 */
+.table-header {
+	display: flex;
+	background: #f8f9fa;
+	border-radius: 16rpx 16rpx 0 0;
+	border: 1rpx solid #e9ecef;
+	position: sticky;
+	top: 0;
+	z-index: 10;
+}
+
+.time-column-header {
+	width: 140rpx;
+	min-width: 140rpx;
+	padding: 16rpx 12rpx;
+	font-size: 22rpx;
+	font-weight: 600;
+	color: #495057;
+	text-align: center;
+	background: #e9ecef;
+	border-right: 1rpx solid #dee2e6;
+}
+
+.weekday-headers {
+	display: flex;
+	flex: 1;
+}
+
+.weekday-header {
+	flex: 1;
+	min-width: 100rpx;
+	padding: 12rpx 8rpx;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4rpx;
+	border-right: 1rpx solid #dee2e6;
+	transition: all 0.3s ease;
+	
+	&:last-child {
+		border-right: none;
+	}
+	
+	&.today {
+		background: linear-gradient(135deg, #7f4515, #8c5527);
+		color: #fff;
+		
+		.weekday-name,
+		.weekday-date {
+			color: #fff;
+		}
+	}
+}
+
+.weekday-name {
+	font-size: 22rpx;
+	font-weight: 600;
+	color: #2c3e50;
+}
+
+.weekday-date {
+	font-size: 18rpx;
+	color: #6c757d;
+}
+
+/* 表格主体 */
+.table-body {
+	display: flex;
+	flex-direction: column;
+	border: 1rpx solid #e9ecef;
+	border-top: none;
+	border-radius: 0 0 16rpx 16rpx;
+	overflow: hidden;
+}
+
+.time-row {
+	display: flex;
+	min-height: 120rpx;
+	border-bottom: 1rpx solid #e9ecef;
+	
+	&:last-child {
+		border-bottom: none;
+	}
+}
+
+.time-column {
+	width: 140rpx;
+	min-width: 140rpx;
+	padding: 16rpx 12rpx;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4rpx;
+	background: #f8f9fa;
+	border-right: 1rpx solid #dee2e6;
+}
+
+.period-name {
+	font-size: 20rpx;
+	font-weight: 600;
+	color: #495057;
+	text-align: center;
+}
+
+.time-range {
+	font-size: 18rpx;
+	color: #6c757d;
+	text-align: center;
+}
+
+.course-columns {
+	display: flex;
+	flex: 1;
+}
+
+.course-cell {
+	flex: 1;
+	min-width: 100rpx;
+	min-height: 120rpx;
+	padding: 8rpx;
+	border-right: 1rpx solid #e9ecef;
+	background: #ffffff;
+	display: flex;
+	flex-direction: column;
+	gap: 4rpx;
+	position: relative;
+	
+	&:last-child {
+		border-right: none;
+	}
+	
+	&.today {
+		background: linear-gradient(135deg, #fff8f0, #fdf4e7);
+		border-left: 3rpx solid #7f4515;
+		border-right: 3rpx solid #7f4515;
+	}
+	
+	&:hover {
+		background: #f8f9fa;
+	}
+}
+
+/* 空状态 */
+.empty-table {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 80rpx 40rpx;
+	gap: 16rpx;
+}
+
+.empty-text {
+	font-size: 24rpx;
+	color: #999;
+	text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+	.time-column-header,
+	.time-column {
+		width: 120rpx;
+		min-width: 120rpx;
+		padding: 12rpx 8rpx;
+	}
+	
+	.weekday-header {
+		min-width: 80rpx;
+		padding: 8rpx 4rpx;
+	}
+	
+	.course-cell {
+		min-width: 80rpx;
+		padding: 6rpx;
+	}
+	
+	.period-name {
+		font-size: 18rpx;
+	}
+	
+	.time-range {
+		font-size: 16rpx;
+	}
+	
+	.weekday-name {
+		font-size: 20rpx;
+	}
+	
+	.weekday-date {
+		font-size: 16rpx;
+	}
+}
+
+/* 滚动条样式 */
+.weekly-table-container::-webkit-scrollbar {
+	height: 6rpx;
+}
+
+.weekly-table-container::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 3rpx;
+}
+
+.weekly-table-container::-webkit-scrollbar-thumb {
+	background: #c1c1c1;
+	border-radius: 3rpx;
+}
+
+.weekly-table-container::-webkit-scrollbar-thumb:hover {
+	background: #7f4515;
+}
+
+/* 表格动画 */
+.time-row {
+	animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(20rpx);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* 今日高亮效果 */
+.weekday-header.today,
+.course-cell.today {
+	position: relative;
+	
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3rpx;
+		background: linear-gradient(90deg, #7f4515, #8c5527);
+		border-radius: 2rpx 2rpx 0 0;
+	}
+}
+
+/* 加载态 */
+.weekly-table-container.loading {
+	.course-cell {
+		background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+		background-size: 200% 100%;
+		animation: loading 1.5s infinite;
+	}
+}
+
+@keyframes loading {
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
+}

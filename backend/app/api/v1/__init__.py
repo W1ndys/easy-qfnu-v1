@@ -66,6 +66,14 @@ except ImportError as e:
     logger.error(f"导入预选课查询路由模块失败: {e}")
     pre_select_course_query_router = None
 
+try:
+    from .classtable import router as classtable_router
+
+    logger.debug("课程表路由模块导入成功")
+except ImportError as e:
+    logger.error(f"导入课程表路由模块失败: {e}")
+    classtable_router = None
+
 
 # 创建主API路由器
 api_router = APIRouter()
@@ -80,6 +88,7 @@ ROUTER_CONFIGS = [
     (semester_router, "", "学期工具"),
     (profile_router, "", "个人信息"),
     (pre_select_course_query_router, "", "预选课查询"),
+    (classtable_router, "", "课程表"),
 ]
 
 
