@@ -39,6 +39,9 @@ def get_jx0502zbid_and_name(session: Session) -> Optional[Dict[str, str]]:
 
         rows = table.find_all("tr")  # type: ignore
 
+        # 收集所有符合条件的候选项
+        candidates = []
+
         # 跳过表头，从第二行开始解析
         for row in rows[1:]:
             try:
@@ -52,11 +55,25 @@ def get_jx0502zbid_and_name(session: Session) -> Optional[Dict[str, str]]:
                     if link and "jx0502zbid" in link["href"]:  # type: ignore
                         m = jx0502zbid_pattern.search(link["href"])  # type: ignore
                         if m:
-                            return {"jx0502zbid": m.group(1), "name": course_name}
+                            candidates.append(
+                                {"jx0502zbid": m.group(1), "name": course_name}
+                            )
             except (AttributeError, IndexError) as e:
                 logging.warning(f"解析行数据时出错: {str(e)}")
                 continue
-        return None
+
+        # 如果没有找到任何候选项
+        if not candidates:
+            return None
+
+        # 优先选择包含"补选"或"选课"的那一行
+        for candidate in candidates:
+            if "补选" in candidate["name"] or "选课" in candidate["name"]:
+                return candidate
+
+        # 如果没有包含"补选"或"选课"的行，返回第一个候选项
+        return candidates[0]
+
     except HTTPError as e:
         status = e.response.status_code if e.response is not None else -1
         logging.error(f"请求选课页面失败: {status} {str(e)}")
@@ -335,8 +352,8 @@ def pre_select_course_query(
             continue
 
     return {
-        "jx0502zbid": jx0502zbid_and_name["jx0502zbid"],
-        "jx0502zbmc": jx0502zbid_and_name["name"],
+        "select_course_round_id": jx0502zbid_and_name["jx0502zbid"],
+        "select_course_round_name": jx0502zbid_and_name["name"],
         "modules": results,
         "errors": errors,
     }

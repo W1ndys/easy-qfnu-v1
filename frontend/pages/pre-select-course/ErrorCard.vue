@@ -8,7 +8,7 @@
                 <text class="error-message">{{ debugInfo.message }}</text>
             </view>
         </view>
-        <view class="button-group" style="margin-top: -500rpx">
+        <view class="button-group">
             <button class="action-btn secondary-btn" @click="$emit('copyDebug')">
                 <uni-icons type="copy" size="20" color="#495057" />
                 <text>复制详细诊断信息</text>
@@ -95,5 +95,11 @@ defineProps({
 .secondary-btn:active {
     background: #e9ecef;
     border-color: #dee2e6;
+}
+
+.button-group {
+    margin-top: 20rpx;
+    display: flex;
+    justify-content: center;
 }
 </style>
