@@ -22,11 +22,17 @@
 
             <view class="content-wrapper">
                 <!-- 日期导航 -->
-                <DateNavigator :selected-date="selectedDate" @date-change="onDateChange" />
+                <DateNavigator ref="dateNavigatorRef" :selected-date="selectedDate" @date-change="onDateChange" />
 
                 <!-- 课表视图 -->
                 <ClassTableView :courses="currentCourses" :selected-date="selectedDate" />
             </view>
+        </view>
+
+        <!-- 悬浮今日按钮 -->
+        <view class="floating-today-btn" v-if="!isToday" @click="handleGotoToday">
+            <uni-icons type="home" size="24" color="#fff" />
+            <text class="today-text">今日</text>
         </view>
     </PageLayout>
 </template>
@@ -42,10 +48,17 @@ import ClassTableView from "./components/ClassTableView.vue";
 const isLoading = ref(true);
 const selectedDate = ref(new Date().toISOString().split('T')[0]); // 默认今天
 const coursesData = ref({}); // 缓存不同日期的课程数据
+const dateNavigatorRef = ref(null); // DateNavigator组件引用
 
 // 当前选中日期的课程
 const currentCourses = computed(() => {
     return coursesData.value[selectedDate.value] || [];
+});
+
+// 是否为今天
+const isToday = computed(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return selectedDate.value === today;
 });
 
 onLoad(() => {
@@ -220,6 +233,13 @@ function handleAuthError() {
     uni.showToast({ title: "登录已过期，请重新登录", icon: "none" });
     setTimeout(() => uni.reLaunch({ url: "/pages/index/index" }), 1500);
 }
+
+// 处理今日按钮点击
+function handleGotoToday() {
+    if (dateNavigatorRef.value) {
+        dateNavigatorRef.value.gotoToday();
+    }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -326,5 +346,36 @@ function handleAuthError() {
     padding: 0 30rpx 30rpx;
     position: relative;
     z-index: 1;
+}
+
+/* 悬浮今日按钮 */
+.floating-today-btn {
+    position: fixed;
+    bottom: 100rpx;
+    right: 40rpx;
+    width: 120rpx;
+    height: 120rpx;
+    background: linear-gradient(135deg, #7f4515 0%, #8c5527 100%);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6rpx;
+    box-shadow: 0 12rpx 32rpx rgba(127, 69, 21, 0.3);
+    z-index: 100;
+    transition: all 0.3s ease;
+
+    &:active {
+        transform: scale(0.95);
+        box-shadow: 0 8rpx 24rpx rgba(127, 69, 21, 0.4);
+    }
+
+    .today-text {
+        font-size: 20rpx;
+        color: #fff;
+        font-weight: 600;
+        line-height: 1;
+    }
 }
 </style>

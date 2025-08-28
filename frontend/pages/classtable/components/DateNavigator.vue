@@ -39,13 +39,7 @@
             </scroll-view>
         </view>
 
-        <!-- 今日快速返回按钮 -->
-        <view class="quick-actions" v-if="!isToday">
-            <button class="today-btn" @click="gotoToday">
-                <uni-icons type="home" size="16" color="#fff" />
-                <text>今日</text>
-            </button>
-        </view>
+        <!-- 今日快速返回按钮 - 移动到父组件中作为悬浮按钮 -->
 
         <!-- 日期选择弹窗 -->
         <picker mode="date" :value="selectedDate" @change="onDatePickerChange" :start="minDate" :end="maxDate">
@@ -264,6 +258,11 @@ watch(currentIndex, (newIndex) => {
     }
 });
 
+// 暴露方法给父组件
+defineExpose({
+    gotoToday
+});
+
 // 初始化
 initDateList();
 </script>
@@ -292,12 +291,13 @@ initDateList();
     width: 64rpx;
     height: 64rpx;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1rpx solid rgba(127, 69, 21, 0.15);
+    background: rgba(255, 255, 255, 0.9);
+    border: 2rpx solid rgba(127, 69, 21, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 
     &::after {
         border: none;
@@ -424,35 +424,7 @@ initDateList();
     line-height: 1;
 }
 
-/* 快速操作按钮 */
-.quick-actions {
-    position: absolute;
-    top: 20rpx;
-    right: 20rpx;
-    z-index: 10;
-}
-
-.today-btn {
-    background: linear-gradient(135deg, #7f4515 0%, #8c5527 100%);
-    color: #fff;
-    border: none;
-    border-radius: 20rpx;
-    padding: 8rpx 16rpx;
-    font-size: 20rpx;
-    font-weight: 600;
-    box-shadow: 0 4rpx 12rpx rgba(127, 69, 21, 0.25);
-    display: flex;
-    align-items: center;
-    gap: 6rpx;
-
-    &::after {
-        border: none;
-    }
-
-    &:active {
-        transform: scale(0.95);
-    }
-}
+/* 移除快速操作按钮样式，将在父组件中实现 */
 
 .date-picker-trigger {
     display: none;

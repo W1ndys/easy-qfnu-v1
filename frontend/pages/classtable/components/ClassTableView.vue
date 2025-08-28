@@ -7,18 +7,14 @@
                 <text class="date-title">{{ formatDate(selectedDate) }}</text>
                 <text class="course-count">共 {{ courses.length }} 节课</text>
             </view>
-            
+
             <!-- 课程卡片列表 -->
             <view class="courses-list">
-                <CourseCard 
-                    v-for="(course, index) in sortedCourses" 
-                    :key="index"
-                    :course="course"
-                    @click="onCourseClick(course)"
-                />
+                <CourseCard v-for="(course, index) in sortedCourses" :key="index" :course="course"
+                    @click="onCourseClick(course)" />
             </view>
         </view>
-        
+
         <!-- 空状态 -->
         <view v-else class="empty-state">
             <view class="empty-icon">
@@ -28,9 +24,9 @@
             <text class="empty-desc">今天没有课程安排</text>
             <text class="empty-tip">好好休息吧 🎉</text>
         </view>
-        
+
         <!-- 课程详情弹窗 -->
-        <uni-popup ref="courseDetailPopup" type="bottom" background-color="#fff">
+        <uni-popup ref="courseDetailPopup" type="bottom" background-color="#fff" :z-index="10000">
             <view class="course-detail-popup" v-if="selectedCourse">
                 <view class="popup-header">
                     <text class="popup-title">课程详情</text>
@@ -38,33 +34,33 @@
                         <uni-icons type="close" size="24" color="#666" />
                     </button>
                 </view>
-                
+
                 <view class="popup-content">
                     <view class="detail-item">
                         <text class="detail-label">课程名称</text>
                         <text class="detail-value">{{ selectedCourse.course_name }}</text>
                     </view>
-                    
+
                     <view class="detail-item">
                         <text class="detail-label">学分</text>
                         <text class="detail-value">{{ selectedCourse.course_credits }}学分</text>
                     </view>
-                    
+
                     <view class="detail-item">
                         <text class="detail-label">课程属性</text>
                         <text class="detail-value">{{ selectedCourse.course_property }}</text>
                     </view>
-                    
+
                     <view class="detail-item">
                         <text class="detail-label">上课时间</text>
                         <text class="detail-value">{{ selectedCourse.class_time }}</text>
                     </view>
-                    
+
                     <view class="detail-item">
                         <text class="detail-label">教室</text>
                         <text class="detail-value">{{ selectedCourse.classroom }}</text>
                     </view>
-                    
+
                     <view class="detail-item" v-if="selectedCourse.class_name">
                         <text class="detail-label">班级</text>
                         <text class="detail-value">{{ selectedCourse.class_name }}</text>
@@ -96,14 +92,14 @@ const selectedCourse = ref(null);
 // 按时间节次排序的课程列表
 const sortedCourses = computed(() => {
     if (!props.courses || props.courses.length === 0) return [];
-    
+
     return [...props.courses].sort((a, b) => {
         // 提取节次数字进行排序
         const getPeriodNumber = (period) => {
             const match = period.match(/(\d+)/);
             return match ? parseInt(match[1]) : 0;
         };
-        
+
         return getPeriodNumber(a.period) - getPeriodNumber(b.period);
     });
 });
@@ -111,17 +107,17 @@ const sortedCourses = computed(() => {
 // 格式化日期显示
 function formatDate(dateStr) {
     if (!dateStr) return '';
-    
+
     const date = new Date(dateStr);
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
-    
+
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     const weekday = weekdays[date.getDay()];
-    
+
     // 判断是今天、明天还是昨天
     if (dateStr === today.toISOString().split('T')[0]) {
         return `今天 ${weekday}`;
@@ -229,6 +225,7 @@ function closeCourseDetail() {
     padding: 0;
     max-height: 80vh;
     overflow: hidden;
+    z-index: 10000;
 }
 
 .popup-header {
@@ -238,6 +235,7 @@ function closeCourseDetail() {
     padding: 32rpx;
     border-bottom: 1rpx solid #f0f0f0;
     background: #fafafa;
+    position: relative;
 }
 
 .popup-title {
@@ -255,7 +253,9 @@ function closeCourseDetail() {
     display: flex;
     align-items: center;
     justify-content: center;
-    
+    flex-shrink: 0;
+    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+
     &::after {
         border: none;
     }
@@ -273,7 +273,7 @@ function closeCourseDetail() {
     align-items: flex-start;
     padding: 24rpx 0;
     border-bottom: 1rpx solid #f8f9fa;
-    
+
     &:last-child {
         border-bottom: none;
     }
