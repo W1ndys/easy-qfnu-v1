@@ -358,6 +358,7 @@ def pre_select_course_query(
     return {
         "jx0502zbid": jx0502zbid_and_name["jx0502zbid"],
         "jx0502zbmc": jx0502zbid_and_name["name"],
+        "semester": jx0502zbid_and_name.get("semester"),
         "modules": results,
         "errors": errors,
     }

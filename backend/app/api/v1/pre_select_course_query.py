@@ -94,6 +94,7 @@ class QueryErrorItem(BaseModel):
 class PreSelectCourseQueryData(BaseModel):
     jx0502zbid: str = Field(..., description="选课轮次编号")
     jx0502zbmc: str = Field(..., description="选课轮次名称")
+    semester: Optional[str] = Field(None, description="学期")
     modules: List[ModuleResult] = Field(..., description="各模块的查询结果")
     errors: List[QueryErrorItem] = Field(
         default_factory=list, description="查询过程中产生的错误列表"
@@ -105,6 +106,7 @@ class Config:
         "example": {
             "jx0502zbid": "XXXXXX",  # 脱敏后的标识符
             "jx0502zbmc": "XXXXXX",  # 脱敏后的名称
+            "semester": "2025-2026-1",  # 学期示例
             "modules": [
                 {
                     "module": "XXXXXX",  # 脱敏后的模块代码

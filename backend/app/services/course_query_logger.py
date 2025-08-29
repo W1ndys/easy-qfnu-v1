@@ -49,9 +49,9 @@ class CourseQueryLogger:
         try:
             # 提取基础信息
             grade = CourseQueryLogger.extract_grade_from_student_id(profile.student_id)
-            round_id = query_results.get("select_course_round_id")
-            round_title = query_results.get("select_course_round_name")
-            semester = getattr(query_results, "semester", None)  # 如果有学期信息
+            round_id = query_results.get("jx0502zbid")
+            round_title = query_results.get("jx0502zbmc")
+            semester = query_results.get("semester")  # 直接从查询结果中获取学期信息
 
             # 如果年级与选课轮次不匹配，并且不是补选或退选，则跳过记录
             if (
