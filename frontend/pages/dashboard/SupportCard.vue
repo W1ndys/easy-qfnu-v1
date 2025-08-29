@@ -18,7 +18,6 @@
 
 <script setup>
 import ModernCard from "../../components/ModernCard/ModernCard.vue";
-import supportCardLogic from "./SupportCard.js";
 
 const emit = defineEmits(['imageError', 'imageLoad']);
 
@@ -32,5 +31,60 @@ const handleImageLoad = () => {
 </script>
 
 <style lang="scss" scoped>
-@import "./SupportCard.scss";
+@import "../../styles/common.scss";
+
+.support-card {
+  margin-top: 16rpx;
+
+  :deep(.card-content) {
+    padding: 12rpx 8rpx !important;
+  }
+}
+
+.support-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding: 12rpx;
+}
+
+.support-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.support-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.support-desc {
+  font-size: 24rpx;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.qr-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx;
+  background: rgba(127, 69, 21, 0.03);
+  border: 1rpx solid rgba(127, 69, 21, 0.08);
+  border-radius: var(--radius-medium);
+}
+
+.qr-code {
+  width: 280rpx;
+  height: 280rpx;
+  border-radius: 8rpx;
+}
+
+.qr-code-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
 </style>
