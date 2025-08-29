@@ -150,6 +150,20 @@ async function fetchData() {
             data.value = res.data || { modules: [], errors: [] };
             if (!Array.isArray(data.value.modules)) data.value.modules = [];
             if (!Array.isArray(data.value.errors)) data.value.errors = [];
+
+            // 优化: 对每个模块中的课程进行排序，有余量的课程排在前面
+            if (data.value.modules) {
+                for (const m of data.value.modules) {
+                    if (m.courses?.length) {
+                        // 优化: 按课余量降序排序，余量越多越靠前，未知余量的排在最后
+                        m.courses.sort(
+                            (a, b) =>
+                                (b.remain_count ?? -1) - (a.remain_count ?? -1)
+                        );
+                    }
+                }
+            }
+
             debugInfo.value = null;
             // MODIFIED: 默认展开所有有结果的模块
             if (hasData.value) {
