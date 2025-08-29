@@ -356,8 +356,8 @@ def pre_select_course_query(
             continue
 
     return {
-        "select_course_round_id": jx0502zbid_and_name["jx0502zbid"],
-        "select_course_round_name": jx0502zbid_and_name["name"],
+        "jx0502zbid": jx0502zbid_and_name["jx0502zbid"],
+        "jx0502zbmc": jx0502zbid_and_name["name"],
         "modules": results,
         "errors": errors,
     }

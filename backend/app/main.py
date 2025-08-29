@@ -155,8 +155,10 @@ else:
 logger.info("正在初始化数据库...")
 try:
     from app.db.database import init_db
+    from app.db.course_query_database import init_course_query_db
 
     init_db()
+    init_course_query_db()
     logger.info("数据库初始化成功")
 except Exception as e:
     logger.error(f"数据库初始化失败: {e}")
