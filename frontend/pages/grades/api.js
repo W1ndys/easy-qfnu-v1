@@ -1,5 +1,5 @@
 // API服务模块 - 处理成绩相关的数据请求
-import { ProfileAPI } from "../dashboard/ProfileCard.js";
+import { ProfileAPI } from "../dashboard/ProfileAPI.js";
 
 /**
  * 获取成绩数据
