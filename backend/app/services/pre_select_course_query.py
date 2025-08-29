@@ -147,7 +147,7 @@ def _build_common_table_payload(
     # 固定起始位置与返回条数
     payload = {
         "iDisplayStart": "0",
-        "iDisplayLength": "1000",
+        "iDisplayLength": "10000",
     }
     if extra:
         payload.update(extra)
@@ -269,8 +269,8 @@ def _query_module(
                 ),
                 "szjylb": "",
                 "sfym": "false",
-                "sfct": "true",
-                "sfxx": "true",
+                "sfct": "false",
+                "sfxx": "false",
             },
             "data": _build_common_table_payload(),
         },
