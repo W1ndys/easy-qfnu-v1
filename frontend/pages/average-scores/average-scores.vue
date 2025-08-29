@@ -38,14 +38,93 @@ import { ref, computed, onMounted } from "vue";
 import SearchForm from './SearchForm.vue';
 import ResultsSection from './ResultsSection.vue';
 import StateComponents from './StateComponents.vue';
-import { queryAverageScores, checkLoginStatus } from './api.js';
-import { getErrorMessage } from './utils.js';
 
 // 状态
 const resultData = ref({});
 const loading = ref(false);
 const searched = ref(false);
 const emptyMessage = ref("未找到相关数据");
+
+/**
+ * 生成错误提示信息
+ * @param {Error} error - 错误对象
+ * @returns {string} 错误提示信息
+ */
+function getErrorMessage(error) {
+  let errorMessage = "网络错误，请重试";
+  if (error.message) {
+    if (error.message.includes("HTTP 422")) {
+      errorMessage = "输入参数格式错误，请检查输入内容";
+    } else if (error.message.includes("HTTP 400")) {
+      errorMessage = "请求参数错误，请检查输入内容";
+    } else if (error.message.includes("HTTP 500")) {
+      errorMessage = "服务器内部错误，请稍后重试";
+    } else if (error.message.includes("HTTP")) {
+      errorMessage = `请求失败: ${error.message}`;
+    }
+  }
+  return errorMessage;
+}
+
+/**
+ * 检查登录状态
+ * @returns {boolean} 是否已登录
+ */
+function checkLoginStatus() {
+  const token = uni.getStorageSync("token");
+  if (!token) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 查询平均分数据
+ * @param {Object} params - 查询参数
+ * @param {string} params.course - 课程名称或代码
+ * @param {string} [params.teacher] - 教师姓名（可选）
+ * @returns {Promise} 返回查询结果
+ */
+function queryAverageScores(params) {
+  const baseURL = getApp().globalData.apiBaseURL;
+  const token = uni.getStorageSync("token");
+
+  if (!token) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    uni.reLaunch({ url: "/pages/index/index" });
+    return Promise.reject(new Error("未登录"));
+  }
+
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: `${baseURL}/api/v1/average-scores`,
+      method: "GET",
+      data: params,
+      header: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      success: (res) => {
+        if (res.statusCode === 401) {
+          uni.removeStorageSync("token");
+          uni.showToast({ title: "登录已过期，请重新登录", icon: "none" });
+          setTimeout(() => {
+            uni.reLaunch({ url: "/pages/index/index" });
+          }, 1500);
+          return;
+        }
+        if (res.statusCode !== 200) {
+          reject(new Error(`HTTP ${res.statusCode}: ${res.data?.message || "请求失败"}`));
+          return;
+        }
+        resolve(res.data);
+      },
+      fail: (err) => reject(err),
+    });
+  });
+}
 
 // 计算属性
 const hasResults = computed(() => Object.keys(resultData.value).length > 0);
