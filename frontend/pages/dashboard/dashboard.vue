@@ -49,7 +49,7 @@ const calendarModalRef = ref(null);
 const profileCardRef = ref(null);
 
 const noticeData = ref({
-  version: "7",
+  version: "8",
   title: "重要通知：请加用户群防走丢！",
   content: `<div style="line-height: 1.6;">
             <p style="margin-bottom: 16rpx;">我们新增了用户QQ群，欢迎加入</p>
