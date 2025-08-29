@@ -57,6 +57,7 @@ const noticeData = ref({
             <p style="margin-bottom: 16rpx; color: red;">仪表盘下方新增了分享本站功能，欢迎分享给朋友</p>
             <p style="margin-bottom: 16rpx;">时间紧张，本网站即将面临四个月的暂停开发，2025年12月后左右恢复开发进度</p>
             <p style="margin-bottom: 16rpx; color: red;">开学快乐！</p>
+            <p style="margin-bottom: 16rpx; color: red;">七夕快乐！</p>
         </div>`,
   timestamp: Date.now(),
   forceShow: false
