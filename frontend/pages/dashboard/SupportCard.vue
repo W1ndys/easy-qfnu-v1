@@ -44,26 +44,28 @@ const handleImageLoad = () => {
 .support-content {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
-  padding: 12rpx;
+  align-items: center;
+  gap: 12rpx;
 }
 
 .support-text {
   display: flex;
   flex-direction: column;
   gap: 8rpx;
+  text-align: center;
 }
 
 .support-title {
-  font-size: 30rpx;
-  font-weight: 600;
+  font-size: 32rpx;
   color: var(--text-primary);
+  font-weight: 600;
 }
 
 .support-desc {
-  font-size: 24rpx;
-  color: var(--text-light);
+  font-size: 26rpx;
+  color: var(--text-secondary);
   line-height: 1.6;
+  text-align: center;
 }
 
 .qr-code-container {
@@ -71,20 +73,19 @@ const handleImageLoad = () => {
   flex-direction: column;
   align-items: center;
   gap: 12rpx;
-  padding: 24rpx;
-  background: rgba(127, 69, 21, 0.03);
-  border: 1rpx solid rgba(127, 69, 21, 0.08);
-  border-radius: var(--radius-medium);
 }
 
 .qr-code {
-  width: 280rpx;
-  height: 280rpx;
-  border-radius: 8rpx;
+  width: 220rpx;
+  height: 220rpx;
+  border-radius: var(--radius-medium);
+  border: 1rpx solid var(--border-light);
+  box-shadow: 0 8rpx 24rpx var(--shadow-light);
 }
 
 .qr-code-label {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: var(--text-light);
+  text-align: center;
 }
 </style>
