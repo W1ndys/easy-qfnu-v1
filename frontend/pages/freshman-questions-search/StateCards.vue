@@ -74,5 +74,113 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "./StateCards.scss";
+// 状态页面样式
+.empty-state,
+.initial-state,
+.loading-state {
+    padding: 80rpx 40rpx;
+}
+
+.empty-content,
+.initial-content,
+.loading-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30rpx;
+}
+
+.empty-icon,
+.initial-icon,
+.loading-spinner {
+    opacity: 0.6;
+}
+
+.empty-title,
+.initial-title,
+.loading-text {
+    font-size: 32rpx;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.empty-subtitle,
+.initial-subtitle,
+.loading-subtitle {
+    font-size: 24rpx;
+    color: #6c757d;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.retry-btn {
+    width: 200rpx;
+    margin-top: 20rpx;
+    height: 72rpx;
+    border-radius: 9999rpx;
+    font-size: 26rpx;
+    padding: 16rpx 24rpx;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12rpx;
+    transition: all 0.3s ease;
+    border: none;
+    background: linear-gradient(135deg, #7f4515, #8c5527);
+    color: #ffffff;
+    box-shadow: 0 8rpx 24rpx rgba(127, 69, 21, 0.25);
+
+    &::after {
+        border: none;
+    }
+
+    &:active {
+        transform: scale(0.95);
+        box-shadow: 0 4rpx 12rpx rgba(127, 69, 21, 0.4);
+    }
+
+    text {
+        font-weight: inherit;
+    }
+}
+
+// 提示区域
+.tips-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+    margin-top: 30rpx;
+}
+
+.tip-item {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    padding: 12rpx 20rpx;
+    background: rgba(127, 69, 21, 0.05);
+    border-radius: 12rpx;
+    border: 1rpx solid rgba(127, 69, 21, 0.1);
+}
+
+.tip-text {
+    font-size: 24rpx;
+    color: #6c757d;
+}
+
+// 加载动画
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
 </style>
