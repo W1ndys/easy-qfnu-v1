@@ -18,7 +18,7 @@
             <text class="setting-label">当前学期:</text>
             <text class="setting-value">{{
                 currentSemester ? `第 ${currentSemester} 学期` : "请先选择入学年份"
-                }}</text>
+            }}</text>
         </view>
     </ModernCard>
 </template>
@@ -56,5 +56,55 @@ const handleYearChange = (e) => {
 </script>
 
 <style lang="scss" scoped>
-@import './EnrollmentSettings.scss';
+.settings-card {
+    margin-bottom: 12rpx;
+}
+
+.enrollment-notice {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    margin-bottom: 16rpx;
+    padding: 8rpx 12rpx;
+    background: linear-gradient(135deg, #e6f7ff 0%, #f0f8ff 100%);
+    border-radius: 8rpx;
+    border: 1rpx solid #91d5ff;
+}
+
+.notice-text {
+    font-size: 24rpx;
+    color: #1890ff;
+    line-height: 1.4;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8rpx 0;
+    font-size: 26rpx;
+}
+
+.setting-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.picker-value {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    padding: 6rpx 12rpx;
+    border: 1rpx solid #d9d9d9;
+    border-radius: 8rpx;
+    background-color: #fafafa;
+    color: var(--text-primary);
+    min-width: 120rpx;
+    justify-content: space-between;
+}
+
+.setting-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
 </style>
