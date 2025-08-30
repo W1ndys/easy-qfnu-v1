@@ -85,7 +85,7 @@ const handleNoticePopupChange = (e) => {
 };
 
 const features = ref([
-  { text: "今日课表", description: "实时查看今日课表", icon: "calendar", url: "/pages/classtable/classtable" },
+  { text: "今日课表", description: "bug修复中", icon: "calendar", url: "" },
   { text: "成绩分析", description: "查看成绩与GPA分析", icon: "paperplane", url: "/pages/grades/grades" },
   { text: "平均分查询", description: "查看课程平均分数据", icon: "bars", url: "/pages/average-scores/average-scores" },
   { text: "选课推荐", description: "智能推荐选课方案", icon: "star", url: "https://doc.easy-qfnu.top/EasySelectCourse/CourseSelectionRecommendation/", external: true },
