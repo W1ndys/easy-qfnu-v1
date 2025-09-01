@@ -371,7 +371,9 @@ def _process_retakes(grades_data: list):
         if len(records) == 1:
             processed_list.append(records[0])
         else:
-            best_record = max(records, key=lambda x: float(x.get("gpa", "0.0")))
+            best_record = max(
+                records, key=lambda x: float(x.get("gpa", "0.0") or "0.0")
+            )
             processed_list.append(best_record)
             logger.debug(
                 f"课程 '{key[1]}' 有 {len(records)} 条记录，已选择最高绩点: {best_record.get('gpa')}"
