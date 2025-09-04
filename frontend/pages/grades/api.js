@@ -45,8 +45,8 @@ export const fetchGradesData = async () => {
         }
     } catch (error) {
         console.error("请求失败", error)
-        uni.showToast({ title: "服务器连接失败", icon: "none" })
-        return { success: false, error: "服务器连接失败" }
+        uni.showToast({ title: "服务器连接失败，请前往QQ群查看是否有新通知", icon: "none" })
+        return { success: false, error: "服务器连接失败，请前往QQ群查看是否有新通知" }
     }
 }
 
