@@ -44,10 +44,6 @@ class AuthService:
             logger.debug("开始教务系统登录验证...")
             session = login_to_university(student_id=student_id, password=password)
 
-            if session is None:
-                logger.warning(f"教务系统登录失败，学号: {student_id}")
-                raise Exception("学号或密码错误")
-
             logger.info(f"教务系统登录成功，学号: {student_id}")
 
             try:

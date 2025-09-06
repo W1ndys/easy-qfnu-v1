@@ -46,10 +46,10 @@ def get_random_code(session):
         return None
 
 
-def login_to_university(student_id: str, password: str, max_retries: int = 3):
+def login_to_university(student_id: str, password: str):
     """
     尝试登录到学校教务系统。
-    成功返回 session 对象，失败返回 None。
+    成功返回 session 对象，失败则抛出异常。
     """
     logger.info(f"开始登录流程，学号: {student_id}")
 
@@ -58,82 +58,56 @@ def login_to_university(student_id: str, password: str, max_retries: int = 3):
     encoded = f"{encoded_student_id}%%%{encoded_password}"
     logger.debug("学号和密码编码完成")
 
-    for attempt in range(max_retries):
-        logger.info(f"第 {attempt + 1} 次登录尝试...")
+    session = requests.Session()
+    logger.debug("创建新的session对象")
 
-        try:
-            session = requests.Session()
-            logger.debug("创建新的session对象")
+    try:
+        random_code = get_random_code(session)
 
-            random_code = get_random_code(session)
+        if random_code is None:
+            logger.error("获取验证码失败")
+            raise Exception("获取验证码失败")
 
-            if random_code is None:
-                logger.warning(f"第 {attempt + 1} 次尝试：获取验证码失败，准备重试...")
-                session.close()
-                if attempt < max_retries - 1:
-                    continue
-                else:
-                    logger.error("获取验证码失败次数已达上限")
-                    return None
+        form_data = {
+            "RANDOMCODE": random_code,
+            "encoded": encoded,
+        }
 
-            form_data = {
-                "RANDOMCODE": random_code,
-                "encoded": encoded,
-            }
+        logger.debug(
+            f"登录数据准备完成: RANDOMCODE={random_code}, encoded={encoded[:20]}..."
+        )
+        logger.info("正在发送登录请求...")
+        response = session.post(LOGIN_URL, headers=HEADERS, data=form_data, timeout=5)
+        logger.info(f"登录响应状态码: {response.status_code}")
 
-            logger.debug(
-                f"登录数据准备完成: RANDOMCODE={random_code}, encoded={encoded[:20]}..."
-            )
-            logger.info("正在发送登录请求...")
-            response = session.post(
-                LOGIN_URL, headers=HEADERS, data=form_data, timeout=5
-            )
-            logger.info(f"登录响应状态码: {response.status_code}")
+        if "密码错误" in response.text or "用户名或密码错误" in response.text:
+            logger.error("登录失败：用户名或密码错误")
+            raise Exception("学号或密码错误")
 
-            if "密码错误" in response.text or "用户名或密码错误" in response.text:
-                logger.error("登录失败：用户名或密码错误")
-                session.close()
-                return None
+        if "验证码错误" in response.text or "验证码不正确" in response.text:
+            logger.warning("登录失败：验证码错误")
+            raise Exception("验证码错误")
 
-            if "验证码错误" in response.text or "验证码不正确" in response.text:
-                logger.warning(f"第 {attempt + 1} 次尝试：验证码错误，准备重试...")
-                session.close()
-                if attempt < max_retries - 1:
-                    continue
-                else:
-                    logger.error("验证码重试次数已用完")
-                    return None
+        logger.debug("正在验证登录状态...")
+        main_page_url = "http://zhjw.qfnu.edu.cn/jsxsd/framework/xsMain.jsp"
+        main_page_resp = session.get(main_page_url, headers=HEADERS, timeout=5)
 
-            logger.debug("正在验证登录状态...")
-            main_page_url = "http://zhjw.qfnu.edu.cn/jsxsd/framework/xsMain.jsp"
-            main_page_resp = session.get(main_page_url, headers=HEADERS, timeout=5)
+        if (
+            "教学一体化服务平台" in main_page_resp.text
+            or "学生个人中心" in main_page_resp.text
+        ):
+            logger.info("登录成功！")
+            return session
 
-            if (
-                "教学一体化服务平台" in main_page_resp.text
-                or "学生个人中心" in main_page_resp.text
-            ):
-                logger.info("登录成功！")
-                return session
+        logger.warning(f"登录响应内容片段: {response.text[:200]}...")
+        logger.warning("登录失败：可能是其他未知原因")
+        raise Exception("登录失败，未知原因")
 
-            logger.warning(f"登录响应内容片段: {response.text[:200]}...")
-            logger.warning("登录失败：可能是验证码识别错误或其他未知原因")
+    except Exception as e:
+        # 确保在任何异常情况下都关闭session
+        if "session" in locals():
             session.close()
-            if attempt < max_retries - 1:
-                logger.info("准备重试...")
-                continue
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"网络请求出错: {e}")
-            if "session" in locals():
-                session.close()
-            if attempt < max_retries - 1:
-                logger.info("网络错误，准备重试...")
-                continue
-            else:
-                return None
-
-    logger.error(f"登录失败：已尝试 {max_retries} 次")
-    return None
+        raise e
 
 
 def get_grades(session: requests.Session, semester: str = ""):
