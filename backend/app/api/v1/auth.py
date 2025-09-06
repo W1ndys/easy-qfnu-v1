@@ -147,6 +147,9 @@ async def login_for_access_token(form_data: UserLogin, request: Request):
         if "学号或密码错误" in error_msg:
             logger.warning(f"教务系统登录失败，学号: {form_data.student_id}")
             raise HTTPException(status_code=401, detail="学号或密码错误，登录失败")
+        elif "教务系统连接超时" in error_msg:
+            logger.error(f"教务系统登录失败（连接超时），学号: {form_data.student_id}")
+            raise HTTPException(status_code=503, detail="教务系统请求超时，请稍后重试")
         else:
             logger.error(f"登录过程中发生未知错误: {e}")
             raise HTTPException(status_code=500, detail=f"登录失败: {str(e)}")

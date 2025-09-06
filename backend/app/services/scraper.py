@@ -21,7 +21,7 @@ def get_random_code(session):
     """使用指定的session获取验证码，确保cookie一致性"""
     try:
         logger.debug("正在获取验证码...")
-        response = session.get(VERIFYCODE_URL, headers=HEADERS, timeout=10)
+        response = session.get(VERIFYCODE_URL, headers=HEADERS, timeout=5)
         if response.status_code != 200:
             logger.error(f"获取验证码失败，状态码: {response.status_code}")
             return None
@@ -86,7 +86,7 @@ def login_to_university(student_id: str, password: str, max_retries: int = 3):
             )
             logger.info("正在发送登录请求...")
             response = session.post(
-                LOGIN_URL, headers=HEADERS, data=form_data, timeout=10
+                LOGIN_URL, headers=HEADERS, data=form_data, timeout=5
             )
             logger.info(f"登录响应状态码: {response.status_code}")
 
@@ -106,7 +106,7 @@ def login_to_university(student_id: str, password: str, max_retries: int = 3):
 
             logger.debug("正在验证登录状态...")
             main_page_url = "http://zhjw.qfnu.edu.cn/jsxsd/framework/xsMain.jsp"
-            main_page_resp = session.get(main_page_url, headers=HEADERS, timeout=10)
+            main_page_resp = session.get(main_page_url, headers=HEADERS, timeout=5)
 
             if (
                 "教学一体化服务平台" in main_page_resp.text
