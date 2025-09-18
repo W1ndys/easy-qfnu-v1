@@ -7,10 +7,10 @@
             <text class="group-title">学习交流群</text>
         </view>
         <view class="group-content">
-            <text class="group-description">曲师大25级选课学习交流群</text>
+            <text class="group-description">曲师大选课学习交流群</text>
             <view class="group-number" @click="copyGroupNumber">
                 <text class="group-label">群号：</text>
-                <text class="group-id">1046961227</text>
+                <text class="group-id">1053432087</text>
                 <view class="copy-icon">
                     <uni-icons type="copy" size="16" color="#1890ff"></uni-icons>
                 </view>
@@ -26,7 +26,7 @@ export default {
     methods: {
         copyGroupNumber() {
             uni.setClipboardData({
-                data: '1046961227',
+                data: '1053432087',
                 success: () => {
                     uni.showToast({
                         title: '群号已复制',
