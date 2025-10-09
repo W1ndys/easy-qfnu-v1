@@ -42,11 +42,7 @@
       >
     </view>
 
-    <!-- 新增：忘记密码入口 -->
-    <view class="forgot-section">
-      <text class="forgot-link" @click="openForgotPassword">忘记密码？</text>
-    </view>
-
+    <!-- 协议区域 -->
     <view class="agreement">
       <checkbox-group @change="onAgreeChange">
         <label class="agree-label">
@@ -57,10 +53,16 @@
       </checkbox-group>
     </view>
 
+    <!-- 登录按钮 -->
     <button class="login-btn" @click="handleLogin" :loading="isLoading">
       <text v-if="!isLoading">登录</text>
       <text v-else>登录中...</text>
     </button>
+
+    <!-- 移动后：忘记密码入口（放到登录按钮下方） -->
+    <view class="forgot-section">
+      <text class="forgot-link" @click="openForgotPassword">忘记密码？</text>
+    </view>
 
     <!-- 账号激活提示 -->
     <view class="activation-tip">
@@ -232,8 +234,8 @@ const openForgotPassword = () => {
 
 .forgot-section {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 20rpx;
+  justify-content: center; // 原为 flex-end
+  margin: 16rpx 0 20rpx; // 原为 margin-bottom: 20rpx;
 }
 
 .forgot-link {
